@@ -1,0 +1,15 @@
+.right {
+  text-align: right;
+}
+
+.container {
+  height: 75vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.count {
+  display: inline-block;
+}

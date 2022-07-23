@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="155" height="112" viewBox="0 0 155 112" xml:space="preserve">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="205" height="149" viewBox="0 0 205 149" xml:space="preserve">
 <desc>Created with Fabric.js 4.6.0</desc>
 <defs>
 </defs>
-<g transform="matrix(1 0 0 1 76.22 45.98)" style="filter: url(#SVGID_124);" id="7LZu-qibSxvle7grNJUp6">
-<filter id="SVGID_124" y="-24%" height="148%" x="-23%" width="146%">
+<g transform="matrix(1 0 0 1 102.51 61.68)" style="filter: url(#SVGID_124);" id="7LZu-qibSxvle7grNJUp6">
+<filter id="SVGID_124" y="-23%" height="146%" x="-22%" width="144%">
 	<feGaussianBlur in="SourceAlpha" stdDeviation="1"/>
 	<feOffset dx="2" dy="2" result="oBlur"/>
 	<feFlood flood-color="rgb(0,0,0)" flood-opacity="0.39"/>
@@ -15,7 +15,7 @@
 		<feMergeNode in="SourceGraphic"/>
 	</feMerge>
 </filter>
-		<text xml:space="preserve" font-family="Pacifico" font-size="80" font-style="normal" font-weight="normal" line-height="1" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1; white-space: pre;"><tspan x="-75.44" y="25.13">Sign</tspan></text>
+		<text xml:space="preserve" font-family="Pacifico" font-size="108" font-style="normal" font-weight="normal" line-height="1" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1; white-space: pre;"><tspan x="-101.84" y="33.93">Sign</tspan></text>
 <style>
           @font-face {
           font-family: "Pacifico";
