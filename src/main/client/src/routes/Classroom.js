@@ -3,9 +3,9 @@ import styles from "./Classroom.module.css";
 import NavBar from "../components/NavBar.js";
 import Circle from "../components/Circle.js";
 import { useParams } from "react-router-dom";
-import io from "socket.io-client";
-import TextField from "@material-ui/core/TextField";
-import { withStyles } from "@material-ui/core/styles";
+// import io from "socket.io-client";
+// import TextField from "@material-ui/core/TextField";
+// import { withStyles } from "@material-ui/core/styles";
 
 function Room() {
   // const params = useParams();
@@ -46,9 +46,9 @@ function Room() {
   const [chat, setChat] = useState([]);
 
   useEffect(() => {
-    socket.on("connect", function () {
-      socket.emit("joined", {});
-    });
+    // socket.on("connect", function () {
+    //   socket.emit("joined", {});
+    // });
   });
 
   const onTextChange = (e) => {
@@ -57,7 +57,7 @@ function Room() {
 
   const onMessageSubmit = (e) => {
     e.preventDefault();
-    socket.emit("message", { message });
+    // socket.emit("message", { message });
     //setState({ message: "", name });
     setChat([...chat, { message }]);
   };

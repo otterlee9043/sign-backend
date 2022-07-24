@@ -8,9 +8,9 @@ import styles from "./Home.module.css";
 function Home() {
   const [rooms, setRooms] = useState([]);
   const getNames = async () => {
-    // const response = await fetch("/api/rooms");
-    // const json = await response.json();
-    // console.log(json);
+    const response = await fetch("/api/member");
+    const json = await response.json();
+    console.log(json);
     // setRooms(json);
     setRooms([]);
   };
