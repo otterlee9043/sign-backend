@@ -1,10 +1,9 @@
 package com.sign.classroom;
 
-import com.sign.member.MemberRepository;
+import com.sign.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
-import java.util.Map;
 
 @RequiredArgsConstructor
 public class ClassroomServiceImpl implements ClassroomService{

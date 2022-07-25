@@ -1,14 +1,12 @@
-package com.sign.member;
+package com.sign.member.repository;
 
+import com.sign.member.Member;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-@Component
-public class MemoryMemberRepository implements MemberRepository{
+//@Component
+public class MemoryMemberRepository implements MemberRepository {
 
     private static Map<Long, Member> store = new HashMap<>();
     private static long sequence = 0L;
@@ -21,8 +19,8 @@ public class MemoryMemberRepository implements MemberRepository{
     }
 
     @Override
-    public Member findById(Long memberId) {
-        return store.get(memberId);
+    public Optional<Member> findById(Long memberId) {
+        return Optional.ofNullable(store.get(memberId));
     }
 
     @Override

@@ -1,8 +1,10 @@
 package com.sign.member;
 
+import java.util.Optional;
+
 public interface MemberService {
     void join(Member member);
 
-    Member findMember(Long memberId);
+    Optional<Member> findMember(Long memberId);
 }
 
