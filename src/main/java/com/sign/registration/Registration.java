@@ -1,4 +1,4 @@
-package com.sign.registeration;
+package com.sign.registration;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

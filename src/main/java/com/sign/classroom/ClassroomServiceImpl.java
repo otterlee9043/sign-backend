@@ -1,5 +1,6 @@
 package com.sign.classroom;
 
+import com.sign.member.Member;
 import com.sign.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -13,32 +14,25 @@ public class ClassroomServiceImpl implements ClassroomService{
 
     @Override
     public List<Classroom> findJoiningRooms(Long memberId) {
-//        List<Classroom> rooms = new List<>();
-//        for(Classroom classroom : classroomRepository.findAll()){
-//            Long roomId = classroom.getId();
-//
-//            if(entry.getValue().equals(34)) { // 값이 null이면 NullPointerException 예외 발생
-//                findKey = entry.getKey();
-//                break;
-//            }
-//        }
-
+        /**
+         * TODO Registration table 만들고 구현할 것
+         */
         return null;
     }
 
     @Override
-    public List<Classroom> findHostingRooms(Long memberId) {
-        return null;
+    public List<Classroom> findHostingRooms(Member host) {
+        return classroomRepository.findByHost(host);
     }
 
     @Override
     public Classroom createRoom(Classroom classroom) {
-        return null;
+        return classroomRepository.save(classroom);
     }
 
     @Override
-    public void deleteRoom(Classroom room) {
-
+    public void deleteRoom(Classroom classroom) {
+        classroomRepository.delete(classroom);
     }
 
     @Override

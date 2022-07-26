@@ -24,12 +24,13 @@ function LoginBar() {
 
   const logout = async () => {
     try {
-      // const response = await fetch("/api/logout");
-      // if (response.status !== 200) {
-      //   alert("There has been some errors.");
-      //   return false;
-      // }
-      setUsername("");
+      const response = await fetch("/api/member/username");
+      if (response.status !== 200) {
+        alert("There has been some errors.");
+        return false;
+      }
+      const username = await response.json();
+      setUsername(username);
     } catch (error) {
       console.error("There has been an error login");
     }
@@ -38,15 +39,14 @@ function LoginBar() {
   useEffect(() => {
     async function getUser(){
       try {
-      // const response = await fetch("/api/user");
-      // if (response.status !== 200) {
-      //   alert("There has been some errors.");
-      //   return false;
-      // }
-      // const data = await response.json();
-      // console.log("This came from the backend", data);
-      // setUsername(data.username);
-        setUsername("username")
+        const response = await fetch("/api/member/username");
+        if (response.status !== 200) {
+          alert("There has been some errors.");
+          return false;
+        }
+        const data = await response.json();
+        console.log("This came from the backend", data);
+        setUsername(data);
       } catch (error) {
         console.error("There has been an error login");
       }

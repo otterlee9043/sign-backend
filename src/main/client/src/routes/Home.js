@@ -8,7 +8,7 @@ import styles from "./Home.module.css";
 function Home() {
   const [rooms, setRooms] = useState([]);
   const getNames = async () => {
-    const response = await fetch("/api/member");
+    const response = await fetch("/api/member/username");
     const json = await response.json();
     console.log(json);
     // setRooms(json);

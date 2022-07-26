@@ -3,16 +3,19 @@ package com.sign.classroom;
 import com.sign.member.Member;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ClassroomRepository {
 
-    Classroom save(Classroom member);
+    Classroom save(Classroom classroom);
 
-    Classroom findById(Long roomId);
+    Optional<Classroom> findById(Long roomId);
 
-    Classroom findByName(String roomName);
+    List<Classroom> findByName(String roomName);
+
+    List<Classroom> findByHost(Member host);
 
     List<Classroom> findAll();
 
-    void delete(Long roomId);
+    void delete(Classroom classroom);
 }

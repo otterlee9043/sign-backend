@@ -11,19 +11,16 @@ import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-@Primary
+@Component
+
 public class JpaMemberRepository implements MemberRepository{
 
-    @PersistenceContext
     private final EntityManager em;
 
     @Autowired
     public JpaMemberRepository(EntityManager em) {
-        System.out.println("em = " + em);
         this.em = em;
     }
-
 
     @Override
     public Member save(Member member) {
@@ -39,6 +36,7 @@ public class JpaMemberRepository implements MemberRepository{
 
     @Override
     public List<Member> findAll() {
+
         return em.createQuery("select m from Member m", Member.class).getResultList();
     }
 }
