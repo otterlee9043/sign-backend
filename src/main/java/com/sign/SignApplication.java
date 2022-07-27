@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 //@EnableJpaRepositories(basePackages = {"com.sign.member.repository"})
 //@EntityScan(basePackages = {"com.sign.member"})
-@SpringBootApplication(scanBasePackages = "com.sign.member")
+@SpringBootApplication
 public class SignApplication {
 
 	public static void main(String[] args) {

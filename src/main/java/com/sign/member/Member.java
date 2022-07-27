@@ -1,13 +1,13 @@
 package com.sign.member;
 
+import com.sign.classroom.Classroom;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -15,7 +15,14 @@ import javax.persistence.Id;
 @ToString
 public class Member {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "MEMBER_ID")
     private Long id;
-    private String name;
-    private String password;
+
+    private String username;
+
+    @ManyToMany
+    @JoinTable(name = "JOIN",
+            joinColumns = @JoinColumn(name = "MEMBER_ID"),
+            inverseJoinColumns = @JoinColumn(name = "CLASSROOM_ID"))
+    private List<Classroom> joiningRooms = new ArrayList<Classroom>();
 }

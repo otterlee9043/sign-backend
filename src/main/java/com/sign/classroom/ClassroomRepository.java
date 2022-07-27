@@ -13,6 +13,8 @@ public interface ClassroomRepository {
 
     List<Classroom> findByName(String roomName);
 
+    Optional<Classroom> findByCode(String roomCode);
+
     List<Classroom> findByHost(Member host);
 
     List<Classroom> findAll();

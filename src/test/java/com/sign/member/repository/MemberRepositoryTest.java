@@ -1,7 +1,10 @@
 package com.sign.member.repository;
 
 import com.sign.SignApplication;
+import com.sign.classroom.Classroom;
+import com.sign.classroom.ClassroomService;
 import com.sign.member.Member;
+import com.sign.member.MemberService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,30 +29,29 @@ class MemberRepositoryTest {
     @Autowired
     MemberRepository repository;
 
+    @Autowired
+    MemberService memberService;
+    @Autowired
+    ClassroomService classroomService;
     @Test
     public void save(){
-//        AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext(SignApplication.class);
-//		String[] beanDefinitionNames = ac.getBeanDefinitionNames();
-//		for (String beanDefinitionName : beanDefinitionNames) {
-//			BeanDefinition beanDefinition = ac.getBeanDefinition(beanDefinitionName);
-//			if (beanDefinition.getRole() == BeanDefinition.ROLE_APPLICATION){
-//				Object bean = ac.getBean(beanDefinitionName);
-//				System.out.println("name = " + beanDefinitionName + " object = " + bean);
-//			}
-//		}
+        Member member = new Member();
+        member.setUsername("spring");
+        memberService.join(member);
 
-//        Member member = new Member();
-//        member.setName("spring");
-//        repository.save(member);
-//        member.setName("sua");
-//        repository.save(member);
-//        Member result = repository.findById(member.getId()).get();
-////        Assertions.assertEquals(member, result);
-//        assertThat(member).isEqualTo(result);
-        List<Member> members = repository.findAll();
-        for (Member member1 : members) {
-            System.out.println("member1 = " + member1);
-
+        Classroom classroom = new Classroom();
+        classroom.setRoomName("new room");
+        classroom.setRoomCode("code0");
+        classroom.setHost(member);
+        classroomService.createRoom(classroom);
+        classroomService.joinRoom(member, "code0");
+        List<Member> joiningMembers = classroom.getJoiningMembers();
+        List<Classroom> joiningRooms = member.getJoiningRooms();
+        for (Classroom joiningRoom : joiningRooms) {
+            System.out.println("joiningRoom = " + joiningRoom);
+        }
+        for (Member joiningMember : joiningMembers) {
+            System.out.println("joiningMember = " + joiningMember);
         }
     }
 }

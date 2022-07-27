@@ -20,8 +20,8 @@ public class MemberController {
         memberService.join(member);
         Optional<Member> foundMember = memberService.findMember(member.getId());
         log.info("foundMember={}", foundMember);
-        log.info("name={}", foundMember.get().getName());
-        System.out.println("foundMember.get().getName() = [" + foundMember.get().getName() + "]");
+//        log.info("name={}", foundMember.get().getName());
+//        System.out.println("foundMember.get().getName() = [" + foundMember.get().getName() + "]");
         return "ok";
     }
 
@@ -29,9 +29,9 @@ public class MemberController {
     public String username(){
         Optional<Member> foundMember = memberService.findMember(8L);
         log.info("foundMember={}", foundMember);
-        log.info("name={}", foundMember.get().getName());
-        System.out.println("foundMember.get().getName() = [" + foundMember.get().getName() + "]");
-        return foundMember.get().getName();
+        log.info("name={}", foundMember.get().getUsername());
+        System.out.println("foundMember.get().getName() = [" + foundMember.get().getUsername() + "]");
+        return foundMember.get().getUsername();
     }
 }
 
