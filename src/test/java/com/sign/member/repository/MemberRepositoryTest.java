@@ -1,25 +1,18 @@
 package com.sign.member.repository;
 
-import com.sign.SignApplication;
-import com.sign.classroom.Classroom;
-import com.sign.classroom.ClassroomService;
+import com.sign.domain.classroom.Classroom;
+import com.sign.domain.classroom.ClassroomService;
 import com.sign.member.Member;
 import com.sign.member.MemberService;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
 
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
 @Transactional

@@ -1,13 +1,13 @@
 package com.sign.member;
 
-import com.sign.classroom.Classroom;
+import com.sign.domain.classroom.Classroom;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -18,11 +18,21 @@ public class Member {
     @Column(name = "MEMBER_ID")
     private Long id;
 
+    @Column(unique = true)
     private String username;
 
+    private String password;
+
+    @Column(unique = true)
+    private String email;
     @ManyToMany
-    @JoinTable(name = "JOIN",
+    @JoinTable(name = "JOINS",
             joinColumns = @JoinColumn(name = "MEMBER_ID"),
             inverseJoinColumns = @JoinColumn(name = "CLASSROOM_ID"))
-    private List<Classroom> joiningRooms = new ArrayList<Classroom>();
+    private Set<Classroom> joiningRooms = new HashSet<>();
+
+    public void addJoiningRoom(Classroom classroom){
+        joiningRooms.add(classroom);
+        classroom.getJoiningMembers().add(this);
+    }
 }

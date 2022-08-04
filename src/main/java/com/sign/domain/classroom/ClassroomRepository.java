@@ -1,4 +1,4 @@
-package com.sign.classroom;
+package com.sign.domain.classroom;
 
 import com.sign.member.Member;
 

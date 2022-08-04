@@ -1,9 +1,10 @@
-package com.sign.classroom;
+package com.sign.domain.classroom;
 
 import com.sign.member.Member;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface ClassroomService {
 
@@ -11,7 +12,7 @@ public interface ClassroomService {
 
     List<Classroom> findRoomByRoomName(String roomName);
 
-    List<Classroom> findJoiningRooms(Member member);
+    Set<Classroom> findJoiningRooms(Member member);
 
 
     List<Classroom> findHostingRooms(Member host);

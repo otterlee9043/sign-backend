@@ -1,16 +1,18 @@
-package com.sign.classroom;
+package com.sign.domain.classroom;
 
 import com.sign.member.Member;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
 public class Classroom {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CLASSROOM_ID")
@@ -26,5 +28,11 @@ public class Classroom {
     private String roomCode;
 
     @ManyToMany(mappedBy = "joiningRooms")
-    private List<Member> joiningMembers;
+    private Set<Member> joiningMembers = new HashSet<Member>();
+
+    public Classroom (String roomName, Member host, String roomCode){
+        this.roomName = roomName;
+        this.host = host;
+        this.roomCode = roomCode;
+    }
 }

@@ -1,4 +1,4 @@
-package com.sign.classroom;
+package com.sign.domain.classroom;
 
 import com.sign.member.Member;
 import com.sign.member.repository.MemberRepository;
@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -27,7 +28,7 @@ public class ClassroomServiceImpl implements ClassroomService{
     }
 
     @Override
-    public List<Classroom> findJoiningRooms(Member member) {
+    public Set<Classroom> findJoiningRooms(Member member) {
         return member.getJoiningRooms();
     }
 
@@ -39,7 +40,9 @@ public class ClassroomServiceImpl implements ClassroomService{
 
     @Override
     public Classroom createRoom(Classroom classroom) {
-        return classroomRepository.save(classroom);
+        classroomRepository.save(classroom);
+        joinRoom(classroom.getHost(), classroom.getRoomCode());
+        return classroom;
     }
 
     @Override
@@ -47,8 +50,8 @@ public class ClassroomServiceImpl implements ClassroomService{
         Optional<Classroom> result = classroomRepository.findByCode(roomCode);
         if (result.isPresent()){
             Classroom classroom = result.get();
-            classroom.getJoiningMembers().add(member);
-            member.getJoiningRooms().add(classroom);
+            member.addJoiningRoom(classroom);
+            memberRepository.save(member);
         }
 
         return result.orElseThrow();
