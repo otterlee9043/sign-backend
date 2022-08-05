@@ -1,9 +1,12 @@
 package com.sign.domain.classroom;
 
-import com.sign.member.Member;
-import com.sign.member.repository.MemberRepository;
+import com.sign.domain.member.LoginMember;
+import com.sign.domain.member.Member;
+import com.sign.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +14,7 @@ import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
+@Transactional
 public class ClassroomServiceImpl implements ClassroomService{
 
     private final MemberRepository memberRepository;
@@ -39,9 +43,13 @@ public class ClassroomServiceImpl implements ClassroomService{
     }
 
     @Override
-    public Classroom createRoom(Classroom classroom) {
+    public Classroom createRoom(ClassroomCreateForm form, @AuthenticationPrincipal LoginMember loginMember) {
+        Classroom classroom = new Classroom();
+        classroom.setRoomCode(form.getRoomCode());
+        classroom.setRoomName(form.getRoomName());
+        classroom.setHost(loginMember.getMember());
         classroomRepository.save(classroom);
-        joinRoom(classroom.getHost(), classroom.getRoomCode());
+//        joinRoom(loginMember.getMember(), classroom.getRoomCode());
         return classroom;
     }
 

@@ -1,6 +1,8 @@
 package com.sign.domain.classroom;
 
-import com.sign.member.Member;
+import com.sign.domain.member.LoginMember;
+import com.sign.domain.member.Member;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +19,7 @@ public interface ClassroomService {
 
     List<Classroom> findHostingRooms(Member host);
 
-    Classroom createRoom(Classroom classroom);
+    Classroom createRoom(ClassroomCreateForm classroom, @AuthenticationPrincipal LoginMember loginMember);
 
     Classroom joinRoom(Member member, String roomCode);
 

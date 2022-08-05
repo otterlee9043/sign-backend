@@ -1,6 +1,6 @@
 package com.sign.domain.classroom;
 
-import com.sign.member.Member;
+import com.sign.domain.member.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

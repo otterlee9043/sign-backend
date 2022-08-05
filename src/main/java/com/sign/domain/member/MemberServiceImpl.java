@@ -1,8 +1,8 @@
-package com.sign.member;
+package com.sign.domain.member;
 
-import com.sign.member.repository.MemberRepository;
+import com.sign.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +14,14 @@ import java.util.Optional;
 public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void join(Member member) {
+    public void join(MemberSignupForm form) {
+        Member member = new Member();
+        member.setUsername(form.getUsername());
+        member.setEmail(form.getEmail());
+        member.setPassword(passwordEncoder.encode(form.getPassword1()));
         memberRepository.save(member);
     }
 

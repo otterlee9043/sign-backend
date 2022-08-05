@@ -1,7 +1,6 @@
 package com.sign.domain.classroom;
 
-import com.sign.member.Member;
-import lombok.AllArgsConstructor;
+import com.sign.domain.member.Member;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

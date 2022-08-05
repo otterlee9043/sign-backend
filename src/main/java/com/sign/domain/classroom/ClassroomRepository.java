@@ -1,6 +1,6 @@
 package com.sign.domain.classroom;
 
-import com.sign.member.Member;
+import com.sign.domain.member.Member;
 
 import java.util.List;
 import java.util.Optional;

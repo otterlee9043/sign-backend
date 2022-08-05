@@ -1,9 +1,9 @@
-package com.sign.member;
+package com.sign.domain.member;
 
 import java.util.Optional;
 
 public interface MemberService {
-    void join(Member member);
+    void join(MemberSignupForm form);
 
     Optional<Member> findMember(Long memberId);
 }

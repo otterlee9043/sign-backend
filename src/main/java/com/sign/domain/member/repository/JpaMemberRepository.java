@@ -1,10 +1,8 @@
-package com.sign.member.repository;
+package com.sign.domain.member.repository;
 
-import com.sign.member.Member;
+import com.sign.domain.member.Member;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -32,6 +30,13 @@ public class JpaMemberRepository implements MemberRepository{
     public Optional<Member> findById(Long memberId) {
         Member member = em.find(Member.class, memberId);
         return Optional.ofNullable(member);
+    }
+
+    @Override
+    public Optional<Member> findByUsername(String username) {
+        return em.createQuery("select m from Member m where m.username =:username", Member.class)
+                .setParameter("username", username)
+                .getResultList().stream().findAny();
     }
 
     @Override

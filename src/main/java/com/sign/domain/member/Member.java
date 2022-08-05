@@ -1,4 +1,4 @@
-package com.sign.member;
+package com.sign.domain.member;
 
 import com.sign.domain.classroom.Classroom;
 import lombok.Getter;
@@ -25,7 +25,7 @@ public class Member {
 
     @Column(unique = true)
     private String email;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "JOINS",
             joinColumns = @JoinColumn(name = "MEMBER_ID"),
             inverseJoinColumns = @JoinColumn(name = "CLASSROOM_ID"))

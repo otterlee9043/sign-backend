@@ -1,7 +1,6 @@
-package com.sign.member.repository;
+package com.sign.domain.member.repository;
 
-import com.sign.member.Member;
-import org.springframework.stereotype.Component;
+import com.sign.domain.member.Member;
 
 import java.util.*;
 
@@ -30,5 +29,10 @@ public class MemoryMemberRepository implements MemberRepository {
 
     public void clearStore(){
         store.clear();
+    }
+
+    @Override
+    public Optional<Member> findByUsername(String username) {
+        return Optional.empty();
     }
 }
