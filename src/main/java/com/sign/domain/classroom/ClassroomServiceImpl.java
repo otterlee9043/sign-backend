@@ -32,6 +32,12 @@ public class ClassroomServiceImpl implements ClassroomService{
     }
 
     @Override
+    public Optional<Classroom> findRoomByRoomId(Long roomId) {
+        Optional<Classroom> result = classroomRepository.findById(roomId);
+        return result;
+    }
+
+    @Override
     public Set<Classroom> findJoiningRooms(Member member) {
         return member.getJoiningRooms();
     }
@@ -54,16 +60,19 @@ public class ClassroomServiceImpl implements ClassroomService{
     }
 
     @Override
-    public Classroom joinRoom(Member member, String roomCode) {
-        Optional<Classroom> result = classroomRepository.findByCode(roomCode);
-        if (result.isPresent()){
-            Classroom classroom = result.get();
-            member.addJoiningRoom(classroom);
-            memberRepository.save(member);
-        }
-
-        return result.orElseThrow();
+    public Classroom joinRoom(Member member, Classroom classroom) {
+//        Optional<Classroom> result = classroomRepository.findByCode(roomCode);
+//        if (result.isPresent()){
+//            Classroom classroom = result.get();
+//            member.addJoiningRoom(classroom);
+//            memberRepository.save(member);
+//        }
+        member.addJoiningRoom(classroom);
+        memberRepository.save(member);
+        return classroom;
     }
+
+
 
     @Override
     public void deleteRoom(Classroom classroom) {

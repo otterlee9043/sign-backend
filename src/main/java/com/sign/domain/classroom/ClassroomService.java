@@ -14,6 +14,8 @@ public interface ClassroomService {
 
     List<Classroom> findRoomByRoomName(String roomName);
 
+    Optional<Classroom> findRoomByRoomId(Long roomId);
+
     Set<Classroom> findJoiningRooms(Member member);
 
 
@@ -21,7 +23,7 @@ public interface ClassroomService {
 
     Classroom createRoom(ClassroomCreateForm classroom, @AuthenticationPrincipal LoginMember loginMember);
 
-    Classroom joinRoom(Member member, String roomCode);
+    Classroom joinRoom(Member member, Classroom classroom);
 
     void deleteRoom(Classroom room);
 

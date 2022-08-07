@@ -13,7 +13,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -28,11 +31,24 @@ public class ClassroomController {
     public Classroom create(@ModelAttribute ClassroomCreateForm form, BindingResult bindingResult,
                             @AuthenticationPrincipal LoginMember loginMember){
         log.info("form={}", form);
-        return classroomService.createRoom(form, loginMember);
+        classroomService.createRoom(form, loginMember);
+        return classroomService.joinRoom(loginMember.getMember(), form.getRoomCode());
 //        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 //        System.out.println("principal : " + authentication.getPrincipal());
 //        System.out.println("Implementing class of UserDetails: " + authentication.getPrincipal().getClass());
 //        System.out.println("Implementing class of UserDetailsService: " + memberSecurityService.getClass());
 //        return null;
     }
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/api/classrooms/{roomId}/join")
+    public String join(@RequestParam Long roomId, @AuthenticationPrincipal LoginMember loginMember){
+        Optional<Classroom> classroomOptional = classroomService.findRoomByRoomId(roomId);
+        if (classroomOptional.isEmpty()){
+            return "There is no room with id of " + roomId;
+        } else {
+            classroomService.joinRoom(loginMember.getMember(), classroomOptional.get());
+            return "successfully joined!";
+        }
+    }
+
 }

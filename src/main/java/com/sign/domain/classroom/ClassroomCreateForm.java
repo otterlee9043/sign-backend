@@ -1,16 +1,18 @@
 package com.sign.domain.classroom;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
-@Getter
+import javax.validation.constraints.NotEmpty;
+
+
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@Data
 public class ClassroomCreateForm {
-    private String roomName;
-    private String roomCode;
 
+    @NotEmpty(message = "방 이름은 필수 항목입니다.")
+    private String roomName;
+
+    @NotEmpty(message = "방 코드는 필수 항목입니다.")
+    private String roomCode;
 }
