@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.transaction.Transactional;
 import java.util.Optional;
 
 @Slf4j
@@ -31,14 +32,17 @@ public class ClassroomController {
     public Classroom create(@ModelAttribute ClassroomCreateForm form, BindingResult bindingResult,
                             @AuthenticationPrincipal LoginMember loginMember){
         log.info("form={}", form);
-        classroomService.createRoom(form, loginMember);
-        return classroomService.joinRoom(loginMember.getMember(), form.getRoomCode());
+        Classroom room = classroomService.createRoom(form, loginMember);
+        return room;
+//        log.info("room");
+//        return classroomService.joinRoom(loginMember.getMember(), room);
 //        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 //        System.out.println("principal : " + authentication.getPrincipal());
 //        System.out.println("Implementing class of UserDetails: " + authentication.getPrincipal().getClass());
 //        System.out.println("Implementing class of UserDetailsService: " + memberSecurityService.getClass());
 //        return null;
     }
+
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/api/classrooms/{roomId}/join")
     public String join(@RequestParam Long roomId, @AuthenticationPrincipal LoginMember loginMember){

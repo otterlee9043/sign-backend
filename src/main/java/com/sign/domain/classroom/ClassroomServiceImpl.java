@@ -54,7 +54,8 @@ public class ClassroomServiceImpl implements ClassroomService{
         classroom.setRoomCode(form.getRoomCode());
         classroom.setRoomName(form.getRoomName());
         classroom.setHost(loginMember.getMember());
-        classroomRepository.save(classroom);
+        Classroom created = classroomRepository.save(classroom);
+        joinRoom(loginMember.getMember(), created);
 //        joinRoom(loginMember.getMember(), classroom.getRoomCode());
         return classroom;
     }
