@@ -12,25 +12,25 @@ function CreateRoom() {
     const opts = {
       method: "POST",
       body: JSON.stringify({
-        roomname: roomname,
-        roomcode: roomcode,
+        roomName: roomname,
+        roomCode: roomcode,
       }),
       headers: new Headers({
         "content-type": "application/json",
       }),
     };
     try {
-      const response = await fetch("/api/createroom", opts);
+      const response = await fetch("/api/classrooms", opts);
       if (response.status !== 200) {
         alert("There has been some errors.");
         return false;
       }
-      const data = await response.json();
+      const data = await response.text();
       console.log("This came from the backend", data);
-      if (data.msg === "created") {
+      if (data === "classroom successfully created") {
         //console.log(location.pathname);
         navigate("/");
-      } else if (data.msg === "already exist") {
+      } else if (data === "classroom successfully created") {
         setMessage("Room name already exists.");
       }
     } catch (error) {

@@ -18,12 +18,14 @@ public interface ClassroomService {
 
     Set<Classroom> findJoiningRooms(Member member);
 
-
     List<Classroom> findHostingRooms(Member host);
 
-    Classroom createRoom(ClassroomCreateForm classroom, @AuthenticationPrincipal LoginMember loginMember);
+    Classroom createRoom(ClassroomCreateForm classroom, LoginMember loginMember);
 
     Classroom joinRoom(Member member, Classroom classroom);
+
+    boolean checkJoined(Member member, Classroom classroom);
+
 
     void deleteRoom(Classroom room);
 

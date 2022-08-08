@@ -1,6 +1,8 @@
 package com.sign.domain.member.repository;
 
+import com.sign.domain.classroom.Classroom;
 import com.sign.domain.member.Member;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -9,6 +11,7 @@ import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Component
 @Transactional
 public class JpaMemberRepository implements MemberRepository{
@@ -43,5 +46,10 @@ public class JpaMemberRepository implements MemberRepository{
     public List<Member> findAll() {
 
         return em.createQuery("select m from Member m", Member.class).getResultList();
+    }
+
+    @Override
+    public boolean checkAttached(Member member){
+        return em.contains(member);
     }
 }

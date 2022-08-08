@@ -3,6 +3,8 @@ package com.sign.domain.member;
 import com.sign.domain.classroom.ClassroomService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,13 +48,13 @@ public class MemberController {
         return "GET login";
     }
 
+
     @GetMapping("/username")
-    public String username(){
-        Optional<Member> foundMember = memberService.findMember(8L);
-        log.info("foundMember={}", foundMember);
-        log.info("name={}", foundMember.get().getUsername());
-        System.out.println("foundMember.get().getName() = [" + foundMember.get().getUsername() + "]");
-        return foundMember.get().getUsername();
+    public String username(@AuthenticationPrincipal LoginMember loginMember){
+        if (loginMember != null){
+            return loginMember.getUsername();
+        }
+        return "expired";
     }
 
 //    @PostMapping("api/room")

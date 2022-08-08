@@ -20,4 +20,6 @@ public interface ClassroomRepository {
     List<Classroom> findAll();
 
     void delete(Classroom classroom);
+
+    boolean checkAttached(Classroom classroom);
 }

@@ -5,34 +5,19 @@ import { Link } from "react-router-dom";
 
 function LoginBar() {
   const [username, setUsername] = useState("");
-  // const get_user = async () => {
-  //   try {
-  //     // const response = await fetch("/api/user");
-  //     // if (response.status !== 200) {
-  //     //   alert("There has been some errors.");
-  //     //   return false;
-  //     // }
-  //     // const data = await response.json();
-  //     // console.log("This came from the backend", data);
-  //     // setUsername(data.username);
-
-  //     setUsername("username")
-  //   } catch (error) {
-  //     console.error("There has been an error login");
-  //   }
-  // };
-
   const logout = async () => {
+    const opts = {
+      method: "POST",
+    };
     try {
-      const response = await fetch("/api/member/username");
+      const response = await fetch("/api/member/logout", opts);
       if (response.status !== 200) {
         alert("There has been some errors.");
         return false;
       }
-      const username = await response.json();
-      setUsername(username);
+      setUsername("");
     } catch (error) {
-      console.error("There has been an error login");
+      console.error("There has been an error login", error);
     }
   };
 
@@ -44,17 +29,18 @@ function LoginBar() {
           alert("There has been some errors.");
           return false;
         }
-        const data = await response.json();
-        console.log("This came from the backend", data);
-        setUsername(data);
+        const username = await response.text();
+        if (username === "expired") setUsername("");
+        else setUsername(username);
+        console.log("This came from the backend", username);
+        
       } catch (error) {
-        console.error("There has been an error login");
+        console.error("There has been an error login", error);
       }
     }
     getUser();
   }, []);
 
-  const { store, actions } = useContext(Context);
   return (
     <div className={styles.loginbar}>
       {username === "" ? (

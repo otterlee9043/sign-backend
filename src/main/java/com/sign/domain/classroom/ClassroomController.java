@@ -3,21 +3,24 @@ package com.sign.domain.classroom;
 import com.sign.domain.member.LoginMember;
 import com.sign.domain.member.Member;
 import com.sign.domain.member.MemberSecurityService;
+import com.sign.domain.member.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -25,27 +28,31 @@ import java.util.Optional;
 public class ClassroomController {
 
     private final ClassroomService classroomService;
-    private final UserDetailsService memberSecurityService;
+    private final MemberService memberService;
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/api/classrooms")
-    public Classroom create(@ModelAttribute ClassroomCreateForm form, BindingResult bindingResult,
-                            @AuthenticationPrincipal LoginMember loginMember){
+    public String create(@Validated @RequestBody ClassroomCreateForm form, BindingResult bindingResult,
+                         @AuthenticationPrincipal LoginMember loginMember){
         log.info("form={}", form);
         Classroom room = classroomService.createRoom(form, loginMember);
-        return room;
-//        log.info("room");
-//        return classroomService.joinRoom(loginMember.getMember(), room);
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        System.out.println("principal : " + authentication.getPrincipal());
-//        System.out.println("Implementing class of UserDetails: " + authentication.getPrincipal().getClass());
-//        System.out.println("Implementing class of UserDetailsService: " + memberSecurityService.getClass());
-//        return null;
+        log.info("Right before return response");
+        return "classroom successfully created";
     }
+
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping(value = "/api/classrooms")
+    public Set<Classroom> joiningRooms(@AuthenticationPrincipal LoginMember loginMember){
+        Member member = memberService.findMember(loginMember.getMember().getId()).get();
+        Set<Classroom> joiningRooms = classroomService.findJoiningRooms(member);
+        return joiningRooms;
+    }
+
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/api/classrooms/{roomId}/join")
-    public String join(@RequestParam Long roomId, @AuthenticationPrincipal LoginMember loginMember){
+    public String join(@PathVariable Long roomId, @AuthenticationPrincipal LoginMember loginMember){
         Optional<Classroom> classroomOptional = classroomService.findRoomByRoomId(roomId);
         if (classroomOptional.isEmpty()){
             return "There is no room with id of " + roomId;
@@ -54,5 +61,22 @@ public class ClassroomController {
             return "successfully joined!";
         }
     }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/api/classrooms/{roomId}")
+    public String enter(@PathVariable Long roomId, @AuthenticationPrincipal LoginMember loginMember){
+        Optional<Classroom> classroomOptional = classroomService.findRoomByRoomId(roomId);
+        if (classroomOptional.isEmpty()){
+            return "There is no room with id of " + roomId;
+        } else {
+            Classroom classroom = classroomOptional.get();
+            if (classroomService.checkJoined(loginMember.getMember(),  classroom)){
+                return "Enter to the classroom!";
+            } else {
+                return "You are not joined in this room";
+            }
+        }
+    }
+
 
 }

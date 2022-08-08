@@ -1,5 +1,6 @@
 package com.sign.domain.classroom;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import javax.validation.constraints.NotEmpty;

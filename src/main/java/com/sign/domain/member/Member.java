@@ -1,5 +1,6 @@
 package com.sign.domain.member;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sign.domain.classroom.Classroom;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,7 +13,6 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@ToString
 public class Member {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MEMBER_ID")
@@ -25,6 +25,8 @@ public class Member {
 
     @Column(unique = true)
     private String email;
+
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "JOINS",
             joinColumns = @JoinColumn(name = "MEMBER_ID"),

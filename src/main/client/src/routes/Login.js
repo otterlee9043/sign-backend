@@ -10,7 +10,7 @@ function Login({ msg }) {
   // console.log(context);
   // const store = context.store;
   // const actions = context.actions;
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setMessage] = useState("");
   //const token = sessionStorage.getItem("token");
@@ -20,36 +20,24 @@ function Login({ msg }) {
   const handleClick = async () => {
     const opts = {
       method: "POST",
-      body: JSON.stringify({
-        email: email,
+      body: new URLSearchParams({
+        username: username,
         password: password,
       }),
       headers: new Headers({
-        "content-type": "application/json",
+        "content-type": "application/x-www-form-urlencoded",
       }),
     };
     try {
-      const response = await fetch("/api/login", opts);
+      const response = await fetch("/api/member/login", opts);
       if (response.status !== 200) {
         alert("There has been some errors.");
         return false;
       }
-      const data = await response.json();
-      console.log("This came from the backend", data);
-      if (data.status == "success") {
-        console.log(location.pathname);
-        //window.location.reload();
-        navigate("/");
-      } else {
-        console.log(location.pathname);
-        //history.go("/login", { msg: "Invalid email" });
-        //navigate(location.pathname, { msg: "Invalid email" });
-        setMessage("Invalid email");
-        console.log("fail!!");
-      }
+       navigate("/");
       return true;
     } catch (error) {
-      console.error("There has been an error login");
+      console.error("There has been an error login", error);
     }
   };
 
@@ -65,10 +53,10 @@ function Login({ msg }) {
             <input
               className={styles.input}
               type="text"
-              name="email"
-              placeholder="Email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              name="username"
+              placeholder="username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
             />
             <input
               className={styles.input}

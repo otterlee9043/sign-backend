@@ -62,4 +62,10 @@ public class JpaRoomRepository implements ClassroomRepository{
     public void delete(Classroom classroom) {
         em.remove(classroom);
     }
+
+    @Override
+    public boolean checkAttached(Classroom classroom){
+        return em.contains(classroom);
+    }
+
 }

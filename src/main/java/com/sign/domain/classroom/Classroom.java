@@ -1,9 +1,11 @@
 package com.sign.domain.classroom;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sign.domain.member.Member;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.util.*;
@@ -27,6 +29,7 @@ public class Classroom {
     private String roomCode;
 
     @ManyToMany(mappedBy = "joiningRooms")
+    @JsonIgnore
     private Set<Member> joiningMembers = new HashSet<Member>();
 
     public Classroom (String roomName, Member host, String roomCode){

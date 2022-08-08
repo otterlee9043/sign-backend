@@ -7,22 +7,28 @@ import styles from "./Home.module.css";
 
 function Home() {
   const [rooms, setRooms] = useState([]);
-  const getNames = async () => {
-    const response = await fetch("/api/member/username");
-    const json = await response.json();
-    console.log(json);
-    // setRooms(json);
-    setRooms([]);
-  };
+
   useEffect(() => {
-    getNames();
-    //console.log(data);
+    async function getRooms() {
+      try {
+        const response = await fetch("/api/classrooms");
+        if (response.status !== 200) {
+          alert("There has been some errors.");
+          return false;
+        }
+        const roomsJson = await response.json();
+
+        console.log(roomsJson)
+        setRooms(roomsJson);
+        // if (username === "expired") setRooms([]);
+        // else setRooms([]);
+
+      } catch (error) {
+        console.error("There has been an error login", error);
+      }
+    }
+    getRooms();
   }, []);
-  const { store, actions } = useContext(Context);
-  useEffect(() => {
-    if (store.token && store.token !== "" && store.token !== undefined)
-      actions.getMessage();
-  }, [store.token]);
 
   return (
     <div>
@@ -41,8 +47,8 @@ function Home() {
           <RoomCard
             key={room.id}
             id={room.id}
-            roomName={room.room_name}
-            host={room.host_name}
+            roomName={room.roomName}
+            host={room.host.username}
           />
         ))}
       </div>

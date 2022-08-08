@@ -1,5 +1,6 @@
 package com.sign.domain.member.repository;
 
+import com.sign.domain.classroom.Classroom;
 import com.sign.domain.member.Member;
 
 import java.util.List;
@@ -13,5 +14,7 @@ public interface MemberRepository {
 
     List<Member> findAll();
 
-    public Optional<Member> findByUsername(String username);
+    Optional<Member> findByUsername(String username);
+
+    boolean checkAttached(Member member);
 }
