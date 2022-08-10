@@ -5,7 +5,7 @@ import Circle from "../components/Circle.js";
 import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
-import { connect } from "socket.io-client";
+import { StarPurple500 } from "@mui/icons-material";
 // import io from "socket.io-client";
 // import TextField from "@material-ui/core/TextField";
 // import { withStyles } from "@material-ui/core/styles";
@@ -15,12 +15,19 @@ function Room() {
   const [username, setUsername] = useState("");
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
-  // const seats = new Array(40).fill("empty");
+  const seats = new Array(40).fill({});
+  for (let i = 0; i < 40; i ++) {
+    const result = useState("empty");
+    seats[i] = {
+      value: result[0],
+      setState: result[1]
+    };
+    //console.log(seat.fn);
+  }
 
-  const [seats, setSeats] = useState(new Array(40).fill("empty"));
-  let copiedSeats;
-  let sockJS = new SockJS("http://localhost:8080/api/classroom/");
-  let stompClient = Stomp.over(sockJS);
+  let stompClient = Stomp.over(function () {
+    return new SockJS("http://localhost:8080/api/classroom/");
+  });
   const joinClassroom = async (roomId) => {
     const opts = {
       method: "POST",
@@ -54,33 +61,77 @@ function Room() {
         alert("There has been some errors.");
         return false;
       }
-      username = await response.text();
+      const data = await response.text();
       if (username === "expired") setUsername("");
-      else setUsername(username);
+      else setUsername(data);
       console.log("This came from the backend", username);
     } catch (error) {
       console.error("There has been an error login", error);
     }
   }
 
-  const selectColor = async (color) => {
+  const selectColor = (color) => {
+    console.log(stompClient);
+    console.log(stompClient.connected)
     console.log(color);
+    console.log({ type: "TALK", roomId: roomId, sender: username, message: color });
+    // stompClient.send(
+    //   "/app/chat/message",
+    //   {},
+    //   JSON.stringify({ type: "TALK", roomId: roomId, sender: username, message: color })
+    // );
+    stompClient.publish({
+      destination: "/app/chat/message",
+      body: JSON.stringify({ type: "TALK", roomId: roomId, sender: username, message: color })
+    });
+  }
+  let reconnect = 0;
+
+  stompClient.onConnect = (_) => {
+    stompClient.subscribe(`/topic/chat/room/${roomId}`, (received) => {
+      // const message = JSON.parse(received.body);
+      // color(message);
+      console.log(received.body);
+      console.log("@onConnect");
+      
+      console.log(stompClient);
+      // stompClient.publish
+    });
     stompClient.send(
       "/app/chat/message",
       {},
-      JSON.stringify({ type: "TALK", roomId: roomId, sender: username, message: color })
+      JSON.stringify({ type: "ENTER", roomId: roomId, sender: username })
     );
+    console.log(stompClient.connected);
+  };
+  stompClient.onChangeState = () => {
+    console.log("something changed!");
   }
-  let reconnect = 0;
+
+  stompClient.onDisconnect = () => {
+    console.log("disconnect");
+  }
+
+  stompClient.onStompError = function (frame) {
+  // Will be invoked in case of error encountered at Broker
+  // Bad login/passcode typically will cause an error
+  // Complaint brokers will set `message` header with a brief message. Body may contain details.
+  // Compliant brokers will terminate the connection after any error
+  console.log('Broker reported error: ' + frame.headers['message']);
+  console.log('Additional details: ' + frame.body);
+};
   useEffect(() => {
     //joinClassroom(roomId);
     function connect() {
+      // stompClient.
       stompClient.connect(
         {},
         (_) => {
           stompClient.subscribe(`/topic/chat/room/${roomId}`, (received) => {
-            const message = JSON.parse(received.body);
-            color(message);
+            // const message = JSON.parse(received.body);
+            // color(message);
+            console.log(received.body);
+            console.log("@subscribe");
           });
           stompClient.send(
             "/app/chat/message",
@@ -92,25 +143,26 @@ function Room() {
           if (reconnect++ <= 5) {
             setTimeout(() => {
               console.log("connection reconnect");
-              sockJS = new SockJS("http://localhost:8080/api/classroom/");
-              stompClient = Stomp.over(sockJS);
+              stompClient = Stomp.over((function () {
+                return new SockJS("http://localhost:8080/api/classroom/");
+              }));
               connect();
             }, 10 * 1000);
           }
         }
       );
+      console.log("@connect");
+      console.log(stompClient.connected);
     }
-    connect();
-    
+    //connect();
+    stompClient.activate();
+    getUsername();
   }, []);
 
   function color(message) {
     console.log(message);
-    copiedSeats = seats;
-    copiedSeats[10] = message.message;
-    setSeats(copiedSeats);
-    console.log(seats[10]);
-    //seats[10] = message.message;
+    seats[10].setState(message.message);
+    console.log(seats[10].value);
     // setSeats(seats.filter(seat => seat == ))
   }
 
@@ -122,8 +174,8 @@ function Room() {
       <NavBar mode="classroom" />
       <div className={styles.container}>
         <div className={styles.seats}>
-          {seats.map((item, index) => (
-            <Circle key={index} size="small" state={item} emoji="" />
+          {seats.map((seat, index) => (
+            <Circle key={index} size="small" state={seat.val} emoji="" />
           ))}
         </div>
       </div>
@@ -167,3 +219,11 @@ function Room() {
 }
 
 export default Room;
+
+
+// {
+//     "destination": "/app/chat/message",
+//     "headers": {},
+//     "body": "{\"type\":\"TALK\",\"roomId\":\"8\",\"sender\":\"sualee\",\"message\":\"green\"}",
+//     "skipContentLengthHeader": false
+// }

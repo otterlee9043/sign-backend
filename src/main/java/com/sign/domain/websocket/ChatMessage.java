@@ -1,12 +1,10 @@
 package com.sign.domain.websocket;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@ToString
 @RequiredArgsConstructor
 public class ChatMessage {
 
