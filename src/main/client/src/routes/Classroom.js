@@ -16,18 +16,19 @@ function Room() {
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
   const seats = new Array(40).fill({});
-  for (let i = 0; i < 40; i ++) {
+  for (let i = 0; i < 40; i++) {
     const result = useState("empty");
     seats[i] = {
       value: result[0],
       setState: result[1]
     };
-    //console.log(seat.fn);
+    console.log(seats[i]);
   }
 
   let stompClient = Stomp.over(function () {
     return new SockJS("http://localhost:8080/api/classroom/");
   });
+
   const joinClassroom = async (roomId) => {
     const opts = {
       method: "POST",
@@ -64,103 +65,84 @@ function Room() {
       const data = await response.text();
       if (username === "expired") setUsername("");
       else setUsername(data);
-      console.log("This came from the backend", username);
+      // console.log("This came from the backend", username);
     } catch (error) {
       console.error("There has been an error login", error);
     }
   }
 
   const selectColor = (color) => {
-    console.log(stompClient);
-    console.log(stompClient.connected)
-    console.log(color);
+    console.log(stompClient.connected);
     console.log({ type: "TALK", roomId: roomId, sender: username, message: color });
-    // stompClient.send(
-    //   "/app/chat/message",
-    //   {},
-    //   JSON.stringify({ type: "TALK", roomId: roomId, sender: username, message: color })
-    // );
-    stompClient.publish({
-      destination: "/app/chat/message",
-      body: JSON.stringify({ type: "TALK", roomId: roomId, sender: username, message: color })
-    });
+    stompClient.activate();
+    stompClient.send(
+      "/app/chat/message",
+      {},
+      JSON.stringify({ type: "TALK", roomId: roomId, sender: username, message: color })
+    );
+
   }
   let reconnect = 0;
 
   stompClient.onConnect = (_) => {
+    console.log("onConnect");
     stompClient.subscribe(`/topic/chat/room/${roomId}`, (received) => {
-      // const message = JSON.parse(received.body);
-      // color(message);
-      console.log(received.body);
-      console.log("@onConnect");
-      
-      console.log(stompClient);
-      // stompClient.publish
+      // console.log(received.body);
+      // console.log("@subscribe");
+      // console.log(stompClient.connected);
+      // color(received.body);
     });
     stompClient.send(
       "/app/chat/message",
       {},
       JSON.stringify({ type: "ENTER", roomId: roomId, sender: username })
     );
-    console.log(stompClient.connected);
   };
-  stompClient.onChangeState = () => {
+
+  stompClient.onChangeState = (state) => {
     console.log("something changed!");
+    console.log(state);
   }
 
   stompClient.onDisconnect = () => {
     console.log("disconnect");
   }
 
-  stompClient.onStompError = function (frame) {
-  // Will be invoked in case of error encountered at Broker
-  // Bad login/passcode typically will cause an error
-  // Complaint brokers will set `message` header with a brief message. Body may contain details.
-  // Compliant brokers will terminate the connection after any error
-  console.log('Broker reported error: ' + frame.headers['message']);
-  console.log('Additional details: ' + frame.body);
-};
+  stompClient.onWebSocketClose = () => {
+    console.log("close");
+  }
+  stompClient.onWebSocketError = () => {
+    console.log("onWebSocketError");
+  }
+
+  stompClient.onStompError = (frame) => {
+      console.log('Broker reported error: ' + frame.headers['message']);
+      console.log('Additional details: ' + frame.body);
+  };
+  
+
+  //
   useEffect(() => {
-    //joinClassroom(roomId);
-    function connect() {
-      // stompClient.
-      stompClient.connect(
-        {},
-        (_) => {
-          stompClient.subscribe(`/topic/chat/room/${roomId}`, (received) => {
-            // const message = JSON.parse(received.body);
-            // color(message);
-            console.log(received.body);
-            console.log("@subscribe");
-          });
-          stompClient.send(
-            "/app/chat/message",
-            {},
-            JSON.stringify({ type: "ENTER", roomId: roomId, sender: username })
-          );
-        },
-        (error) => {
-          if (reconnect++ <= 5) {
-            setTimeout(() => {
-              console.log("connection reconnect");
-              stompClient = Stomp.over((function () {
-                return new SockJS("http://localhost:8080/api/classroom/");
-              }));
-              connect();
-            }, 10 * 1000);
-          }
-        }
-      );
-      console.log("@connect");
-      console.log(stompClient.connected);
-    }
-    //connect();
-    stompClient.activate();
     getUsername();
+      // stompClient.activate();
+    //stompClient.connect();
+    stompClient.connect(
+    {},
+    (_) => {
+      console.log("connect");
+      stompClient.subscribe(`/topic/chat/room/${roomId}`, (received) => {
+        color(received.body);
+      });
+      stompClient.send(
+        "/app/chat/message",
+        {},
+        JSON.stringify({ type: "ENTER", roomId: roomId, sender: username })
+      );
+    });
   }, []);
 
   function color(message) {
-    console.log(message);
+    console.log("message.message :", message.message);
     seats[10].setState(message.message);
     console.log(seats[10].value);
     // setSeats(seats.filter(seat => seat == ))
@@ -186,36 +168,9 @@ function Room() {
           </span>
         ))}
       </div>
+      <span onClick={() => stompClient.disconnect()}>disconnect</span>
     </div>
   );
-  // return (
-  //   <div className="card">
-  //     <form onSubmit={onMessageSubmit}>
-  //       <h1>Message</h1>
-  //       <div>
-  //         <textarea
-  //           name="message"
-  //           onChange={(e) => onTextChange(e)}
-  //           value={message}
-  //           id="outlined-multiline-static"
-  //           variant="outlined"
-  //           label="Message"
-  //         />
-  //       </div>
-  //       <button type="submit">Send Message</button>
-  //     </form>
-  //     <div className="render-chat">
-  //       <h1>Chat log</h1>
-  //       {chat.map(({ message }, index) => (
-  //         <div key={index}>
-  //           <h3>
-  //             <span>{message}</span>
-  //           </h3>
-  //         </div>
-  //       ))}
-  //     </div>
-  //   </div>
-  // );
 }
 
 export default Room;
