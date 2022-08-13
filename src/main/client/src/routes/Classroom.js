@@ -16,30 +16,53 @@ function Room() {
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
   let seats = new Array(40).fill({});
-  // let stompClient = Stomp.over(function () {
-  //   console.log("Stomp.over");
-  //   return new SockJS("http://localhost:8080/api/classroom/");
-  // });
-  let stompClient = new Client({
-    brokerURL: "ws://localhost:3000/ws",
-    webSocketFactory: function () {
-      console.log("Stomp.over");
-      return new SockJS("http://localhost:8080/api/classroom/");
-    },
-  });
-
-  // let stompClient = Stomp.over(sockJS);
-
-  // let stompClient = Stomp.client("ws://localhost:8080/api/classroom/");
-  stompClient.debug = () => {};
   for (let i = 0; i < 40; i++) {
     const result = useState("empty");
     seats[i] = {
       value: result[0],
       setState: result[1],
     };
-    // console.log(seats[i]);
   }
+
+  let stompClient = new Client({
+    brokerURL: "ws://localhost:3000/ws",
+    webSocketFactory: function () {
+      console.log("Stomp.over");
+      return new SockJS("http://localhost:8080/api/classroom/");
+    },
+    onConnect: (_) => {
+      console.log("======== onConnect");
+
+      stompClient.subscribe(`/topic/chat/room/${roomId}`, (received) => {
+        console.log(received.body);
+        const parsedMsg = JSON.parse(received.body);
+        if (parsedMsg.type == "TALK") color(parsedMsg.message);
+      });
+      stompClient.publish({
+        destination: "/app/chat/message",
+        body: JSON.stringify({ type: "ENTER", roomId: roomId, sender: username }),
+      });
+    },
+    onChangeState: (state) => {
+      console.log("something changed!");
+      console.log(state);
+    },
+    onDisconnect: () => {
+      console.log("disconnect");
+    },
+    onWebSocketClose: () => {
+      console.log("close");
+    },
+    debug: () => {},
+    onWebSocketError: () => {
+      console.log("onWebSocketError");
+    },
+    onStompError: (frame) => {
+      console.log("Broker reported error: " + frame.headers["message"]);
+      console.log("Additional details: " + frame.body);
+    },
+    reconnectDelay: 100000,
+  });
 
   function color(receivedColor) {
     seats[10].setState(receivedColor);
@@ -77,45 +100,6 @@ function Room() {
   useEffect(() => {
     getUsername();
     let reconnect = 0;
-
-    stompClient.onConnect = (_) => {
-      console.log("======== onConnect");
-      stompClient.subscribe(`/topic/chat/room/${roomId}`, (received) => {
-        console.log(received.body);
-        const parsedMsg = JSON.parse(received.body);
-        if (parsedMsg.type == "TALK") color(parsedMsg.message);
-      });
-      // stompClient.
-      stompClient.publish({
-        destination: "/app/chat/message",
-        body: JSON.stringify({ type: "ENTER", roomId: roomId, sender: username }),
-      });
-    };
-
-    stompClient.onChangeState = (state) => {
-      console.log("something changed!");
-      console.log(state);
-    };
-
-    stompClient.onDisconnect = () => {
-      console.log("disconnect");
-    };
-
-    stompClient.on;
-
-    stompClient.onWebSocketClose = () => {
-      console.log("close");
-    };
-    stompClient.onWebSocketError = () => {
-      console.log("onWebSocketError");
-    };
-
-    stompClient.onStompError = (frame) => {
-      console.log("Broker reported error: " + frame.headers["message"]);
-      console.log("Additional details: " + frame.body);
-    };
-
-    // stompClient.reconnectDelay = 10000;
 
     stompClient.activate();
   }, []);
