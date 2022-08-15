@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -42,7 +43,7 @@ public class ClassroomController {
 
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = "/api/classrooms")
+    @GetMapping("/api/classrooms")
     public Set<Classroom> joiningRooms(@AuthenticationPrincipal LoginMember loginMember){
         Member member = memberService.findMember(loginMember.getMember().getId()).get();
         Set<Classroom> joiningRooms = classroomService.findJoiningRooms(member);
@@ -51,7 +52,7 @@ public class ClassroomController {
 
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("/api/classrooms/{roomId}/join")
+    @PostMapping("/api/classroom/{roomId}/join")
     public String join(@PathVariable Long roomId, @AuthenticationPrincipal LoginMember loginMember){
         Optional<Classroom> classroomOptional = classroomService.findRoomByRoomId(roomId);
         if (classroomOptional.isEmpty()){
@@ -63,7 +64,7 @@ public class ClassroomController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/api/classrooms/{roomId}")
+    @GetMapping("/api/classroom/{roomId}")
     public String enter(@PathVariable Long roomId, @AuthenticationPrincipal LoginMember loginMember){
         Optional<Classroom> classroomOptional = classroomService.findRoomByRoomId(roomId);
         if (classroomOptional.isEmpty()){
@@ -78,5 +79,16 @@ public class ClassroomController {
         }
     }
 
-
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/api/classrooms/{roomCode}")
+    public String findRoomByCode(@PathVariable String roomCode) {
+        Optional<Classroom> room = classroomService.findRoomByRoomCode(roomCode);
+        log.info("findRoomByCode");
+        if (room.isEmpty()) {
+            return "no room";
+        } else {
+            log.info("room.get().getId().toString():", room.get().getId().toString());
+            return room.get().getId().toString();
+        }
+    }
 }

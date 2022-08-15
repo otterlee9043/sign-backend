@@ -5,21 +5,37 @@ import styles from "./EnterRoom.module.css";
 
 function EnterRoom() {
   const [roomcode, setRoomcode] = useState("");
-  const [roomname, setRoomname] = useState("");
   const navigate = useNavigate();
   const [errorMsg, setMessage] = useState("");
+  const findRoomByRoomcode = async () => {
+    try {
+      const response = await fetch(`/api/classrooms/${roomcode}`);
+      const result = await response.text();
+      if (result === "no room") {
+        window.location.reload();
+        return;
+      }
+      return result;
+    } catch (error) {
+      console.error("There has been error while getting room Id", error);
+      return;
+    }
+  };
+
   const enterRoom = async () => {
+    const roomId = await findRoomByRoomcode();
     const opts = {
       method: "POST",
       body: JSON.stringify({
-        roomcode: roomcode,
+        roomCode: roomcode,
       }),
       headers: new Headers({
         "content-type": "application/json",
       }),
     };
+
     try {
-      const response = await fetch("/api/enterroom", opts);
+      const response = await fetch(`/api/classroom/${roomId}/join`, opts);
       if (response.status !== 200) {
         alert("There has been some errors.");
         return false;
@@ -41,11 +57,9 @@ function EnterRoom() {
   return (
     <div className={styles.container}>
       <div>
-        {errorMsg == "" ? null : (
-          <div className={styles.errorMsg}>{errorMsg}</div>
-        )}
+        {errorMsg == "" ? null : <div className={styles.errorMsg}>{errorMsg}</div>}
         <p className={styles.label}>입장 코드</p>
-        <input type="text"></input>
+        <input type="text" onChange={(event) => setRoomcode(event.target.value)}></input>
         <StyledButton text="방 참가" handler={enterRoom} />
       </div>
     </div>

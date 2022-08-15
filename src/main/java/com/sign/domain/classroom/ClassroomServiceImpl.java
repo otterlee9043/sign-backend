@@ -10,8 +10,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
@@ -21,7 +23,7 @@ public class ClassroomServiceImpl implements ClassroomService{
 
     private final MemberRepository memberRepository;
     private final ClassroomRepository classroomRepository;
-
+    private Map<String, Map<String, String>> lastState = new ConcurrentHashMap<>();
 
     @Override
     public Optional<Classroom> findRoomByRoomCode(String roomCode) {
@@ -72,9 +74,10 @@ public class ClassroomServiceImpl implements ClassroomService{
 //            member.addJoiningRoom(classroom);
 //            memberRepository.save(member);
 //        }
-        member.addJoiningRoom(classroom);
-        log.info("member.getJoiningRooms: {}",member.getJoiningRooms());
-        memberRepository.save(member);
+        Member memberToJoin = memberRepository.findById(member.getId()).get();
+        memberToJoin.addJoiningRoom(classroom);
+        log.info("member.getJoiningRooms: {}",memberToJoin.getJoiningRooms());
+        memberRepository.save(memberToJoin);
         return classroom;
     }
 

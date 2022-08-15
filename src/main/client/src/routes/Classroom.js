@@ -13,6 +13,7 @@ import { StarPurple500 } from "@mui/icons-material";
 function Room() {
   const params = useParams();
   const [username, setUsername] = useState("");
+  const [connected, setConnected] = useState(false);
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
   let seats = new Array(40).fill({});
@@ -23,25 +24,30 @@ function Room() {
       setState: result[1],
     };
   }
+  let subscription = false;
 
   let stompClient = new Client({
     brokerURL: "ws://localhost:3000/ws",
     webSocketFactory: function () {
       console.log("Stomp.over");
-      return new SockJS("http://localhost:8080/api/classroom/");
+      return new SockJS("http://localhost:8080/ws");
     },
     onConnect: (_) => {
       console.log("======== onConnect");
-
-      stompClient.subscribe(`/topic/chat/room/${roomId}`, (received) => {
-        console.log(received.body);
-        const parsedMsg = JSON.parse(received.body);
-        if (parsedMsg.type == "TALK") color(parsedMsg.message);
-      });
-      stompClient.publish({
-        destination: "/app/chat/message",
-        body: JSON.stringify({ type: "ENTER", roomId: roomId, sender: username }),
-      });
+      if (!connected) {
+        stompClient.subscribe(`/topic/chat/room/${roomId}`, (received) => {
+          console.log(received.body);
+          const parsedMsg = JSON.parse(received.body);
+          if (parsedMsg.type == "TALK") color(parsedMsg.message);
+          // subscription = true;
+          setConnected(true);
+          console.log("connected: ", connected);
+        });
+        stompClient.publish({
+          destination: "/app/chat/message",
+          body: JSON.stringify({ type: "ENTER", roomId: roomId, sender: username }),
+        });
+      }
     },
     onChangeState: (state) => {
       console.log("something changed!");
@@ -88,7 +94,7 @@ function Room() {
 
   const selectColor = (color) => {
     // console.log({ type: "TALK", roomId: roomId, sender: username, message: color });
-    stompClient.activate();
+    // stompClient.activate();
     console.log(stompClient.connected);
     stompClient.publish({
       destination: "/app/chat/message",
@@ -100,10 +106,12 @@ function Room() {
   useEffect(() => {
     getUsername();
     let reconnect = 0;
-
-    stompClient.activate();
   }, []);
 
+  useEffect(() => {
+    stompClient.activate();
+    console.log("activate in useEffect");
+  }, [stompClient]);
   return (
     <div>
       <NavBar mode="classroom" />
