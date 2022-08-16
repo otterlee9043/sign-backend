@@ -4,11 +4,13 @@ import NavBar from "../components/NavBar.js";
 import Circle from "../components/Circle.js";
 import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
+import { over } from "stompjs";
 import { Stomp, Client } from "@stomp/stompjs";
 import { StarPurple500 } from "@mui/icons-material";
 // import io from "socket.io-client";
 // import TextField from "@material-ui/core/TextField";
 // import { withStyles } from "@material-ui/core/styles";
+let stompClient = null;
 
 function Room() {
   const params = useParams();
@@ -26,49 +28,73 @@ function Room() {
   }
   let subscription = false;
 
-  let stompClient = new Client({
-    brokerURL: "ws://localhost:3000/ws",
-    webSocketFactory: function () {
-      console.log("Stomp.over");
-      return new SockJS("http://localhost:8080/ws");
-    },
-    onConnect: (_) => {
-      console.log("======== onConnect");
-      if (!connected) {
-        stompClient.subscribe(`/topic/chat/room/${roomId}`, (received) => {
-          console.log(received.body);
-          const parsedMsg = JSON.parse(received.body);
-          if (parsedMsg.type == "TALK") color(parsedMsg.message);
-          // subscription = true;
-          setConnected(true);
-          console.log("connected: ", connected);
-        });
-        stompClient.publish({
-          destination: "/app/chat/message",
-          body: JSON.stringify({ type: "ENTER", roomId: roomId, sender: username }),
-        });
-      }
-    },
-    onChangeState: (state) => {
-      console.log("something changed!");
-      console.log(state);
-    },
-    onDisconnect: () => {
-      console.log("disconnect");
-    },
-    onWebSocketClose: () => {
-      console.log("close");
-    },
-    debug: () => {},
-    onWebSocketError: () => {
-      console.log("onWebSocketError");
-    },
-    onStompError: (frame) => {
-      console.log("Broker reported error: " + frame.headers["message"]);
-      console.log("Additional details: " + frame.body);
-    },
-    reconnectDelay: 100000,
-  });
+  const connect = async () => {
+    let Sock = new SockJS("http://localhost:8080/ws");
+    stompClient = over(Sock);
+  };
+
+  const onConnected = () => {
+    stompClient.subscribe(`/topic/chat/room/${roomId}`, onMessageReceived);
+    stompClient.send(
+      "/app/chat/message",
+      {},
+      JSON.stringify({ type: "ENTER", roomId: roomId, sender: username })
+    );
+  };
+
+  const onMessageReceived = (received) => {
+    console.log(received.body);
+    const parsedMsg = JSON.parse(received.body);
+    if (parsedMsg.type == "TALK") color(parsedMsg.message);
+  };
+
+  const onError = (err) => {
+    console.log(err);
+  };
+
+  // stompClient = new Client({
+  //   brokerURL: "ws://localhost:3000/ws",
+  //   webSocketFactory: function () {
+  //     console.log("Stomp.over");
+  //     return new SockJS("http://localhost:8080/ws");
+  //   },
+  //   onConnect: (_) => {
+  //     console.log("======== onConnect");
+  //     if (!connected) {
+  //       stompClient.subscribe(`/topic/chat/room/${roomId}`, (received) => {
+  //         console.log(received.body);
+  //         const parsedMsg = JSON.parse(received.body);
+  //         if (parsedMsg.type == "TALK") color(parsedMsg.message);
+  //         // subscription = true;
+  //         setConnected(true);
+  //         console.log("connected: ", connected);
+  //       });
+  //       stompClient.publish({
+  //         destination: "/app/chat/message",
+  //         body: JSON.stringify({ type: "ENTER", roomId: roomId, sender: username }),
+  //       });
+  //     }
+  //   },
+  //   onChangeState: (state) => {
+  //     console.log("something changed!");
+  //     console.log(state);
+  //   },
+  //   onDisconnect: () => {
+  //     console.log("disconnect");
+  //   },
+  //   onWebSocketClose: () => {
+  //     console.log("close");
+  //   },
+  //   debug: () => {},
+  //   onWebSocketError: () => {
+  //     console.log("onWebSocketError");
+  //   },
+  //   onStompError: (frame) => {
+  //     console.log("Broker reported error: " + frame.headers["message"]);
+  //     console.log("Additional details: " + frame.body);
+  //   },
+  //   reconnectDelay: 100000,
+  // });
 
   function color(receivedColor) {
     seats[10].setState(receivedColor);
@@ -96,22 +122,28 @@ function Room() {
     // console.log({ type: "TALK", roomId: roomId, sender: username, message: color });
     // stompClient.activate();
     console.log(stompClient.connected);
-    stompClient.publish({
-      destination: "/app/chat/message",
-      body: JSON.stringify({ type: "TALK", roomId: roomId, sender: username, message: color }),
-    });
+    // stompClient.publish({
+    //   destination: "/app/chat/message",
+    //   body: JSON.stringify({ type: "TALK", roomId: roomId, sender: username, message: color }),
+    // });
+    stompClient.send(
+      "/app/chat/message",
+      {},
+      JSON.stringify({ type: "TALK", roomId: roomId, sender: username, message: color })
+    );
   };
 
   //
   useEffect(() => {
     getUsername();
     let reconnect = 0;
+    connect().then(stompClient.connect({}, onConnected, onError));
   }, []);
 
-  useEffect(() => {
-    stompClient.activate();
-    console.log("activate in useEffect");
-  }, [stompClient]);
+  // useEffect(() => {
+  //   stompClient.activate();
+  //   console.log("activate in useEffect");
+  // }, [stompClient]);
   return (
     <div>
       <NavBar mode="classroom" />
