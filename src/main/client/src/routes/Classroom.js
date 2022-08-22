@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import { Stomp, Client } from "@stomp/stompjs";
-import { StarPurple500 } from "@mui/icons-material";
+import { ReportProblem, StarPurple500 } from "@mui/icons-material";
 // import io from "socket.io-client";
 // import TextField from "@material-ui/core/TextField";
 // import { withStyles } from "@material-ui/core/styles";
@@ -27,7 +27,6 @@ function Room() {
     };
   }
   let subscription = false;
-
   const connect = async () => {
     let Sock = new SockJS("http://localhost:8080/ws");
     stompClient = over(Sock);
@@ -37,13 +36,14 @@ function Room() {
     stompClient.subscribe(`/topic/chat/room/${roomId}`, onMessageReceived);
     stompClient.send(
       "/app/chat/message",
-      {},
+      { roomId: roomId },
       JSON.stringify({ type: "ENTER", roomId: roomId, sender: username })
     );
+    console.log(`=> sessionId: `, stompClient);
   };
 
   const onMessageReceived = (received) => {
-    console.log(received.body);
+    console.log(received);
     const parsedMsg = JSON.parse(received.body);
     if (parsedMsg.type == "TALK") color(parsedMsg.message);
   };
@@ -137,7 +137,9 @@ function Room() {
   useEffect(() => {
     getUsername();
     let reconnect = 0;
-    connect().then(stompClient.connect({}, onConnected, onError));
+    connect().then(() => {
+      stompClient.connect({ roomId: roomId }, onConnected, onError);
+    });
   }, []);
 
   // useEffect(() => {

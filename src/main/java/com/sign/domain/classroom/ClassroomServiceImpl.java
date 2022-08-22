@@ -23,8 +23,8 @@ public class ClassroomServiceImpl implements ClassroomService{
 
     private final MemberRepository memberRepository;
     private final ClassroomRepository classroomRepository;
-    private Map<String, Map<String, String>> lastState = new ConcurrentHashMap<>();
 
+    // roomId, sessionId, color
     @Override
     public Optional<Classroom> findRoomByRoomCode(String roomCode) {
         return classroomRepository.findByCode(roomCode);
