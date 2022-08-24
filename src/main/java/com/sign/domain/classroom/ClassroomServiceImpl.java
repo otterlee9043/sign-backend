@@ -3,6 +3,7 @@ package com.sign.domain.classroom;
 import com.sign.domain.member.LoginMember;
 import com.sign.domain.member.Member;
 import com.sign.domain.member.repository.MemberRepository;
+import com.sign.domain.websocket.ChatEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +24,7 @@ public class ClassroomServiceImpl implements ClassroomService{
 
     private final MemberRepository memberRepository;
     private final ClassroomRepository classroomRepository;
+    private final ChatEventListener chatEventListener;
 
     // roomId, sessionId, color
     @Override
@@ -68,12 +70,6 @@ public class ClassroomServiceImpl implements ClassroomService{
 
     @Override
     public Classroom joinRoom(Member member, Classroom classroom) {
-//        Optional<Classroom> result = classroomRepository.findByCode(roomCode);
-//        if (result.isPresent()){
-//            Classroom classroom = result.get();
-//            member.addJoiningRoom(classroom);
-//            memberRepository.save(member);
-//        }
         Member memberToJoin = memberRepository.findById(member.getId()).get();
         memberToJoin.addJoiningRoom(classroom);
         log.info("member.getJoiningRooms: {}",memberToJoin.getJoiningRooms());
@@ -95,4 +91,14 @@ public class ClassroomServiceImpl implements ClassroomService{
         classroomRepository.delete(classroom);
     }
 
+
+    @Override
+    public Map<Integer, String> getRoomStates(String roomId) {
+        return chatEventListener.getRoomStatesByRoomId(roomId);
+    }
+
+    @Override
+    public Integer getMySeatPosition(String roomId) {
+        return chatEventListener.getMySeatPosition(roomId);
+    }
 }

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -90,5 +91,18 @@ public class ClassroomController {
             log.info("room.get().getId().toString():", room.get().getId().toString());
             return room.get().getId().toString();
         }
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/api/classroom/{roomId}/states")
+    public Map<Integer, String> getCurrentRoomStates(@PathVariable String roomId) {
+        return classroomService.getRoomStates(roomId);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/api/classroom/{roomId}/mySeat")
+    public String getMyPosition(@PathVariable String roomId) {
+        log.info("classroomService.getMySeatPosition(roomId)={}", classroomService.getMySeatPosition(roomId));
+        return classroomService.getMySeatPosition(roomId).toString();
     }
 }

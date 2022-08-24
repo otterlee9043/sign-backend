@@ -26,7 +26,7 @@ function Room() {
       setState: result[1],
     };
   }
-  let subscription = false;
+
   const connect = async () => {
     let Sock = new SockJS("http://localhost:8080/ws");
     stompClient = over(Sock);
@@ -40,66 +40,23 @@ function Room() {
       JSON.stringify({ type: "ENTER", roomId: roomId, sender: username })
     );
     console.log(`=> sessionId: `, stompClient);
+    getCurrentState();
+    getMyPosition();
   };
 
   const onMessageReceived = (received) => {
     console.log(received);
     const parsedMsg = JSON.parse(received.body);
-    if (parsedMsg.type == "TALK") color(parsedMsg.message);
+    if (parsedMsg.type === "TALK") color(parsedMsg.message);
   };
 
   const onError = (err) => {
     console.log(err);
   };
 
-  // stompClient = new Client({
-  //   brokerURL: "ws://localhost:3000/ws",
-  //   webSocketFactory: function () {
-  //     console.log("Stomp.over");
-  //     return new SockJS("http://localhost:8080/ws");
-  //   },
-  //   onConnect: (_) => {
-  //     console.log("======== onConnect");
-  //     if (!connected) {
-  //       stompClient.subscribe(`/topic/chat/room/${roomId}`, (received) => {
-  //         console.log(received.body);
-  //         const parsedMsg = JSON.parse(received.body);
-  //         if (parsedMsg.type == "TALK") color(parsedMsg.message);
-  //         // subscription = true;
-  //         setConnected(true);
-  //         console.log("connected: ", connected);
-  //       });
-  //       stompClient.publish({
-  //         destination: "/app/chat/message",
-  //         body: JSON.stringify({ type: "ENTER", roomId: roomId, sender: username }),
-  //       });
-  //     }
-  //   },
-  //   onChangeState: (state) => {
-  //     console.log("something changed!");
-  //     console.log(state);
-  //   },
-  //   onDisconnect: () => {
-  //     console.log("disconnect");
-  //   },
-  //   onWebSocketClose: () => {
-  //     console.log("close");
-  //   },
-  //   debug: () => {},
-  //   onWebSocketError: () => {
-  //     console.log("onWebSocketError");
-  //   },
-  //   onStompError: (frame) => {
-  //     console.log("Broker reported error: " + frame.headers["message"]);
-  //     console.log("Additional details: " + frame.body);
-  //   },
-  //   reconnectDelay: 100000,
-  // });
-
   function color(receivedColor) {
     seats[10].setState(receivedColor);
     console.log(seats[10].value);
-    // setSeats(seats.filter(seat => seat == ))
   }
 
   const getUsername = async () => {
@@ -118,14 +75,42 @@ function Room() {
     }
   };
 
+  const getCurrentState = async () => {
+    try {
+      const response = await fetch(`/api/classroom/${roomId}/states`);
+      if (response.status !== 200) {
+        alert("There has been some errors.");
+        return false;
+      }
+      const data = await response.json();
+      console.log(data);
+      //if (username === "expired") setUsername("");
+      //else setUsername(data);
+      // console.log("This came from the backend", username);
+    } catch (error) {
+      console.error("There has been an error login", error);
+    }
+  };
+
+  const getMyPosition = async () => {
+    try {
+      const response = await fetch(`/api/classroom/${roomId}/mySeat`);
+      if (response.status !== 200) {
+        alert("There has been some errors.");
+        return false;
+      }
+      const data = await response.text();
+      console.log(data);
+      //if (username === "expired") setUsername("");
+      //else setUsername(data);
+      // console.log("This came from the backend", username);
+    } catch (error) {
+      console.error("There has been an error login", error);
+    }
+  };
+
   const selectColor = (color) => {
-    // console.log({ type: "TALK", roomId: roomId, sender: username, message: color });
-    // stompClient.activate();
     console.log(stompClient.connected);
-    // stompClient.publish({
-    //   destination: "/app/chat/message",
-    //   body: JSON.stringify({ type: "TALK", roomId: roomId, sender: username, message: color }),
-    // });
     stompClient.send(
       "/app/chat/message",
       {},
@@ -142,10 +127,6 @@ function Room() {
     });
   }, []);
 
-  // useEffect(() => {
-  //   stompClient.activate();
-  //   console.log("activate in useEffect");
-  // }, [stompClient]);
   return (
     <div>
       <NavBar mode="classroom" />
