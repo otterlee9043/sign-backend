@@ -101,8 +101,8 @@ public class ClassroomController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/api/classroom/{roomId}/mySeat")
-    public String getMyPosition(@PathVariable String roomId) {
-        log.info("classroomService.getMySeatPosition(roomId)={}", classroomService.getMySeatPosition(roomId));
-        return classroomService.getMySeatPosition(roomId).toString();
+    public String getMyPosition(@PathVariable String roomId, @AuthenticationPrincipal LoginMember loginMember) {
+        log.info("classroomService.getMySeatPosition(roomId, loginMember.getUsername()).toString()={}", classroomService.getMySeatPosition(roomId, loginMember.getUsername()).toString());
+        return classroomService.getMySeatPosition(roomId, loginMember.getUsername()).toString();
     }
 }

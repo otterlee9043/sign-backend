@@ -31,5 +31,5 @@ public interface ClassroomService {
 
     Map<Integer, String> getRoomStates(String roomId);
 
-    Integer getMySeatPosition(String roomId);
+    Integer getMySeatPosition(String roomId, String username);
 }

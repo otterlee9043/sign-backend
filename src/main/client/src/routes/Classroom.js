@@ -5,17 +5,14 @@ import Circle from "../components/Circle.js";
 import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
-import { Stomp, Client } from "@stomp/stompjs";
-import { ReportProblem, StarPurple500 } from "@mui/icons-material";
-// import io from "socket.io-client";
-// import TextField from "@material-ui/core/TextField";
-// import { withStyles } from "@material-ui/core/styles";
+
 let stompClient = null;
 
 function Room() {
   const params = useParams();
   const [username, setUsername] = useState("");
-  const [connected, setConnected] = useState(false);
+  const [seatNum, setSeatNum] = useState();
+
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
   let seats = new Array(40).fill({});
@@ -47,7 +44,7 @@ function Room() {
   const onMessageReceived = (received) => {
     console.log(received);
     const parsedMsg = JSON.parse(received.body);
-    if (parsedMsg.type === "TALK") color(parsedMsg.message);
+    if (parsedMsg.type === "TALK") color(parsedMsg.message, seatNum);
   };
 
   const onError = (err) => {
@@ -84,9 +81,6 @@ function Room() {
       }
       const data = await response.json();
       console.log(data);
-      //if (username === "expired") setUsername("");
-      //else setUsername(data);
-      // console.log("This came from the backend", username);
     } catch (error) {
       console.error("There has been an error login", error);
     }
@@ -101,9 +95,7 @@ function Room() {
       }
       const data = await response.text();
       console.log(data);
-      //if (username === "expired") setUsername("");
-      //else setUsername(data);
-      // console.log("This came from the backend", username);
+      setSeatNum(parseInt(data));
     } catch (error) {
       console.error("There has been an error login", error);
     }
@@ -123,9 +115,17 @@ function Room() {
     getUsername();
     let reconnect = 0;
     connect().then(() => {
-      stompClient.connect({ roomId: roomId }, onConnected, onError);
+      stompClient.connect({ roomId: roomId, username: username }, onConnected, onError);
     });
   }, []);
+
+  const indicateMyself = () => {
+    /**
+     * TODO 내가 위치한 곳에 I 그리기
+     */
+  };
+
+  useEffect(() => {}, [seatNum]);
 
   return (
     <div>

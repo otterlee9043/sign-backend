@@ -33,20 +33,21 @@ public class ChatEventListener {
     public void handleWebSocketConnectListener(SessionConnectedEvent event){
         log.info(">>> connected: {}", event);
 
-        String roomId = getRoomId(event);
-        String sessionId = getSessionId();
+        Map nativeHeaders = getNativeHeaders(event);
+        String roomId = getHeaderValue(nativeHeaders, "roomId");
+        String username = getHeaderValue(nativeHeaders, "username");
 
         if(connectedUser.containsKey(roomId)){
             //방에 무조건 차례대로 앉게 하는 경우
             Map seatInfo = connectedUser.get(roomId);
-            seatInfo.put(sessionId, seatInfo.size());
+            seatInfo.put(username, seatInfo.size());
 
             Map colorInfo = lastState.get(roomId);
             colorInfo.put(seatInfo.size(), "empty");
         } else {
             //방에 첫번째로 접속하는 경우
             Map seatInfo = new ConcurrentHashMap<>();
-            seatInfo.put(sessionId, 0);
+            seatInfo.put(username, 0);
             connectedUser.put(roomId, seatInfo);
 
             Map colorInfo = new ConcurrentHashMap<>();
@@ -75,18 +76,21 @@ public class ChatEventListener {
         return sessionId;
     }
 
-    private String getRoomId(SessionConnectedEvent event) {
+
+    private String getHeaderValue(Map nativeHeaders, String headerName) {
+        return (String)((List) nativeHeaders.get(headerName)).get(0);
+    }
+
+    private Map getNativeHeaders(SessionConnectedEvent event) {
         MessageHeaderAccessor accessor = NativeMessageHeaderAccessor.getAccessor(event.getMessage(), SimpMessageHeaderAccessor.class);
         GenericMessage generic = (GenericMessage) accessor.getHeader("simpConnectMessage");
         Map nativeHeaders = (Map) generic.getHeaders().get("nativeHeaders");
-        String roomId = (String)((List) nativeHeaders.get("roomId")).get(0);
-        return roomId;
+        return nativeHeaders;
     }
 
-    public Integer getMySeatPosition(String roomId) {
-        String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
-        log.info("sessionId by RequestContextHolder={}", sessionId);
-        return connectedUser.get(roomId).get(sessionId);
+    public Integer getMySeatPosition(String roomId, String username) {
+        log.info("connectedUser={}", connectedUser);
+        return connectedUser.get(roomId).get(username);
     }
 
     public void color(String roomId, String sessionId, String color){
