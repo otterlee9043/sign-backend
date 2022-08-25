@@ -4,6 +4,7 @@ import com.sign.domain.member.LoginMember;
 import com.sign.domain.member.Member;
 import com.sign.domain.member.MemberSecurityService;
 import com.sign.domain.member.MemberService;
+import com.sign.domain.websocket.SeatInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -104,5 +105,14 @@ public class ClassroomController {
     public String getMyPosition(@PathVariable String roomId, @AuthenticationPrincipal LoginMember loginMember) {
         log.info("classroomService.getMySeatPosition(roomId, loginMember.getUsername()).toString()={}", classroomService.getMySeatPosition(roomId, loginMember.getUsername()).toString());
         return classroomService.getMySeatPosition(roomId, loginMember.getUsername()).toString();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/api/classroom/{roomId}/seatInfo")
+    public SeatInfo getClassroomInfo(@PathVariable String roomId, @AuthenticationPrincipal LoginMember loginMember){
+        SeatInfo seatInfo = new SeatInfo();
+        seatInfo.setClassRoomStates(classroomService.getRoomStates(roomId));
+        seatInfo.setSeatNum(classroomService.getMySeatPosition(roomId, loginMember.getUsername()));
+        return seatInfo;
     }
 }

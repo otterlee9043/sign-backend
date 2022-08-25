@@ -112,10 +112,10 @@ function Room() {
 
   //
   useEffect(() => {
-    getUsername();
-    let reconnect = 0;
-    connect().then(() => {
-      stompClient.connect({ roomId: roomId, username: username }, onConnected, onError);
+    getUsername().then(() => {
+      connect().then(() => {
+        stompClient.connect({ roomId: roomId, username: username }, onConnected, onError);
+      });
     });
   }, []);
 
