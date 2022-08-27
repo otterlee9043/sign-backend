@@ -3,11 +3,12 @@ import { Context } from "../store/appContext";
 import { useContext, useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function LoginBar() {
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
-  const logout = async () => {
+  const logout2 = async () => {
     const opts = {
       method: "POST",
     };
@@ -22,6 +23,10 @@ function LoginBar() {
       console.error("There has been an error login", error);
     }
   };
+
+  const logout = async () => {
+    axios.post("/api/member/logout")
+  }
 
   useEffect(() => {
     async function getUser(){
