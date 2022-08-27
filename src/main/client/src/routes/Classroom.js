@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./Classroom.module.css";
 import NavBar from "../components/NavBar.js";
 import Circle from "../components/Circle.js";
 import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
-import axios from 'axios';
+import axios from "axios";
 
 let stompClient = null;
 
@@ -17,13 +17,13 @@ function Room() {
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
   let seats = new Array(40).fill({});
-  // for (let i = 0; i < 40; i++) {
-  //   const result = useState("empty");
-  //   seats[i] = {
-  //     value: result[0],
-  //     setState: result[1],
-  //   };
-  // }
+  for (let i = 0; i < 40; i++) {
+    const result = useState("empty");
+    seats[i] = {
+      value: result[0],
+      setState: result[1],
+    };
+  }
 
   const connect = async () => {
     let Sock = new SockJS("http://localhost:8080/ws");
@@ -57,39 +57,6 @@ function Room() {
   //   console.log(seats[10].value);
   // }
 
-
-  const getUsername = async () => {
-    axios.get("/api/member/username")
-    .then(res => {
-      if (res.status !== 200) {
-        alert("There has been some errors.");
-      }
-      if (username === "expired") setUsername("");
-      else setUsername(res.data);
-      console.log("username is set");
-    }).catch(err => {
-      console.error("There has been an error login", err);
-    });
-  }
-
-
-
-
-  const getSeatInfo = async () => {
-    axios.get(`/api/classroom/${roomId}/seatInfo`)
-    .then(res => {
-      const seatInfo = res.data;
-      console.log(seatInfo);
-      setMySeat(parseInt(seatInfo.seatNum));
-      for (let seat in seatInfo.classRoomStates){
-        console.log(seat);
-      }
-    })
-    .catch(err => {
-      console.log(err);
-    });
-  }
-
   const selectColor = (color) => {
     console.log(stompClient.connected);
     stompClient.send(
@@ -99,14 +66,47 @@ function Room() {
     );
   };
 
+  const getUsername = async () => {
+    axios
+      .get("/api/member/username")
+      .then((res) => {
+        if (res.status !== 200) {
+          alert("There has been some errors.");
+        }
+        if (username === "expired") setUsername("");
+        else setUsername(res.data);
+        console.log("username is set");
+      })
+      .catch((err) => {
+        console.error("There has been an error login", err);
+      });
+  };
+
+  const getSeatInfo = async () => {
+    axios
+      .get(`/api/classroom/${roomId}/seatInfo`)
+      .then((res) => {
+        const seatInfo = res.data;
+        console.log(seatInfo);
+        setMySeat(parseInt(seatInfo.seatNum));
+        // for (let seat in seatInfo.classRoomStates) {
+        //   console.log(seat);
+        // }
+        console.log(seatInfo.classRoomStates);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   //
   useEffect(() => {
     getUsername().then(() => {
       connect().then(() => {
         getSeatInfo();
+        console.log("username before connect ", username);
         stompClient.connect({ roomId: roomId, username: username }, onConnected, onError);
       });
-      
     });
   }, []);
 
@@ -115,8 +115,6 @@ function Room() {
      * TODO 내가 위치한 곳에 I 그리기
      */
   };
-
-  useEffect(() => {}, [mySeat]);
 
   return (
     <div>
@@ -141,3 +139,4 @@ function Room() {
 }
 
 export default Room;
+//https://devsoyoung.github.io/posts/react-usestate-double-invoked/
