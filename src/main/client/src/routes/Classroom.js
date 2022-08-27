@@ -17,13 +17,13 @@ function Room() {
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
   let seats = new Array(40).fill({});
-  for (let i = 0; i < 40; i++) {
-    const result = useState("empty");
-    seats[i] = {
-      value: result[0],
-      setState: result[1],
-    };
-  }
+  // for (let i = 0; i < 40; i++) {
+  //   const result = useState("empty");
+  //   seats[i] = {
+  //     value: result[0],
+  //     setState: result[1],
+  //   };
+  // }
 
   const connect = async () => {
     let Sock = new SockJS("http://localhost:8080/ws");
@@ -66,21 +66,7 @@ function Room() {
     );
   };
 
-  const getUsername = async () => {
-    axios
-      .get("/api/member/username")
-      .then((res) => {
-        if (res.status !== 200) {
-          alert("There has been some errors.");
-        }
-        if (username === "expired") setUsername("");
-        else setUsername(res.data);
-        console.log("username is set");
-      })
-      .catch((err) => {
-        console.error("There has been an error login", err);
-      });
-  };
+  
 
   const getSeatInfo = async () => {
     axios
@@ -99,15 +85,30 @@ function Room() {
       });
   };
 
-  //
+
   useEffect(() => {
-    getUsername().then(() => {
-      connect().then(() => {
-        getSeatInfo();
-        console.log("username before connect ", username);
-        stompClient.connect({ roomId: roomId, username: username }, onConnected, onError);
-      });
-    });
+    const getUsername = async () => {
+      axios
+        .get("/api/member/username")
+        .then((res) => {
+          if (res.status !== 200) {
+            alert("There has been some errors.");
+          }
+          if (username === "expired") setUsername("");
+          else setUsername(res.data);
+          connect()
+          .then(() => {
+            getSeatInfo();
+            stompClient.connect({ roomId: roomId, username: res.data }, onConnected, onError);
+          })
+        })
+        .catch((err) => {
+          console.error("There has been an error login", err);
+        });
+    };
+
+    getUsername();
+
   }, []);
 
   const indicateMyself = () => {
