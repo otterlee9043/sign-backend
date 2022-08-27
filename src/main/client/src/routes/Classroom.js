@@ -5,24 +5,25 @@ import Circle from "../components/Circle.js";
 import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
+import axios from 'axios';
 
 let stompClient = null;
 
 function Room() {
   const params = useParams();
   const [username, setUsername] = useState("");
-  const [seatNum, setSeatNum] = useState();
+  const [mySeat, setMySeat] = useState();
 
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
   let seats = new Array(40).fill({});
-  for (let i = 0; i < 40; i++) {
-    const result = useState("empty");
-    seats[i] = {
-      value: result[0],
-      setState: result[1],
-    };
-  }
+  // for (let i = 0; i < 40; i++) {
+  //   const result = useState("empty");
+  //   seats[i] = {
+  //     value: result[0],
+  //     setState: result[1],
+  //   };
+  // }
 
   const connect = async () => {
     let Sock = new SockJS("http://localhost:8080/ws");
@@ -37,69 +38,57 @@ function Room() {
       JSON.stringify({ type: "ENTER", roomId: roomId, sender: username })
     );
     console.log(`=> sessionId: `, stompClient);
-    getCurrentState();
-    getMyPosition();
+    // getCurrentState();
+    // getMyPosition();
   };
 
   const onMessageReceived = (received) => {
     console.log(received);
     const parsedMsg = JSON.parse(received.body);
-    if (parsedMsg.type === "TALK") color(parsedMsg.message, seatNum);
+    // if (parsedMsg.type === "TALK") color(parsedMsg.message, seatNum);
   };
 
   const onError = (err) => {
     console.log(err);
   };
 
-  function color(receivedColor) {
-    seats[10].setState(receivedColor);
-    console.log(seats[10].value);
-  }
+  // function color(seat, receivedColor) {
+  //   seats[10].setState(receivedColor);
+  //   console.log(seats[10].value);
+  // }
+
 
   const getUsername = async () => {
-    try {
-      const response = await fetch("/api/member/username");
-      if (response.status !== 200) {
+    axios.get("/api/member/username")
+    .then(res => {
+      if (res.status !== 200) {
         alert("There has been some errors.");
-        return false;
       }
-      const data = await response.text();
       if (username === "expired") setUsername("");
-      else setUsername(data);
-      // console.log("This came from the backend", username);
-    } catch (error) {
-      console.error("There has been an error login", error);
-    }
-  };
+      else setUsername(res.data);
+      console.log("username is set");
+    }).catch(err => {
+      console.error("There has been an error login", err);
+    });
+  }
 
-  const getCurrentState = async () => {
-    try {
-      const response = await fetch(`/api/classroom/${roomId}/states`);
-      if (response.status !== 200) {
-        alert("There has been some errors.");
-        return false;
-      }
-      const data = await response.json();
-      console.log(data);
-    } catch (error) {
-      console.error("There has been an error login", error);
-    }
-  };
 
-  const getMyPosition = async () => {
-    try {
-      const response = await fetch(`/api/classroom/${roomId}/mySeat`);
-      if (response.status !== 200) {
-        alert("There has been some errors.");
-        return false;
+
+
+  const getSeatInfo = async () => {
+    axios.get(`/api/classroom/${roomId}/seatInfo`)
+    .then(res => {
+      const seatInfo = res.data;
+      console.log(seatInfo);
+      setMySeat(parseInt(seatInfo.seatNum));
+      for (let seat in seatInfo.classRoomStates){
+        console.log(seat);
       }
-      const data = await response.text();
-      console.log(data);
-      setSeatNum(parseInt(data));
-    } catch (error) {
-      console.error("There has been an error login", error);
-    }
-  };
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  }
 
   const selectColor = (color) => {
     console.log(stompClient.connected);
@@ -114,8 +103,10 @@ function Room() {
   useEffect(() => {
     getUsername().then(() => {
       connect().then(() => {
+        getSeatInfo();
         stompClient.connect({ roomId: roomId, username: username }, onConnected, onError);
       });
+      
     });
   }, []);
 
@@ -125,7 +116,7 @@ function Room() {
      */
   };
 
-  useEffect(() => {}, [seatNum]);
+  useEffect(() => {}, [mySeat]);
 
   return (
     <div>

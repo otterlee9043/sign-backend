@@ -1,10 +1,12 @@
 import styles from "./LoginBar.module.css";
 import { Context } from "../store/appContext";
 import { useContext, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function LoginBar() {
   const [username, setUsername] = useState("");
+  const navigate = useNavigate();
   const logout = async () => {
     const opts = {
       method: "POST",
@@ -15,7 +17,7 @@ function LoginBar() {
         alert("There has been some errors.");
         return false;
       }
-      setUsername("");
+      navigate("/");
     } catch (error) {
       console.error("There has been an error login", error);
     }
