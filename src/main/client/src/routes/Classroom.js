@@ -6,17 +6,17 @@ import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import axios from "axios";
-
+import { version } from "react";
 let stompClient = null;
 
 function Room() {
   const params = useParams();
   const [username, setUsername] = useState("");
   const [mySeat, setMySeat] = useState();
-
+  const [seats, setSeats] = useState(new Array(40).fill("empty"));
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
-  let seats = new Array(40).fill({});
+  // let seats = new Array(40).fill("empty");
   // for (let i = 0; i < 40; i++) {
   //   const result = useState("empty");
   //   seats[i] = {
@@ -45,28 +45,37 @@ function Room() {
   const onMessageReceived = (received) => {
     console.log(received);
     const parsedMsg = JSON.parse(received.body);
-    // if (parsedMsg.type === "TALK") color(parsedMsg.message, seatNum);
+    if (parsedMsg.type === "TALK") color(parsedMsg.seatNum, parsedMsg.message);
   };
 
   const onError = (err) => {
     console.log(err);
   };
 
-  // function color(seat, receivedColor) {
-  //   seats[10].setState(receivedColor);
-  //   console.log(seats[10].value);
-  // }
+  function color(seatNum, receivedColor) {
+    setSeats((oldSeats) => {
+      let newSeats = [...oldSeats];
+      newSeats[seatNum] = receivedColor;
+      console.log(newSeats);
+      return newSeats;
+    });
+    console.log(seats);
+  }
 
   const selectColor = (color) => {
     console.log(stompClient.connected);
     stompClient.send(
       "/app/chat/message",
       {},
-      JSON.stringify({ type: "TALK", roomId: roomId, sender: username, message: color })
+      JSON.stringify({
+        type: "TALK",
+        roomId: roomId,
+        sender: username,
+        message: color,
+        seatNum: mySeat,
+      })
     );
   };
-
-  
 
   const getSeatInfo = async () => {
     axios
@@ -85,7 +94,6 @@ function Room() {
       });
   };
 
-
   useEffect(() => {
     const getUsername = async () => {
       axios
@@ -96,11 +104,10 @@ function Room() {
           }
           if (username === "expired") setUsername("");
           else setUsername(res.data);
-          connect()
-          .then(() => {
+          connect().then(() => {
             getSeatInfo();
             stompClient.connect({ roomId: roomId, username: res.data }, onConnected, onError);
-          })
+          });
         })
         .catch((err) => {
           console.error("There has been an error login", err);
@@ -108,7 +115,6 @@ function Room() {
     };
 
     getUsername();
-
   }, []);
 
   const indicateMyself = () => {
@@ -123,7 +129,7 @@ function Room() {
       <div className={styles.container}>
         <div className={styles.seats}>
           {seats.map((seat, index) => (
-            <Circle key={index} size="small" state={seat.value} emoji="" />
+            <Circle key={index} size="small" state={seats[index]} emoji="" />
           ))}
         </div>
       </div>
