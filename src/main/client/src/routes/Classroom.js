@@ -16,14 +16,6 @@ function Room() {
   const [seats, setSeats] = useState(new Array(40).fill("empty"));
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
-  // let seats = new Array(40).fill("empty");
-  // for (let i = 0; i < 40; i++) {
-  //   const result = useState("empty");
-  //   seats[i] = {
-  //     value: result[0],
-  //     setState: result[1],
-  //   };
-  // }
 
   const connect = async () => {
     let Sock = new SockJS("http://localhost:8080/ws");
@@ -56,10 +48,8 @@ function Room() {
     setSeats((oldSeats) => {
       let newSeats = [...oldSeats];
       newSeats[seatNum] = receivedColor;
-      console.log(newSeats);
       return newSeats;
     });
-    console.log(seats);
   }
 
   const selectColor = (color) => {

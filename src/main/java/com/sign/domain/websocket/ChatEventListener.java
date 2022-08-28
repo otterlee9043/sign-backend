@@ -36,18 +36,20 @@ public class ChatEventListener {
         Map nativeHeaders = getNativeHeaders(event);
         String roomId = getHeaderValue(nativeHeaders, "roomId");
         String username = getHeaderValue(nativeHeaders, "username");
-
+        String sessionId = getSessionId();
         if(connectedUser.containsKey(roomId)){
             //방에 무조건 차례대로 앉게 하는 경우
             Map seatInfo = connectedUser.get(roomId);
-            seatInfo.put(username, seatInfo.size());
+//            seatInfo.put(username, seatInfo.size());
+            seatInfo.put(sessionId, seatInfo.size());
 
             Map colorInfo = lastState.get(roomId);
             colorInfo.put(seatInfo.size(), "empty");
         } else {
             //방에 첫번째로 접속하는 경우
             Map seatInfo = new ConcurrentHashMap<>();
-            seatInfo.put(username, 0);
+//            seatInfo.put(username, 0);
+            seatInfo.put(sessionId, 0);
             connectedUser.put(roomId, seatInfo);
 
             Map colorInfo = new ConcurrentHashMap<>();
@@ -60,6 +62,21 @@ public class ChatEventListener {
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event){
         log.info(">>> disconnected: {}", event);
         log.info("  sessionId={}", event.getSessionId());
+        String sessionId = getSessionId();
+        for (String roomId : connectedUser.keySet()) {
+            if (connectedUser.get(roomId).containsKey(sessionId)){
+                int seatNum = connectedUser.get(roomId).get(sessionId);
+                connectedUser.get(roomId).remove(sessionId);
+                lastState.get(roomId).remove(seatNum);
+                break;
+            }
+        }
+        log.info("connectedUser={}", connectedUser);
+        /**
+         * TODO 해당 사용자가 disconnect되었으므로
+         * 클라이언트에서도 방에서 퇴장했다는 조치를 해야한다.
+         * seat을 empty로 처리하도록
+         */
     }
 
     public Map<Integer, String> getRoomStatesByRoomId(String roomId){

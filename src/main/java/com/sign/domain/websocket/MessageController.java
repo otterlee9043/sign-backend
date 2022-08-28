@@ -22,7 +22,7 @@ public class MessageController {
         } else {
             String color = message.getMessage();
             String sessionId = SimpAttributesContextHolder.currentAttributes().getSessionId();
-            log.info("enter.sessionId={}", sessionId);
+//            log.info("enter.sessionId={}", sessionId);
             chatEventListener.color(message.getRoomId(), sessionId, color);
         }
         log.info("message={}", message);

@@ -95,24 +95,12 @@ public class ClassroomController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/api/classroom/{roomId}/states")
-    public Map<Integer, String> getCurrentRoomStates(@PathVariable String roomId) {
-        return classroomService.getRoomStates(roomId);
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/api/classroom/{roomId}/mySeat")
-    public String getMyPosition(@PathVariable String roomId, @AuthenticationPrincipal LoginMember loginMember) {
-        log.info("classroomService.getMySeatPosition(roomId, loginMember.getUsername()).toString()={}", classroomService.getMySeatPosition(roomId, loginMember.getUsername()).toString());
-        return classroomService.getMySeatPosition(roomId, loginMember.getUsername()).toString();
-    }
-
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/api/classroom/{roomId}/seatInfo")
     public SeatInfo getClassroomInfo(@PathVariable String roomId, @AuthenticationPrincipal LoginMember loginMember){
         SeatInfo seatInfo = new SeatInfo();
         seatInfo.setClassRoomStates(classroomService.getRoomStates(roomId));
         seatInfo.setSeatNum(classroomService.getMySeatPosition(roomId, loginMember.getUsername()));
+        log.info("seaInfo={}", seatInfo);
         return seatInfo;
     }
 }
