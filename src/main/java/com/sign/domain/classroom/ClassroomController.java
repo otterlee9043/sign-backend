@@ -2,26 +2,17 @@ package com.sign.domain.classroom;
 
 import com.sign.domain.member.LoginMember;
 import com.sign.domain.member.Member;
-import com.sign.domain.member.MemberSecurityService;
 import com.sign.domain.member.MemberService;
-import com.sign.domain.websocket.SeatInfo;
+import com.sign.domain.websocket.ClassroomInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.parameters.P;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -96,11 +87,12 @@ public class ClassroomController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/api/classroom/{roomId}/seatInfo")
-    public SeatInfo getClassroomInfo(@PathVariable String roomId, @AuthenticationPrincipal LoginMember loginMember){
-        SeatInfo seatInfo = new SeatInfo();
-        seatInfo.setClassRoomStates(classroomService.getRoomStates(roomId));
-        seatInfo.setSeatNum(classroomService.getMySeatPosition(roomId, loginMember.getUsername()));
-        log.info("seaInfo={}", seatInfo);
-        return seatInfo;
+    public ClassroomInfo getClassroomInfo(@PathVariable String roomId, @AuthenticationPrincipal LoginMember loginMember){
+        ClassroomInfo classroomInfo = new ClassroomInfo();
+        classroomInfo.setClassRoomStates(classroomService.getRoomStates(roomId));
+        classroomInfo.setSeatNum(classroomService.getMySeatPosition(roomId, loginMember.getUsername()));
+        log.info("seatInfo={}", classroomInfo);
+
+        return classroomInfo;
     }
 }

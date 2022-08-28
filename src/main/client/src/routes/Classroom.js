@@ -53,7 +53,6 @@ function Room() {
   }
 
   const selectColor = (color) => {
-    console.log(stompClient.connected);
     stompClient.send(
       "/app/chat/message",
       {},
@@ -94,10 +93,11 @@ function Room() {
           }
           if (username === "expired") setUsername("");
           else setUsername(res.data);
-          connect().then(() => {
-            getSeatInfo();
+          connect()
+          .then(() => {  
             stompClient.connect({ roomId: roomId, username: res.data }, onConnected, onError);
-          });
+          })
+          .then(getSeatInfo);
         })
         .catch((err) => {
           console.error("There has been an error login", err);

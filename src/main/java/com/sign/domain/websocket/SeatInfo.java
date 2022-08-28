@@ -1,17 +1,12 @@
 package com.sign.domain.websocket;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-
-import java.util.Map;
+import lombok.*;
 
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class SeatInfo {
     private Integer seatNum;
-    private Map<Integer, String> classRoomStates;
+    private String username;
 }
