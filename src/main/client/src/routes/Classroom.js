@@ -29,9 +29,7 @@ function Room() {
       { roomId: roomId },
       JSON.stringify({ type: "ENTER", roomId: roomId, sender: username })
     );
-    console.log(`=> sessionId: `, stompClient);
-    // getCurrentState();
-    // getMyPosition();
+    getClassroomInfo();
   };
 
   const onMessageReceived = (received) => {
@@ -66,17 +64,17 @@ function Room() {
     );
   };
 
-  const getSeatInfo = async () => {
+  const getClassroomInfo = async () => {
     axios
-      .get(`/api/classroom/${roomId}/seatInfo`)
+      .get(`/api/classroom/${roomId}/classroomInfo`)
       .then((res) => {
-        const seatInfo = res.data;
-        console.log(seatInfo);
-        setMySeat(parseInt(seatInfo.seatNum));
-        // for (let seat in seatInfo.classRoomStates) {
+        const classroomInfo = res.data;
+        console.log(classroomInfo);
+        setMySeat(parseInt(classroomInfo.seatNum));
+        // for (let seat in classroomInfo.classRoomStates) {
         //   console.log(seat);
         // }
-        console.log(seatInfo.classRoomStates);
+        console.log(classroomInfo.classRoomStates);
       })
       .catch((err) => {
         console.log(err);
@@ -93,11 +91,9 @@ function Room() {
           }
           if (username === "expired") setUsername("");
           else setUsername(res.data);
-          connect()
-          .then(() => {  
+          connect().then(() => {
             stompClient.connect({ roomId: roomId, username: res.data }, onConnected, onError);
-          })
-          .then(getSeatInfo);
+          });
         })
         .catch((err) => {
           console.error("There has been an error login", err);
@@ -118,9 +114,13 @@ function Room() {
       <NavBar mode="classroom" />
       <div className={styles.container}>
         <div className={styles.seats}>
-          {seats.map((seat, index) => (
-            <Circle key={index} size="small" state={seats[index]} emoji="" />
-          ))}
+          {seats.map((color, index) =>
+            index == mySeat ? (
+              <Circle key={index} size="small" state={color} emoji="" mySeat={true} />
+            ) : (
+              <Circle key={index} size="small" state={color} emoji="" mySeat={false} />
+            )
+          )}
         </div>
       </div>
       <div className={styles.count}>
@@ -136,4 +136,3 @@ function Room() {
 }
 
 export default Room;
-//https://devsoyoung.github.io/posts/react-usestate-double-invoked/
