@@ -6,7 +6,8 @@ import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import axios from "axios";
-import { version } from "react";
+import { useBeforeunload } from "react-beforeunload";
+import { useLocation } from "react-router-dom";
 let stompClient = null;
 
 function Room() {
@@ -16,6 +17,7 @@ function Room() {
   const [seats, setSeats] = useState(new Array(40).fill("empty"));
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
+  let location = useLocation();
 
   const connect = async () => {
     let Sock = new SockJS("http://localhost:8080/ws");
@@ -71,9 +73,14 @@ function Room() {
         const classroomInfo = res.data;
         console.log(classroomInfo);
         setMySeat(parseInt(classroomInfo.seatNum));
-        // for (let seat in classroomInfo.classRoomStates) {
-        //   console.log(seat);
-        // }
+        setSeats((oldSeats) => {
+          let newSeats = [...oldSeats];
+          for (let seatNum in Object.entries(classroomInfo.classRoomStates)) {
+            newSeats[seatNum] = classroomInfo.classRoomStates[seatNum];
+          }
+          return newSeats;
+        });
+
         console.log(classroomInfo.classRoomStates);
       })
       .catch((err) => {
@@ -101,7 +108,25 @@ function Room() {
     };
 
     getUsername();
+    window.onpopstate = () => {
+      stompClient.disconnect();
+    };
+    window.addEventListener("beforeunload", (event) => {
+      // 표준에 따라 기본 동작 방지
+      event.preventDefault();
+      // Chrome에서는 returnValue 설정이 필요함
+      event.returnValue = "";
+      stompClient.disconnect();
+    });
   }, []);
+
+  useEffect(() => {
+    console.log("page moved");
+  }, [location]);
+  // useBeforeunload((e) => {
+  //   e.preventDefault();
+  //   stompClient.disconnect();
+  // });
 
   const indicateMyself = () => {
     /**
@@ -118,7 +143,7 @@ function Room() {
             index == mySeat ? (
               <Circle key={index} size="small" state={color} emoji="" mySeat={true} />
             ) : (
-              <Circle key={index} size="small" state={color} emoji="" mySeat={false} />
+              <Circle key={index} size="small" state={color} emoji="" />
             )
           )}
         </div>
