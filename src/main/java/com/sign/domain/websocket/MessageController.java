@@ -22,6 +22,9 @@ public class MessageController {
         } else {
             chatEventListener.color(message.getRoomId(), message.getSeatNum(), message.getMessage());
         }
+        /**
+         * TODO MessageType.CHANGE_SEAT 처리하기
+         */
         log.info("message={}", message);
         sendingOperations.convertAndSend("/topic/chat/room/" + message.getRoomId(), message) ;
     }

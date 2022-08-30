@@ -16,7 +16,6 @@ function Room() {
   const [seats, setSeats] = useState(new Array(40).fill("empty"));
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
-  let location = useLocation();
 
   const connect = async () => {
     let Sock = new SockJS("http://localhost:8080/ws");
@@ -36,15 +35,21 @@ function Room() {
   const onMessageReceived = (received) => {
     console.log(received);
     const parsedMsg = JSON.parse(received.body);
-    switch(parsedMsg.type) {
-      case "TALK": 
-        color(parsedMsg.seatNum, parsedMsg.message);  
+    switch (parsedMsg.type) {
+      case "TALK":
+        color(parsedMsg.seatNum, parsedMsg.message);
         break;
       case "EXIT":
         color(parsedMsg.seatNum, "empty");
         break;
+      case "CHANGE_SEAT":
+        color(parsedMsg.message, parsedMsg.color);
+        color(parsedMsg.seatNum, "empty");
+        if (parsedMsg.seatNum == mySeat) {
+          // 바꾸기 전 좌석이 mySeat이라면 자신의 좌석임
+          setMySeat(parsedMsg.message);
+        }
     }
-  
   };
 
   const onError = (err) => {
@@ -95,6 +100,21 @@ function Room() {
       });
   };
 
+  const changeSeat = (seatNum) => {
+    stompClient.send(
+      "/app/chat/message",
+      {},
+      JSON.stringify({
+        type: "CHANGE_SEAT",
+        roomId: roomId,
+        sender: username,
+        message: seatNum,
+        seatNum: mySeat,
+      })
+    );
+    console.log("changing seat");
+  };
+
   useEffect(() => {
     const getUsername = async () => {
       axios
@@ -106,7 +126,11 @@ function Room() {
           if (username === "expired") setUsername("");
           else setUsername(res.data);
           connect().then(() => {
-            stompClient.connect({ roomId: roomId, username: res.data }, onConnected, onError);
+            stompClient.connect(
+              { roomId: roomId, username: res.data },
+              onConnected,
+              onError
+            );
           });
         })
         .catch((err) => {
@@ -125,17 +149,30 @@ function Room() {
     });
   }, []);
 
-
   return (
     <div>
       <NavBar mode="classroom" />
       <div className={styles.container}>
         <div className={styles.seats}>
           {seats.map((color, index) =>
-            index == mySeat ? (
-              <Circle key={index} size="small" state={color} emoji="" mySeat={true} />
-            ) : (
+            index === mySeat ? (
+              <Circle
+                key={index}
+                size="small"
+                state={color}
+                emoji=""
+                mySeat={true}
+              />
+            ) : color !== "empty" ? (
               <Circle key={index} size="small" state={color} emoji="" />
+            ) : (
+              <Circle
+                key={index}
+                size="small"
+                state={color}
+                emoji=""
+                handler={changeSeat(index)}
+              />
             )
           )}
         </div>
@@ -147,7 +184,6 @@ function Room() {
           </span>
         ))}
       </div>
-      <span onClick={() => stompClient.disconnect()}>disconnect</span>
     </div>
   );
 }

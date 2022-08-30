@@ -11,9 +11,11 @@ function Seat({ size, state = "empty", emoji, mySeat = false }) {
   // const images = importAll(
   //   require.context("./emojis", false, /\.(png|jpe?g|svg)$/)
   // );
-
+  const handleOnclick = () => {
+    console.log("click");
+  }
   return (
-    <div className={`${styles.seat} ${styles[state]} ${styles[size]}`}>
+    <div className={`${styles.seat} ${styles[state]} ${styles[size]}`} onClick={null}>
       <span className={`${styles.float} ${styles.emoji}`}>{emoji}</span>
       {mySeat ? <span className={`${styles.float} ${styles.I}`}>I</span> : null}
     </div>
