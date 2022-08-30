@@ -20,10 +20,7 @@ public class MessageController {
         if (ChatMessage.MessageType.ENTER.equals(message.getType())){
             //message.setMessage(message.getSender() );
         } else {
-            String color = message.getMessage();
-            String sessionId = SimpAttributesContextHolder.currentAttributes().getSessionId();
-//            log.info("enter.sessionId={}", sessionId);
-            chatEventListener.color(message.getRoomId(), sessionId, color);
+            chatEventListener.color(message.getRoomId(), message.getSeatNum(), message.getMessage());
         }
         log.info("message={}", message);
         sendingOperations.convertAndSend("/topic/chat/room/" + message.getRoomId(), message) ;
