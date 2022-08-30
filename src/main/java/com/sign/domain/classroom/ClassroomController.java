@@ -86,12 +86,11 @@ public class ClassroomController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/api/classroom/{roomId}/seatInfo")
+    @GetMapping("/api/classroom/{roomId}/classroomInfo")
     public ClassroomInfo getClassroomInfo(@PathVariable String roomId, @AuthenticationPrincipal LoginMember loginMember){
         ClassroomInfo classroomInfo = new ClassroomInfo();
         classroomInfo.setClassRoomStates(classroomService.getRoomStates(roomId));
         classroomInfo.setSeatNum(classroomService.getMySeatPosition(roomId, loginMember.getUsername()));
-        log.info("seatInfo={}", classroomInfo);
 
         return classroomInfo;
     }
