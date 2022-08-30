@@ -94,19 +94,18 @@ public class ChatEventListener {
                     lastState.remove(roomId);
                 }
                 connectedUser.remove(username);
+
+                sendingOperations.convertAndSend("/topic/chat/room/" + roomId,
+                        new ChatMessage(ChatMessage.MessageType.EXIT, seatNum, roomId, username, null));
+
                 break;
             }
         }
 
-
         log.info(">>> disconnected | [after] connectedUser={}", connectedUser);
         log.info(">>> disconnected | [after] lastState={}", lastState);
         log.info(">>> disconnected | [after] seatingCharts={}", seatingCharts);
-        /**
-         * TODO 해당 사용자가 disconnect되었으므로
-         * 클라이언트에서도 방에서 퇴장했다는 조치를 해야한다.
-         * seat을 empty로 처리하도록.
-         */
+
     }
 
     public Map<Integer, String> getRoomStatesByRoomId(String roomId){

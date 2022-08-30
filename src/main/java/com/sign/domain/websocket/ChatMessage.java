@@ -6,10 +6,11 @@ import lombok.*;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@AllArgsConstructor
 public class ChatMessage {
 
     public enum MessageType {
-        ENTER, TALK
+        ENTER, TALK, EXIT
     }
 
     private MessageType type;

@@ -6,7 +6,6 @@ import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import axios from "axios";
-import { useBeforeunload } from "react-beforeunload";
 import { useLocation } from "react-router-dom";
 let stompClient = null;
 
@@ -37,7 +36,15 @@ function Room() {
   const onMessageReceived = (received) => {
     console.log(received);
     const parsedMsg = JSON.parse(received.body);
-    if (parsedMsg.type === "TALK") color(parsedMsg.seatNum, parsedMsg.message);
+    switch(parsedMsg.type) {
+      case "TALK": 
+        color(parsedMsg.seatNum, parsedMsg.message);  
+        break;
+      case "EXIT":
+        color(parsedMsg.seatNum, "empty");
+        break;
+    }
+  
   };
 
   const onError = (err) => {
@@ -112,27 +119,12 @@ function Room() {
       stompClient.disconnect();
     };
     window.addEventListener("beforeunload", (event) => {
-      // 표준에 따라 기본 동작 방지
       event.preventDefault();
-      // Chrome에서는 returnValue 설정이 필요함
       event.returnValue = "";
       stompClient.disconnect();
     });
   }, []);
 
-  useEffect(() => {
-    console.log("page moved");
-  }, [location]);
-  // useBeforeunload((e) => {
-  //   e.preventDefault();
-  //   stompClient.disconnect();
-  // });
-
-  const indicateMyself = () => {
-    /**
-     * TODO 내가 위치한 곳에 I 그리기
-     */
-  };
 
   return (
     <div>
