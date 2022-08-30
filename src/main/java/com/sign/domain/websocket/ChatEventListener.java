@@ -1,6 +1,6 @@
 package com.sign.domain.websocket;
 
-import com.sign.domain.classroom.ClassroomService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -12,7 +12,6 @@ import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
@@ -28,29 +27,37 @@ public class ChatEventListener {
     private final Map<String, Map<Integer, String>> lastState = new ConcurrentHashMap<>();
     //roomId, seatNum, color
     private final Map<String, Map<String, SeatInfo>> seatingCharts = new ConcurrentHashMap<>();
-    //roomId, sessionId, classroomInfo(seatNum, username)
+    //roomId, sessionId, seatInfo(seatNum, username)
     private final Map<String, String> connectedUser = new ConcurrentHashMap<>();
     //username, sessionId
-
+    private static final int roomSize = 40;
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-        log.info(">>> connected: {}", event);
 
         Map nativeHeaders = getNativeHeaders(event);
         String roomId = getHeaderValue(nativeHeaders, "roomId");
         String username = getHeaderValue(nativeHeaders, "username");
         String sessionId = getSessionId();
+        log.info(">>> connected | sessionId={}", sessionId);
+        log.info(">>> connected | [before] connectedUser={}", connectedUser);
+        log.info(">>> connected | [before] lastState={}", lastState);
+        log.info(">>> connected | [before] seatingCharts={}", seatingCharts);
         connectedUser.put(username, sessionId);
         if (seatingCharts.containsKey(roomId)) {
             //방에 무조건 차례대로 앉게 하는 경우
             Map seatingChart = seatingCharts.get(roomId);
-//            seatInfo.put(username, seatInfo.size());
-            int seatNum = seatingChart.size();
+            Map classroomState = lastState.get(roomId);
+            int seatNum = 0;
+            for(int i = 0; i < roomSize; i++) {
+                if (!classroomState.containsKey(i)){
+                    seatNum = i;
+                    break;
+                }
+            }
             seatingChart.put(sessionId, new SeatInfo(seatNum, username));
 
             Map colorInfo = lastState.get(roomId);
             colorInfo.put(seatNum, "empty");
-            log.info("handleWebSocketConnectListener.seatingCharts={}", seatingCharts);
         } else {
             //방에 첫번째로 접속하는 경우
             Map seatingChart = new ConcurrentHashMap<>();
@@ -61,19 +68,23 @@ public class ChatEventListener {
             Map colorInfo = new ConcurrentHashMap<>();
             colorInfo.put(0, "empty");
             lastState.put(roomId, colorInfo);
-            log.info("handleWebSocketConnectListener.seatingCharts={}", seatingCharts);
         }
-        log.info("connect.seatingCharts={}", seatingCharts);
+        log.info(">>> connected | [after] connectedUser={}", connectedUser);
+        log.info(">>> connected | [after] lastState={}", lastState);
+        log.info(">>> connected | [after] seatingCharts={}", seatingCharts);
     }
 
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event){
-        log.info(">>> disconnected: {}", event);
-        log.info("  sessionId={}", event.getSessionId());
         String sessionId = getSessionId();
+        log.info(">>> disconnected | sessionId={}", sessionId);
+        log.info(">>> disconnected | [before] connectedUser={}", connectedUser);
+        log.info(">>> disconnected | [before] lastState={}", lastState);
+        log.info(">>> disconnected | [before] seatingCharts={}", seatingCharts);
         for (String roomId : seatingCharts.keySet()) {
             if (seatingCharts.get(roomId).containsKey(sessionId)){
                 int seatNum = seatingCharts.get(roomId).get(sessionId).getSeatNum();
+                String username = seatingCharts.get(roomId).get(sessionId).getUsername();
                 seatingCharts.get(roomId).remove(sessionId);
                 if(seatingCharts.get(roomId).isEmpty()) {
                     seatingCharts.remove(roomId);
@@ -82,15 +93,19 @@ public class ChatEventListener {
                 if(lastState.get(roomId).isEmpty()){
                     lastState.remove(roomId);
                 }
+                connectedUser.remove(username);
                 break;
             }
         }
-        connectedUser.remove(sessionId);
-        log.info("disconnected.seatingCharts={}", seatingCharts);
+
+
+        log.info(">>> disconnected | [after] connectedUser={}", connectedUser);
+        log.info(">>> disconnected | [after] lastState={}", lastState);
+        log.info(">>> disconnected | [after] seatingCharts={}", seatingCharts);
         /**
          * TODO 해당 사용자가 disconnect되었으므로
          * 클라이언트에서도 방에서 퇴장했다는 조치를 해야한다.
-         * seat을 empty로 처리하도록
+         * seat을 empty로 처리하도록.
          */
     }
 
@@ -126,10 +141,7 @@ public class ChatEventListener {
         return seatingCharts.get(roomId).get(sessionId).getSeatNum();
     }
 
-    public void color(String roomId, String sessionId, String color){
-//        lastState.get(roomId).put(sessionId, color);
-//        log.info("lastState={}", lastState);
+    public void color(String roomId, int seatNum, String color){
+        lastState.get(roomId).put(seatNum, color);
     }
-
-
 }
