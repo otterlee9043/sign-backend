@@ -12,7 +12,7 @@ let stompClient = null;
 function Room() {
   const params = useParams();
   const [username, setUsername] = useState("");
-  const [mySeat, setMySeat] = useState();
+  const [mySeat, setMySeat] = useState(-1);
   const [seats, setSeats] = useState(new Array(40).fill("empty"));
   const roomId = params.roomId;
   const colors = ["red", "orange", "yellow", "green", "blue"];
@@ -43,13 +43,22 @@ function Room() {
         color(parsedMsg.seatNum, "empty");
         break;
       case "CHANGE_SEAT":
-        color(parsedMsg.message, parsedMsg.color);
-        color(parsedMsg.seatNum, "empty");
-        if (parsedMsg.seatNum == mySeat) {
+        setSeats((oldSeats) => {
+          let newSeats = [...oldSeats];
+          newSeats[parseInt(parsedMsg.message)] = oldSeats[parsedMsg.seatNum];
+          newSeats[parsedMsg.seatNum] = "empty";
+          return newSeats;
+        });
+        console.log("mySeat: ", mySeat);
+        if (isMySeat(parsedMsg.seatNum)) {
           // 바꾸기 전 좌석이 mySeat이라면 자신의 좌석임
           setMySeat(parsedMsg.message);
         }
+        break;
     }
+  };
+  const isMySeat = (seatNum) => {
+    return seatNum === mySeat;
   };
 
   const onError = (err) => {
@@ -84,7 +93,7 @@ function Room() {
       .then((res) => {
         const classroomInfo = res.data;
         console.log(classroomInfo);
-        setMySeat(parseInt(classroomInfo.seatNum));
+        setMySeat(classroomInfo.seatNum);
         setSeats((oldSeats) => {
           let newSeats = [...oldSeats];
           for (let seatNum in Object.entries(classroomInfo.classRoomStates)) {
@@ -99,8 +108,21 @@ function Room() {
         console.log(err);
       });
   };
-
   const changeSeat = (seatNum) => {
+    stompClient.send(
+      "/app/chat/message",
+      {},
+      JSON.stringify({
+        type: "CHANGE_SEAT",
+        roomId: roomId,
+        sender: username,
+        message: seatNum,
+        seatNum: mySeat,
+      })
+    );
+    console.log("changing seat");
+  };
+  const changeSeat2 = (seatNum) => {
     stompClient.send(
       "/app/chat/message",
       {},
@@ -126,11 +148,7 @@ function Room() {
           if (username === "expired") setUsername("");
           else setUsername(res.data);
           connect().then(() => {
-            stompClient.connect(
-              { roomId: roomId, username: res.data },
-              onConnected,
-              onError
-            );
+            stompClient.connect({ roomId: roomId, username: res.data }, onConnected, onError);
           });
         })
         .catch((err) => {
@@ -156,23 +174,13 @@ function Room() {
         <div className={styles.seats}>
           {seats.map((color, index) =>
             index === mySeat ? (
-              <Circle
-                key={index}
-                size="small"
-                state={color}
-                emoji=""
-                mySeat={true}
-              />
+              <Circle key={index} size="small" state={color} emoji="" mySeat={true} />
             ) : color !== "empty" ? (
               <Circle key={index} size="small" state={color} emoji="" />
             ) : (
-              <Circle
-                key={index}
-                size="small"
-                state={color}
-                emoji=""
-                handler={changeSeat(index)}
-              />
+              <span onClick={() => changeSeat(index)}>
+                <Circle key={index} size="small" state={color} emoji="" />
+              </span>
             )
           )}
         </div>
