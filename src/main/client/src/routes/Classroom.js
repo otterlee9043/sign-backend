@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./Classroom.module.css";
 import NavBar from "../components/NavBar.js";
 import Circle from "../components/Circle.js";
@@ -6,7 +6,6 @@ import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import axios from "axios";
-import { useLocation } from "react-router-dom";
 let stompClient = null;
 
 function Room() {
@@ -14,8 +13,10 @@ function Room() {
   const [username, setUsername] = useState("");
   const [mySeat, setMySeat] = useState(-1);
   const [seats, setSeats] = useState(new Array(40).fill("empty"));
-  const roomId = params.roomId;
+  const roomId = parseInt(params.roomId);
   const colors = ["red", "orange", "yellow", "green", "blue"];
+  const stateRef = useRef();
+  stateRef.current = mySeat;
 
   const connect = async () => {
     let Sock = new SockJS("http://localhost:8080/ws");
@@ -33,7 +34,7 @@ function Room() {
   };
 
   const onMessageReceived = (received) => {
-    console.log(received);
+    // console.log(received);
     const parsedMsg = JSON.parse(received.body);
     switch (parsedMsg.type) {
       case "TALK":
@@ -47,18 +48,17 @@ function Room() {
           let newSeats = [...oldSeats];
           newSeats[parseInt(parsedMsg.message)] = oldSeats[parsedMsg.seatNum];
           newSeats[parsedMsg.seatNum] = "empty";
+
           return newSeats;
         });
-        console.log("mySeat: ", mySeat);
         if (isMySeat(parsedMsg.seatNum)) {
-          // 바꾸기 전 좌석이 mySeat이라면 자신의 좌석임
-          setMySeat(parsedMsg.message);
+          setMySeat(parseInt(parsedMsg.message));
         }
         break;
     }
   };
   const isMySeat = (seatNum) => {
-    return seatNum === mySeat;
+    return seatNum === stateRef.current;
   };
 
   const onError = (err) => {
@@ -87,27 +87,6 @@ function Room() {
     );
   };
 
-  const getClassroomInfo = async () => {
-    axios
-      .get(`/api/classroom/${roomId}/classroomInfo`)
-      .then((res) => {
-        const classroomInfo = res.data;
-        console.log(classroomInfo);
-        setMySeat(classroomInfo.seatNum);
-        setSeats((oldSeats) => {
-          let newSeats = [...oldSeats];
-          for (let seatNum in Object.entries(classroomInfo.classRoomStates)) {
-            newSeats[seatNum] = classroomInfo.classRoomStates[seatNum];
-          }
-          return newSeats;
-        });
-
-        console.log(classroomInfo.classRoomStates);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  };
   const changeSeat = (seatNum) => {
     stompClient.send(
       "/app/chat/message",
@@ -120,21 +99,25 @@ function Room() {
         seatNum: mySeat,
       })
     );
-    console.log("changing seat");
   };
-  const changeSeat2 = (seatNum) => {
-    stompClient.send(
-      "/app/chat/message",
-      {},
-      JSON.stringify({
-        type: "CHANGE_SEAT",
-        roomId: roomId,
-        sender: username,
-        message: seatNum,
-        seatNum: mySeat,
+
+  const getClassroomInfo = async () => {
+    axios
+      .get(`/api/classroom/${roomId}/classroomInfo`)
+      .then((res) => {
+        const classroomInfo = res.data;
+        setMySeat(classroomInfo.seatNum);
+        setSeats((oldSeats) => {
+          let newSeats = [...oldSeats];
+          for (let seatNum in classroomInfo.classRoomStates) {
+            newSeats[seatNum] = classroomInfo.classRoomStates[seatNum];
+          }
+          return newSeats;
+        });
       })
-    );
-    console.log("changing seat");
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   useEffect(() => {
@@ -178,7 +161,7 @@ function Room() {
             ) : color !== "empty" ? (
               <Circle key={index} size="small" state={color} emoji="" />
             ) : (
-              <span onClick={() => changeSeat(index)}>
+              <span key={index} onClick={() => changeSeat(index)}>
                 <Circle key={index} size="small" state={color} emoji="" />
               </span>
             )
