@@ -93,12 +93,12 @@ public class ClassroomServiceImpl implements ClassroomService{
 
 
     @Override
-    public Map<Integer, String> getRoomStates(String roomId) {
+    public Map<Integer, String> getRoomStates(Integer roomId) {
         return chatEventListener.getRoomStatesByRoomId(roomId);
     }
 
     @Override
-    public Integer getMySeatPosition(String roomId, String username) {
+    public Integer getMySeatPosition(Integer roomId, String username) {
         return chatEventListener.getMySeatPosition(roomId, username);
     }
 }

@@ -29,7 +29,7 @@ public interface ClassroomService {
 
     void deleteRoom(Classroom room);
 
-    Map<Integer, String> getRoomStates(String roomId);
+    Map<Integer, String> getRoomStates(Integer roomId);
 
-    Integer getMySeatPosition(String roomId, String username);
+    Integer getMySeatPosition(Integer roomId, String username);
 }

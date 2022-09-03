@@ -7,7 +7,7 @@ import lombok.*;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class ChatMessage {
+public class ClassroomMessage {
 
     public enum MessageType {
         ENTER, TALK, EXIT, CHANGE_SEAT
@@ -15,7 +15,7 @@ public class ChatMessage {
 
     private MessageType type;
     private Integer seatNum;
-    private String roomId;
+    private Integer roomId;
     private String sender;
     private String message;
 }

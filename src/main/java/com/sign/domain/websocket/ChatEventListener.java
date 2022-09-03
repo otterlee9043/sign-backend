@@ -24,9 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class ChatEventListener {
     private final SimpMessageSendingOperations sendingOperations;
-    private final Map<String, Map<Integer, String>> lastState = new ConcurrentHashMap<>();
+    private final Map<Integer, Map<Integer, String>> lastState = new ConcurrentHashMap<>();
     //roomId, seatNum, color
-    private final Map<String, Map<String, SeatInfo>> seatingCharts = new ConcurrentHashMap<>();
+    private final Map<Integer, Map<String, SeatInfo>> seatingCharts = new ConcurrentHashMap<>();
     //roomId, sessionId, seatInfo(seatNum, username)
     private final Map<String, String> connectedUser = new ConcurrentHashMap<>();
     //username, sessionId
@@ -35,7 +35,7 @@ public class ChatEventListener {
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
 
         Map nativeHeaders = getNativeHeaders(event);
-        String roomId = getHeaderValue(nativeHeaders, "roomId");
+        Integer roomId = Integer.parseInt(getHeaderValue(nativeHeaders, "roomId"));
         String username = getHeaderValue(nativeHeaders, "username");
         String sessionId = getSessionId();
         log.info(">>> connected | sessionId={}", sessionId);
@@ -81,7 +81,7 @@ public class ChatEventListener {
         log.info(">>> disconnected | [before] connectedUser={}", connectedUser);
         log.info(">>> disconnected | [before] lastState={}", lastState);
         log.info(">>> disconnected | [before] seatingCharts={}", seatingCharts);
-        for (String roomId : seatingCharts.keySet()) {
+        for (Integer roomId : seatingCharts.keySet()) {
             if (seatingCharts.get(roomId).containsKey(sessionId)){
                 int seatNum = seatingCharts.get(roomId).get(sessionId).getSeatNum();
                 String username = seatingCharts.get(roomId).get(sessionId).getUsername();
@@ -95,8 +95,8 @@ public class ChatEventListener {
                 }
                 connectedUser.remove(username);
 
-                sendingOperations.convertAndSend("/topic/chat/room/" + roomId,
-                        new ChatMessage(ChatMessage.MessageType.EXIT, seatNum, roomId, username, null));
+                sendingOperations.convertAndSend("/topic/room/" + roomId,
+                        new ClassroomMessage(ClassroomMessage.MessageType.EXIT, seatNum, roomId, username, null));
 
                 break;
             }
@@ -108,7 +108,7 @@ public class ChatEventListener {
 
     }
 
-    public Map<Integer, String> getRoomStatesByRoomId(String roomId){
+    public Map<Integer, String> getRoomStatesByRoomId(Integer roomId){
         return lastState.get(roomId);
     }
 
@@ -134,13 +134,27 @@ public class ChatEventListener {
         return nativeHeaders;
     }
 
-    public Integer getMySeatPosition(String roomId, String username) {
+    public Integer getMySeatPosition(Integer roomId, String username) {
         String sessionId = connectedUser.get(username);
         log.info("seatingCharts={}", seatingCharts);
         return seatingCharts.get(roomId).get(sessionId).getSeatNum();
     }
 
-    public void color(String roomId, int seatNum, String color){
+    public void color(Integer roomId, int seatNum, String color){
         lastState.get(roomId).put(seatNum, color);
+    }
+
+    public String getColor(int roomId, int seatNum){
+        return lastState.get(roomId).get(seatNum);
+    }
+    public void changeSeat(Integer roomId, String username, int oldSeatNum, int newSeatNum){
+        Map<Integer, String> classroomState = lastState.get(roomId);
+        Map<String, SeatInfo> seatingChart = seatingCharts.get(roomId);
+        classroomState.put(newSeatNum, classroomState.get(oldSeatNum));
+        classroomState.remove(oldSeatNum);
+        String sessionId = connectedUser.get(username);
+        SeatInfo seatInfo = seatingChart.get(sessionId);
+        seatInfo.setSeatNum(newSeatNum);
+        seatingChart.put(sessionId, seatInfo);
     }
 }

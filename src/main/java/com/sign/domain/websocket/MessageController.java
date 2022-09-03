@@ -2,11 +2,11 @@ package com.sign.domain.websocket;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpAttributesContextHolder;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.socket.config.WebSocketMessageBrokerStats;
 
 @Slf4j
 @RestController
@@ -15,17 +15,27 @@ public class MessageController {
 
     private final SimpMessageSendingOperations sendingOperations;
     private final ChatEventListener chatEventListener;
-    @MessageMapping("/chat/message")
-    public void enter (ChatMessage message){
-        if (ChatMessage.MessageType.ENTER.equals(message.getType())){
-            //message.setMessage(message.getSender() );
-        } else {
-            chatEventListener.color(message.getRoomId(), message.getSeatNum(), message.getMessage());
+    @MessageMapping("/classroom/{roomId}")
+    public void enter (ClassroomMessage message, @DestinationVariable Integer roomId, @Header("simpSessionId") String sessionId){
+        log.info("@DestinationVariable.roomId: {}", roomId);
+        log.info("@Header.sessionId: {}", sessionId);
+        switch (message.getType()){
+            case ENTER, EXIT:
+                break;
+            case TALK:
+                chatEventListener.color(message.getRoomId(), message.getSeatNum(), message.getMessage());
+                break;
+            case CHANGE_SEAT:
+                chatEventListener.changeSeat(message.getRoomId(), message.getSender(), message.getSeatNum(), Integer.parseInt(message.getMessage()));
+                break;
         }
-        /**
-         * TODO MessageType.CHANGE_SEAT 처리하기
-         */
+
         log.info("message={}", message);
-        sendingOperations.convertAndSend("/topic/chat/room/" + message.getRoomId(), message) ;
+        sendingOperations.convertAndSend("/topic/room/" + message.getRoomId(), message) ;
+    }
+
+    @MessageMapping("/classroom/{roomId}/chat/{row}")
+    public void chat(ChatroomMessage message, @DestinationVariable Integer roomId, @DestinationVariable String row){
+        log.info("chatMessageReceived message={}", message);
     }
 }

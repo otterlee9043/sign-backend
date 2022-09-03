@@ -13,3 +13,7 @@
 .count {
   display: inline-block;
 }
+
+.hidden {
+  display: none;
+}

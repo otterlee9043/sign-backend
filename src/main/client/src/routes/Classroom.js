@@ -6,15 +6,26 @@ import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import axios from "axios";
+import { style } from "@mui/system";
 let stompClient = null;
 
 function Room() {
   const params = useParams();
   const [username, setUsername] = useState("");
   const [mySeat, setMySeat] = useState(-1);
+  const [myRow, setMyRow] = useState(-1);
+  const [visible, setVisible] = useState(false);
   const [seats, setSeats] = useState(new Array(40).fill("empty"));
+  const [chat, setChat] = useState([]);
   const roomId = parseInt(params.roomId);
   const colors = ["red", "orange", "yellow", "green", "blue"];
+  const columnNum = 5;
+  const CLASSROOM_EVENT = {
+    ENTER: "ENTER",
+    EXIT: "EXIT",
+    TALK: "TALK",
+    CHANGE_SEAT: "CHANGE_SEAT",
+  };
   const stateRef = useRef();
   stateRef.current = mySeat;
 
@@ -24,39 +35,44 @@ function Room() {
   };
 
   const onConnected = () => {
-    stompClient.subscribe(`/topic/chat/room/${roomId}`, onMessageReceived);
+    stompClient.subscribe(`/topic/classroom/${roomId}`, onColorReceived);
+    stompClient.subscribe(`/topic/classroom/${roomId}/chat/${myRow}`, onMessageReceived);
     stompClient.send(
       "/app/chat/message",
       { roomId: roomId },
-      JSON.stringify({ type: "ENTER", roomId: roomId, sender: username })
+      JSON.stringify({ type: CLASSROOM_EVENT.ENTER, roomId: roomId, sender: username })
     );
     getClassroomInfo();
   };
 
-  const onMessageReceived = (received) => {
-    // console.log(received);
+  const onColorReceived = (received) => {
     const parsedMsg = JSON.parse(received.body);
     switch (parsedMsg.type) {
-      case "TALK":
+      case CLASSROOM_EVENT.TALK:
         color(parsedMsg.seatNum, parsedMsg.message);
         break;
-      case "EXIT":
+      case CLASSROOM_EVENT.EXIT:
         color(parsedMsg.seatNum, "empty");
         break;
-      case "CHANGE_SEAT":
+      case CLASSROOM_EVENT.CHANGE_SEAT:
         setSeats((oldSeats) => {
           let newSeats = [...oldSeats];
           newSeats[parseInt(parsedMsg.message)] = oldSeats[parsedMsg.seatNum];
           newSeats[parsedMsg.seatNum] = "empty";
-
           return newSeats;
         });
         if (isMySeat(parsedMsg.seatNum)) {
           setMySeat(parseInt(parsedMsg.message));
+          setMyRow(parseInt(mySeat / columnNum));
         }
         break;
     }
   };
+
+  const onMessageReceived = (received) => {
+    console.log(received);
+  };
+
   const isMySeat = (seatNum) => {
     return seatNum === stateRef.current;
   };
@@ -75,10 +91,10 @@ function Room() {
 
   const selectColor = (color) => {
     stompClient.send(
-      "/app/chat/message",
+      `/app/classroom/${roomId}`,
       {},
       JSON.stringify({
-        type: "TALK",
+        type: CLASSROOM_EVENT.TALK,
         roomId: roomId,
         sender: username,
         message: color,
@@ -89,10 +105,10 @@ function Room() {
 
   const changeSeat = (seatNum) => {
     stompClient.send(
-      "/app/chat/message",
+      `/app/classroom/${roomId}`,
       {},
       JSON.stringify({
-        type: "CHANGE_SEAT",
+        type: CLASSROOM_EVENT.CHANGE_SEAT,
         roomId: roomId,
         sender: username,
         message: seatNum,
@@ -107,6 +123,7 @@ function Room() {
       .then((res) => {
         const classroomInfo = res.data;
         setMySeat(classroomInfo.seatNum);
+        setMyRow(parseInt(classroomInfo.seatNum / columnNum));
         setSeats((oldSeats) => {
           let newSeats = [...oldSeats];
           for (let seatNum in classroomInfo.classRoomStates) {
@@ -144,16 +161,36 @@ function Room() {
       stompClient.disconnect();
     };
     window.addEventListener("beforeunload", (event) => {
+      console.log(event);
+      console.log(document.activeElement.href);
       event.preventDefault();
       event.returnValue = "";
       stompClient.disconnect();
     });
   }, []);
 
+  const openChatroom = () => {
+    setVisible((visible) => !visible);
+  };
   return (
     <div>
-      <NavBar mode="classroom" />
+      <NavBar mode="classroom" roomId={roomId} handler={openChatroom} />
       <div className={styles.container}>
+        <div></div>
+        <div className={visible ? null : styles.hidden}>
+          <ul>
+            <li></li>
+          </ul>
+          <form
+            onSubmit={(event) => {
+              console.log("submit: ", event);
+              event.preventDefault();
+            }}
+          >
+            <input name="message" />
+            <button type="submit"></button>
+          </form>
+        </div>
         <div className={styles.seats}>
           {seats.map((color, index) =>
             index === mySeat ? (

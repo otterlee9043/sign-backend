@@ -10,6 +10,7 @@ import Confirmed from "./routes/Confirmed.js";
 import injectContext from "./store/appContext";
 import CreateRoom from "./routes/CreateRoom.js";
 import EnterRoom from "./routes/EnterRoom.js";
+import Chatroom from "./routes/Chatroom.js";
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
         <Route path="/signup" element={<Signup />} />
         <Route path="/main" element={<Main />} />
         <Route path="/classroom/:roomId" element={<Classroom />} />
+        <Route path="/classroom/:roomId/chat" element={<Chatroom />} />
         <Route path="/mystate" element={<MyRoom />} />
         <Route path="/confirm/:token" element={<Confirmed />} />
         <Route path="/createroom" element={<CreateRoom />} />
