@@ -31,11 +31,11 @@ public class MessageController {
         }
 
         log.info("message={}", message);
-        sendingOperations.convertAndSend("/topic/room/" + message.getRoomId(), message) ;
+        sendingOperations.convertAndSend("/topic/classroom/" + message.getRoomId(), message) ;
     }
 
     @MessageMapping("/classroom/{roomId}/chat/{row}")
-    public void chat(ChatroomMessage message, @DestinationVariable Integer roomId, @DestinationVariable String row){
-        log.info("chatMessageReceived message={}", message);
+    public void chat(ChatroomMessage message, @DestinationVariable Integer roomId, @DestinationVariable Integer row){
+        sendingOperations.convertAndSend("/topic/classroom/" + roomId + "/chat/" + row, message) ;
     }
 }

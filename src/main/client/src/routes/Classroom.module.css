@@ -17,3 +17,11 @@
 .hidden {
   display: none;
 }
+
+.chatroom {
+  background-color: rgba(48, 48, 48, 0.9);
+
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}

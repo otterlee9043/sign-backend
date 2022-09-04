@@ -6,7 +6,6 @@ import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import axios from "axios";
-import { style } from "@mui/system";
 let stompClient = null;
 
 function Room() {
@@ -27,7 +26,10 @@ function Room() {
     CHANGE_SEAT: "CHANGE_SEAT",
   };
   const stateRef = useRef();
+  const messageRef = useRef();
+  const chatRef = useRef();
   stateRef.current = mySeat;
+  chatRef.current = chat;
 
   const connect = async () => {
     let Sock = new SockJS("http://localhost:8080/ws");
@@ -36,9 +38,8 @@ function Room() {
 
   const onConnected = () => {
     stompClient.subscribe(`/topic/classroom/${roomId}`, onColorReceived);
-    stompClient.subscribe(`/topic/classroom/${roomId}/chat/${myRow}`, onMessageReceived);
     stompClient.send(
-      "/app/chat/message",
+      `/app/classroom/${roomId}`,
       { roomId: roomId },
       JSON.stringify({ type: CLASSROOM_EVENT.ENTER, roomId: roomId, sender: username })
     );
@@ -70,7 +71,10 @@ function Room() {
   };
 
   const onMessageReceived = (received) => {
-    console.log(received);
+    console.log(chatRef.current);
+    const parsedMsg = JSON.parse(received.body);
+    setChat([...chatRef.current, parsedMsg.content]);
+    console.log(chat);
   };
 
   const isMySeat = (seatNum) => {
@@ -117,13 +121,30 @@ function Room() {
     );
   };
 
+  const sendMessage = (message) => {
+    stompClient.send(
+      `/app/classroom/${roomId}/chat/${myRow}`,
+      {},
+      JSON.stringify({
+        type: CLASSROOM_EVENT.TALK,
+        seatNum: mySeat,
+        sender: username,
+        content: message,
+      })
+    );
+  };
+
   const getClassroomInfo = async () => {
     axios
       .get(`/api/classroom/${roomId}/classroomInfo`)
       .then((res) => {
         const classroomInfo = res.data;
         setMySeat(classroomInfo.seatNum);
-        setMyRow(parseInt(classroomInfo.seatNum / columnNum));
+        setMyRow(() => {
+          const row = parseInt(classroomInfo.seatNum / columnNum);
+          stompClient.subscribe(`/topic/classroom/${roomId}/chat/${row}`, onMessageReceived);
+          return row;
+        });
         setSeats((oldSeats) => {
           let newSeats = [...oldSeats];
           for (let seatNum in classroomInfo.classRoomStates) {
@@ -131,6 +152,8 @@ function Room() {
           }
           return newSeats;
         });
+
+        console.log(`/topic/classroom/${roomId}/chat/${myRow}`);
       })
       .catch((err) => {
         console.log(err);
@@ -176,21 +199,6 @@ function Room() {
     <div>
       <NavBar mode="classroom" roomId={roomId} handler={openChatroom} />
       <div className={styles.container}>
-        <div></div>
-        <div className={visible ? null : styles.hidden}>
-          <ul>
-            <li></li>
-          </ul>
-          <form
-            onSubmit={(event) => {
-              console.log("submit: ", event);
-              event.preventDefault();
-            }}
-          >
-            <input name="message" />
-            <button type="submit"></button>
-          </form>
-        </div>
         <div className={styles.seats}>
           {seats.map((color, index) =>
             index === mySeat ? (
@@ -203,6 +211,22 @@ function Room() {
               </span>
             )
           )}
+        </div>
+        <div className={visible ? styles.chatroom : styles.hidden}>
+          <ul>
+            {chat.map((data, index) => (
+              <li key={index}>{data}</li>
+            ))}
+          </ul>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              sendMessage(messageRef.current.value);
+            }}
+          >
+            <input ref={messageRef} />
+            <button type="submit">전송</button>
+          </form>
         </div>
       </div>
       <div className={styles.count}>
