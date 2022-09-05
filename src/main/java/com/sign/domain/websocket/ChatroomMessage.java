@@ -2,6 +2,11 @@ package com.sign.domain.websocket;
 
 import lombok.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
 @Getter
 @Setter
 @ToString
@@ -16,4 +21,5 @@ public class ChatroomMessage {
     private Integer seatNum;
     private String sender;
     private String content;
+    private String sentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("a h:mm", Locale.KOREA));
 }
