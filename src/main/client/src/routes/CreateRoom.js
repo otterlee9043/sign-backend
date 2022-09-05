@@ -41,16 +41,16 @@ function CreateRoom() {
   return (
     <div className={styles.container}>
       <div>
-        {errorMsg == "" ? null : (
-          <div className={styles.errorMsg}>{errorMsg}</div>
-        )}
+        {errorMsg == "" ? null : <div className={styles.errorMsg}>{errorMsg}</div>}
         <p className={styles.label}>입장 코드</p>
         <input
+          className={styles.input}
           type="text"
           onChange={(event) => setRoomcode(event.target.value)}
         ></input>
         <p className={styles.label}>방 이름</p>
         <input
+          className={styles.input}
           type="text"
           onChange={(event) => setRoomname(event.target.value)}
         ></input>

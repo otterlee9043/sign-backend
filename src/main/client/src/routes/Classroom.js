@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import axios from "axios";
+import { Card } from "react-bootstrap";
 let stompClient = null;
 
 function Room() {
@@ -73,7 +74,7 @@ function Room() {
   const onMessageReceived = (received) => {
     console.log(chatRef.current);
     const parsedMsg = JSON.parse(received.body);
-    setChat([...chatRef.current, parsedMsg.content]);
+    setChat([...chatRef.current, parsedMsg]);
     console.log(chat);
   };
 
@@ -127,7 +128,7 @@ function Room() {
       {},
       JSON.stringify({
         type: CLASSROOM_EVENT.TALK,
-        seatNum: mySeat,
+        seatNum: mySeat + 1,
         sender: username,
         content: message,
       })
@@ -196,45 +197,67 @@ function Room() {
     setVisible((visible) => !visible);
   };
   return (
-    <div>
+    <div className={styles.wrapper}>
       <NavBar mode="classroom" roomId={roomId} handler={openChatroom} />
-      <div className={styles.container}>
-        <div className={styles.seats}>
-          {seats.map((color, index) =>
-            index === mySeat ? (
-              <Circle key={index} size="small" state={color} emoji="" mySeat={true} />
-            ) : color !== "empty" ? (
-              <Circle key={index} size="small" state={color} emoji="" />
-            ) : (
-              <span key={index} onClick={() => changeSeat(index)}>
+      <div className={styles.classroom}>
+        <div className={styles.container}>
+          <div className={styles.seats}>
+            {seats.map((color, index) =>
+              index === mySeat ? (
+                <Circle key={index} size="small" state={color} emoji="" mySeat={true} />
+              ) : color !== "empty" ? (
                 <Circle key={index} size="small" state={color} emoji="" />
-              </span>
+              ) : (
+                <span key={index} onClick={() => changeSeat(index)}>
+                  <Circle key={index} size="small" state={color} emoji="" />
+                </span>
+              )
+            )}
+          </div>
+        </div>
+        <div className={styles.colors}>
+          {colors.map((color, index) => (
+            <span onClick={() => selectColor(color)} key={index}>
+              <Circle key={index} size="small" state={color} />
+            </span>
+          ))}
+        </div>
+      </div>
+      <div className={visible ? styles.chatroom : styles.hidden}>
+        <ul className={styles.msgContainer}>
+          {chat.map((data, index) => 
+            stateRef.current + 1 == data.seatNum ? (
+              <div key={index} className={`${styles.msgWrapper} ${styles.right}`}>
+                <span className={styles.sentTime}>{data.sentTime}</span>
+                <li className={styles.message}>
+                  {data.content}
+                </li>
+              </div>
+            ) : (
+              <div key={index} className={`${styles.msgWrapper} ${styles.left}`}>
+                <span className={styles.sender}>{data.seatNum}번 좌석</span>
+                <li className={styles.message}>
+                  <span>{data.content}</span>
+                </li>
+                <span className={styles.sentTime}>{data.sentTime}</span>
+              </div>
             )
           )}
-        </div>
-        <div className={visible ? styles.chatroom : styles.hidden}>
-          <ul>
-            {chat.map((data, index) => (
-              <li key={index}>{data}</li>
-            ))}
-          </ul>
+        </ul>
+        <div className={styles.inputBar}>
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              sendMessage(messageRef.current.value);
+              if (messageRef.current.value != "") sendMessage(messageRef.current.value);
+              messageRef.current.value = "";
             }}
           >
-            <input ref={messageRef} />
-            <button type="submit">전송</button>
+            <input className={styles.input} ref={messageRef} />
+            <button className={styles.button} type="submit">
+              전송
+            </button>
           </form>
         </div>
-      </div>
-      <div className={styles.count}>
-        {colors.map((color, index) => (
-          <span onClick={() => selectColor(color)} key={index}>
-            <Circle key={index} size="small" state={color} />
-          </span>
-        ))}
       </div>
     </div>
   );

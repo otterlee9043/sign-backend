@@ -2,6 +2,20 @@
   text-align: right;
 }
 
+.left {
+  text-align: left;
+}
+
+.wrapper {
+  position: relative;
+  height: 100%;
+  display: block;
+}
+
+.classroom {
+  position: absolute;
+}
+
 .container {
   height: 75vh;
   position: relative;
@@ -10,7 +24,7 @@
   align-items: center;
 }
 
-.count {
+.colors {
   display: inline-block;
 }
 
@@ -20,8 +34,63 @@
 
 .chatroom {
   background-color: rgba(48, 48, 48, 0.9);
-
   position: absolute;
   width: 100%;
-  height: 100%;
+  height: -webkit-fill-available;
+}
+
+.message {
+  display: inline-block;
+  white-space: normal;
+  border-radius: 13px;
+  background-color: white;
+  width: 65%;
+  height: auto;
+  color: black;
+  padding: 8px 10px;
+  margin: 10px auto;
+}
+
+.msgContainer {
+  height: 85%;
+  overflow-y: scroll;
+  padding: 0px;
+  text-align: left;
+}
+
+.button {
+  font-size: 20px;
+  font-weight: 200;
+  line-height: 2;
+  color: white;
+  background: #0289b1;
+  border-radius: 25px;
+  padding: 0 20px 0 20px;
+  border: none;
+}
+
+.input {
+  font-size: 20px;
+  color: white;
+  text-align: center;
+  background-color: transparent;
+  border: none;
+  border-bottom: 2px solid #ccc;
+  margin-right: 10px;
+}
+
+.sender {
+  font-weight: bold;
+  margin-right: 10px;
+  display: block;
+}
+
+.sentTime {
+  margin: 0 10px;
+  font-size: 13px;
+}
+
+.msgWrapper {
+  width: 100%;
+  height: auto; 
 }

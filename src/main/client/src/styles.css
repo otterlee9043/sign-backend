@@ -11,12 +11,11 @@ a:hover {
 }
 
 body {
-  padding: 35px 20px;
   max-width: 380px;
   margin: 0 auto;
   background: rgb(48, 48, 48);
   color: white;
-  height: 100%;
+  height: 100vh;
 }
 
 div {
@@ -25,4 +24,9 @@ div {
 
 .rooms {
   text-align: left;
+}
+
+#root {
+  padding: 35px 10px;
+  height: -webkit-fill-available;
 }

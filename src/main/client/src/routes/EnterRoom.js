@@ -59,7 +59,11 @@ function EnterRoom() {
       <div>
         {errorMsg == "" ? null : <div className={styles.errorMsg}>{errorMsg}</div>}
         <p className={styles.label}>입장 코드</p>
-        <input type="text" onChange={(event) => setRoomcode(event.target.value)}></input>
+        <input
+          type="text"
+          className={styles.input}
+          onChange={(event) => setRoomcode(event.target.value)}
+        ></input>
         <StyledButton text="방 참가" handler={enterRoom} />
       </div>
     </div>
