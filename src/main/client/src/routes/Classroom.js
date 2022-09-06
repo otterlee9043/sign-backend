@@ -6,21 +6,21 @@ import { useParams } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import axios from "axios";
-import { Card } from "react-bootstrap";
+import Message from "../components/Message";
+import { switchClasses } from "@mui/material";
 let stompClient = null;
 
 function Room() {
   const params = useParams();
-  const [username, setUsername] = useState("");
-  const [mySeat, setMySeat] = useState(-1);
-  const [myRow, setMyRow] = useState(-1);
+  // const [username, setUsername] = useState("");
   const [visible, setVisible] = useState(false);
   const [seats, setSeats] = useState(new Array(40).fill("empty"));
   const [chat, setChat] = useState([]);
+  const [chatSubscription, setChatSubs] = useState(null);
   const roomId = parseInt(params.roomId);
   const colors = ["red", "orange", "yellow", "green", "blue"];
   const columnNum = 5;
-  const CLASSROOM_EVENT = {
+  const EVENT = {
     ENTER: "ENTER",
     EXIT: "EXIT",
     TALK: "TALK",
@@ -29,20 +29,23 @@ function Room() {
   const stateRef = useRef();
   const messageRef = useRef();
   const chatRef = useRef();
-  stateRef.current = mySeat;
+  const chatSubsRef = useRef();
+  const rowRef = useRef();
+  const usernameRef = useRef();
   chatRef.current = chat;
-
+  let classSubscription;
+  chatSubsRef.current = chatSubscription;
   const connect = async () => {
     let Sock = new SockJS("http://localhost:8080/ws");
     stompClient = over(Sock);
   };
 
   const onConnected = () => {
-    stompClient.subscribe(`/topic/classroom/${roomId}`, onColorReceived);
+    classSubscription = stompClient.subscribe(`/topic/classroom/${roomId}`, onColorReceived);
     stompClient.send(
       `/app/classroom/${roomId}`,
       { roomId: roomId },
-      JSON.stringify({ type: CLASSROOM_EVENT.ENTER, roomId: roomId, sender: username })
+      JSON.stringify({ type: EVENT.ENTER, roomId: roomId, sender: usernameRef.current })
     );
     getClassroomInfo();
   };
@@ -50,13 +53,13 @@ function Room() {
   const onColorReceived = (received) => {
     const parsedMsg = JSON.parse(received.body);
     switch (parsedMsg.type) {
-      case CLASSROOM_EVENT.TALK:
+      case EVENT.TALK:
         color(parsedMsg.seatNum, parsedMsg.message);
         break;
-      case CLASSROOM_EVENT.EXIT:
+      case EVENT.EXIT:
         color(parsedMsg.seatNum, "empty");
         break;
-      case CLASSROOM_EVENT.CHANGE_SEAT:
+      case EVENT.CHANGE_SEAT:
         setSeats((oldSeats) => {
           let newSeats = [...oldSeats];
           newSeats[parseInt(parsedMsg.message)] = oldSeats[parsedMsg.seatNum];
@@ -64,15 +67,16 @@ function Room() {
           return newSeats;
         });
         if (isMySeat(parsedMsg.seatNum)) {
-          setMySeat(parseInt(parsedMsg.message));
-          setMyRow(parseInt(mySeat / columnNum));
+          // setMySeat(parseInt(parsedMsg.message));
+          // setMyRow(parseInt(mySeat / columnNum));
+          stateRef.current = parseInt(parsedMsg.message);
+          rowRef.current = parseInt(stateRef.current / columnNum);
         }
         break;
     }
   };
 
   const onMessageReceived = (received) => {
-    console.log(chatRef.current);
     const parsedMsg = JSON.parse(received.body);
     setChat([...chatRef.current, parsedMsg]);
     console.log(chat);
@@ -99,11 +103,11 @@ function Room() {
       `/app/classroom/${roomId}`,
       {},
       JSON.stringify({
-        type: CLASSROOM_EVENT.TALK,
+        type: EVENT.TALK,
         roomId: roomId,
-        sender: username,
+        sender: usernameRef.current,
         message: color,
-        seatNum: mySeat,
+        seatNum: stateRef.current,
       })
     );
   };
@@ -113,23 +117,53 @@ function Room() {
       `/app/classroom/${roomId}`,
       {},
       JSON.stringify({
-        type: CLASSROOM_EVENT.CHANGE_SEAT,
+        type: EVENT.CHANGE_SEAT,
         roomId: roomId,
-        sender: username,
+        sender: usernameRef.current,
         message: seatNum,
-        seatNum: mySeat,
+        seatNum: stateRef.current,
       })
     );
+    stompClient.send(
+      `/app/classroom/${roomId}/chat/${rowRef.current}`,
+      {},
+      JSON.stringify({
+        type: EVENT.EXIT,
+        seatNum: stateRef.current + 1,
+        sender: usernameRef.current,
+        content: null,
+      })
+    );
+    chatSubsRef.current.unsubscribe();
+    rowRef.current = parseInt(seatNum / columnNum);
+    setChatSubs((_) => {
+      const subscription = stompClient.subscribe(
+        `/topic/classroom/${roomId}/chat/${rowRef.current}`,
+        onMessageReceived
+      );
+      stompClient.send(
+        `/app/classroom/${roomId}/chat/${rowRef.current}`,
+        {},
+        JSON.stringify({
+          type: EVENT.ENTER,
+          seatNum: seatNum + 1,
+          sender: usernameRef.current,
+          row: rowRef.current + 1,
+          content: null,
+        })
+      );
+      return subscription;
+    });
   };
 
   const sendMessage = (message) => {
     stompClient.send(
-      `/app/classroom/${roomId}/chat/${myRow}`,
+      `/app/classroom/${roomId}/chat/${rowRef.current}`,
       {},
       JSON.stringify({
-        type: CLASSROOM_EVENT.TALK,
-        seatNum: mySeat + 1,
-        sender: username,
+        type: EVENT.TALK,
+        seatNum: stateRef.current + 1,
+        sender: usernameRef.current,
         content: message,
       })
     );
@@ -140,11 +174,25 @@ function Room() {
       .get(`/api/classroom/${roomId}/classroomInfo`)
       .then((res) => {
         const classroomInfo = res.data;
-        setMySeat(classroomInfo.seatNum);
-        setMyRow(() => {
-          const row = parseInt(classroomInfo.seatNum / columnNum);
-          stompClient.subscribe(`/topic/classroom/${roomId}/chat/${row}`, onMessageReceived);
-          return row;
+        stateRef.current = classroomInfo.seatNum;
+        rowRef.current = parseInt(classroomInfo.seatNum / columnNum);
+        setChatSubs((_) => {
+          const subscription = stompClient.subscribe(
+            `/topic/classroom/${roomId}/chat/${rowRef.current}`,
+            onMessageReceived
+          );
+          stompClient.send(
+            `/app/classroom/${roomId}/chat/${rowRef.current}`,
+            {},
+            JSON.stringify({
+              type: EVENT.ENTER,
+              seatNum: stateRef.current + 1,
+              sender: usernameRef.current,
+              row: rowRef.current + 1,
+              content: null,
+            })
+          );
+          return subscription;
         });
         setSeats((oldSeats) => {
           let newSeats = [...oldSeats];
@@ -154,7 +202,7 @@ function Room() {
           return newSeats;
         });
 
-        console.log(`/topic/classroom/${roomId}/chat/${myRow}`);
+        console.log(`/topic/classroom/${roomId}/chat/${rowRef.current}`);
       })
       .catch((err) => {
         console.log(err);
@@ -169,8 +217,8 @@ function Room() {
           if (res.status !== 200) {
             alert("There has been some errors.");
           }
-          if (username === "expired") setUsername("");
-          else setUsername(res.data);
+          if (res.data === "expired") usernameRef.current = "";
+          else usernameRef.current = res.data;
           connect().then(() => {
             stompClient.connect({ roomId: roomId, username: res.data }, onConnected, onError);
           });
@@ -196,6 +244,8 @@ function Room() {
   const openChatroom = () => {
     setVisible((visible) => !visible);
   };
+
+  let prevRow = null;
   return (
     <div className={styles.wrapper}>
       <NavBar mode="classroom" roomId={roomId} handler={openChatroom} />
@@ -203,7 +253,7 @@ function Room() {
         <div className={styles.container}>
           <div className={styles.seats}>
             {seats.map((color, index) =>
-              index === mySeat ? (
+              index === stateRef.current ? (
                 <Circle key={index} size="small" state={color} emoji="" mySeat={true} />
               ) : color !== "empty" ? (
                 <Circle key={index} size="small" state={color} emoji="" />
@@ -225,24 +275,40 @@ function Room() {
       </div>
       <div className={visible ? styles.chatroom : styles.hidden}>
         <ul className={styles.msgContainer}>
-          {chat.map((data, index) => 
-            stateRef.current + 1 == data.seatNum ? (
-              <div key={index} className={`${styles.msgWrapper} ${styles.right}`}>
-                <span className={styles.sentTime}>{data.sentTime}</span>
-                <li className={styles.message}>
-                  {data.content}
-                </li>
-              </div>
-            ) : (
-              <div key={index} className={`${styles.msgWrapper} ${styles.left}`}>
-                <span className={styles.sender}>{data.seatNum}번 좌석</span>
-                <li className={styles.message}>
-                  <span>{data.content}</span>
-                </li>
-                <span className={styles.sentTime}>{data.sentTime}</span>
-              </div>
-            )
-          )}
+          {chat.map((data, index) => {
+            switch (data.type) {
+              case EVENT.ENTER:
+                return (
+                  <div key={index} className={styles.announcWrapper}>
+                    {data.sender === usernameRef.current ? (
+                      <div>
+                        {index !== 0 ? <hr></hr> : null}
+                        <span>{data.row}번째 줄 대화방</span>
+                        <br></br>
+                      </div>
+                    ) : null}
+
+                    <span className={styles.announcement}>
+                      {data.seatNum}번 좌석님이 들어왔습니다.
+                    </span>
+                  </div>
+                );
+              case EVENT.EXIT:
+                return (
+                  <div key={index} className={styles.announcWrapper}>
+                    <span className={styles.announcement}>
+                      {data.seatNum}번 좌석님이 나갔습니다.
+                    </span>
+                  </div>
+                );
+              case EVENT.TALK:
+                return stateRef.current + 1 == data.seatNum ? (
+                  <Message key={index} myMessage={true} data={data}></Message>
+                ) : (
+                  <Message key={index} myMessage={false} data={data}></Message>
+                );
+            }
+          })}
         </ul>
         <div className={styles.inputBar}>
           <form
