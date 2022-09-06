@@ -32,8 +32,7 @@ public class ChatEventListener {
     //username, sessionId
     private static final int roomSize = 40;
     @EventListener
-    public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-
+    public void handleSessionConnectedEvent(SessionConnectedEvent event) {
         Map nativeHeaders = getNativeHeaders(event);
         Integer roomId = Integer.parseInt(getHeaderValue(nativeHeaders, "roomId"));
         String username = getHeaderValue(nativeHeaders, "username");
@@ -75,7 +74,7 @@ public class ChatEventListener {
     }
 
     @EventListener
-    public void handleWebSocketDisconnectListener(SessionDisconnectEvent event){
+    public void handleSessionDisconnectEvent(SessionDisconnectEvent event){
         String sessionId = getSessionId();
         log.info(">>> disconnected | sessionId={}", sessionId);
         log.info(">>> disconnected | [before] connectedUser={}", connectedUser);

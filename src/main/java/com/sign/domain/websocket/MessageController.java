@@ -23,10 +23,10 @@ public class MessageController {
             case ENTER, EXIT:
                 break;
             case TALK:
-                chatEventListener.color(message.getRoomId(), message.getSeatNum(), message.getMessage());
+                chatEventListener.color(roomId, message.getSeatNum(), message.getMessage());
                 break;
             case CHANGE_SEAT:
-                chatEventListener.changeSeat(message.getRoomId(), message.getSender(), message.getSeatNum(), Integer.parseInt(message.getMessage()));
+                chatEventListener.changeSeat(roomId, message.getSender(), message.getSeatNum(), Integer.parseInt(message.getMessage()));
                 break;
         }
 
