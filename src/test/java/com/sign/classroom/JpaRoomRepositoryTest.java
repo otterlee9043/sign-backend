@@ -1,7 +1,7 @@
 package com.sign.classroom;
 
-import com.sign.domain.classroom.Classroom;
-import com.sign.domain.member.Member;
+import com.sign.domain.classroom.entity.Classroom;
+import com.sign.domain.member.entity.Member;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;

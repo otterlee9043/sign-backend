@@ -1,5 +1,7 @@
-package com.sign.domain.member;
+package com.sign.domain.member.service;
 
+import com.sign.domain.member.entity.LoginMember;
+import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

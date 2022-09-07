@@ -1,6 +1,8 @@
-package com.sign.domain.member;
+package com.sign.domain.member.service;
 
+import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
+import com.sign.domain.member.service.dto.MemberSignupForm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;

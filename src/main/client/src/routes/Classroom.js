@@ -42,17 +42,60 @@ function Room() {
   };
 
   const onConnected = () => {
-    classSubscription = stompClient.subscribe(`/topic/classroom/${roomId}`, onColorReceived);
-    queueSubsRef.current = stompClient.subscribe(`/queue/temp/classroom/${roomId}`, (received) => {
-      console.log(received);
-      queueSubsRef.current.unsubscribe();
-    });
+    classSubscription = stompClient.subscribe(
+      `/topic/classroom/${roomId}`,
+      onColorReceived
+    );
+    queueSubsRef.current = stompClient.subscribe(
+      `/queue/temp/classroom/${roomId}/user/${usernameRef.current}`,
+      (received) => {
+        const classroomInfo = JSON.parse(received.body);
+        stateRef.current = classroomInfo.seatNum;
+        rowRef.current = parseInt(classroomInfo.seatNum / columnNum);
+        setChatSubs((_) => {
+          const subscription = stompClient.subscribe(
+            `/topic/classroom/${roomId}/chat/${rowRef.current}`,
+            onMessageReceived
+          );
+          stompClient.send(
+            `/app/classroom/${roomId}/chat/${rowRef.current}`,
+            {},
+            JSON.stringify({
+              type: EVENT.ENTER,
+              seatNum: stateRef.current + 1,
+              sender: usernameRef.current,
+              row: rowRef.current + 1,
+              content: null,
+            })
+          );
+          return subscription;
+        });
+        setSeats((oldSeats) => {
+          let newSeats = [...oldSeats];
+          for (let seatNum in classroomInfo.classRoomStates) {
+            newSeats[seatNum] = classroomInfo.classRoomStates[seatNum];
+          }
+          return newSeats;
+        });
+        queueSubsRef.current.unsubscribe();
+      }
+    );
     stompClient.send(
       `/app/classroom/${roomId}`,
       { roomId: roomId },
-      JSON.stringify({ type: EVENT.ENTER, roomId: roomId, sender: usernameRef.current })
+      JSON.stringify({
+        type: EVENT.ENTER,
+        roomId: roomId,
+        sender: usernameRef.current,
+      })
     );
-    // getClassroomInfo();
+    stompClient.send(
+      `/app/classroomInfo/${roomId}`,
+      {},
+      JSON.stringify({
+        sender: usernameRef.current,
+      })
+    );
   };
 
   const onColorReceived = (received) => {
@@ -72,8 +115,6 @@ function Room() {
           return newSeats;
         });
         if (isMySeat(parsedMsg.seatNum)) {
-          // setMySeat(parseInt(parsedMsg.message));
-          // setMyRow(parseInt(mySeat / columnNum));
           stateRef.current = parseInt(parsedMsg.message);
           rowRef.current = parseInt(stateRef.current / columnNum);
         }
@@ -225,7 +266,11 @@ function Room() {
           if (res.data === "expired") usernameRef.current = "";
           else usernameRef.current = res.data;
           connect().then(() => {
-            stompClient.connect({ roomId: roomId, username: res.data }, onConnected, onError);
+            stompClient.connect(
+              { roomId: roomId, username: res.data },
+              onConnected,
+              onError
+            );
           });
         })
         .catch((err) => {
@@ -259,7 +304,13 @@ function Room() {
           <div className={styles.seats}>
             {seats.map((color, index) =>
               index === stateRef.current ? (
-                <Circle key={index} size="small" state={color} emoji="" mySeat={true} />
+                <Circle
+                  key={index}
+                  size="small"
+                  state={color}
+                  emoji=""
+                  mySeat={true}
+                />
               ) : color !== "empty" ? (
                 <Circle key={index} size="small" state={color} emoji="" />
               ) : (
@@ -319,7 +370,8 @@ function Room() {
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              if (messageRef.current.value != "") sendMessage(messageRef.current.value);
+              if (messageRef.current.value != "")
+                sendMessage(messageRef.current.value);
               messageRef.current.value = "";
             }}
           >

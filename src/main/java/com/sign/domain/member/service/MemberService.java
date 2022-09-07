@@ -1,4 +1,7 @@
-package com.sign.domain.member;
+package com.sign.domain.member.service;
+
+import com.sign.domain.member.entity.Member;
+import com.sign.domain.member.service.dto.MemberSignupForm;
 
 import java.util.Optional;
 

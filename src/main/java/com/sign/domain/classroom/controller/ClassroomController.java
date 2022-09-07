@@ -1,8 +1,11 @@
-package com.sign.domain.classroom;
+package com.sign.domain.classroom.controller;
 
-import com.sign.domain.member.LoginMember;
-import com.sign.domain.member.Member;
-import com.sign.domain.member.MemberService;
+import com.sign.domain.classroom.service.dto.ClassroomCreateForm;
+import com.sign.domain.classroom.service.ClassroomService;
+import com.sign.domain.classroom.entity.Classroom;
+import com.sign.domain.member.entity.LoginMember;
+import com.sign.domain.member.entity.Member;
+import com.sign.domain.member.service.MemberService;
 import com.sign.domain.websocket.ClassroomInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -83,15 +86,5 @@ public class ClassroomController {
             log.info("room.get().getId().toString():", room.get().getId().toString());
             return room.get().getId().toString();
         }
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/api/classroom/{roomId}/classroomInfo")
-    public ClassroomInfo getClassroomInfo(@PathVariable Integer roomId, @AuthenticationPrincipal LoginMember loginMember){
-        ClassroomInfo classroomInfo = new ClassroomInfo();
-        classroomInfo.setClassRoomStates(classroomService.getRoomStates(roomId));
-        classroomInfo.setSeatNum(classroomService.getMySeatPosition(roomId, loginMember.getUsername()));
-
-        return classroomInfo;
     }
 }

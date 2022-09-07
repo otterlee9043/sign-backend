@@ -1,7 +1,7 @@
 package com.sign.member.repository;
 
-import com.sign.domain.classroom.ClassroomService;
-import com.sign.domain.member.MemberService;
+import com.sign.domain.classroom.service.ClassroomService;
+import com.sign.domain.member.service.MemberService;
 import com.sign.domain.member.repository.MemberRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

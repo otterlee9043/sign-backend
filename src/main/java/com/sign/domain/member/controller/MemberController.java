@@ -1,15 +1,16 @@
-package com.sign.domain.member;
+package com.sign.domain.member.controller;
 
-import com.sign.domain.classroom.ClassroomService;
+import com.sign.domain.classroom.service.ClassroomService;
+import com.sign.domain.member.entity.LoginMember;
+import com.sign.domain.member.service.MemberService;
+import com.sign.domain.member.service.dto.MemberSignupForm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.Optional;
 
 @Slf4j
 @RestController

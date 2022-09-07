@@ -1,7 +1,6 @@
 package com.sign.domain.member.repository;
 
-import com.sign.domain.classroom.Classroom;
-import com.sign.domain.member.Member;
+import com.sign.domain.member.entity.Member;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

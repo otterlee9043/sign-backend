@@ -9,6 +9,8 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -40,9 +42,12 @@ public class MessageController {
         sendingOperations.convertAndSend("/topic/classroom/" + roomId + "/chat/" + row, message) ;
     }
 
-    @SubscribeMapping("/queue/temp/classroom/{roomId}")
-    public void sendClassroomInfo(@DestinationVariable Integer roomId){
-        log.info("@SubscribeMapping.roomId={}", roomId);
-
+    @MessageMapping("/classroomInfo/{roomId}")
+    public void sendClassroomInfo(ClassroomMessage message, @DestinationVariable Integer roomId,  @Header("simpSessionId") String sessionId){
+        ClassroomInfo classroomInfo = new ClassroomInfo();
+        classroomInfo.setClassRoomStates(chatEventListener.getRoomStatesByRoomId(roomId));
+        classroomInfo.setSeatNum(chatEventListener.getMySeatPosition(roomId, sessionId));
+        log.info("Destination={}", "/queue/temp/classroom/" + roomId + "/user/" + message.getSender());
+        sendingOperations.convertAndSend("/queue/temp/classroom/" + roomId + "/user/" + message.getSender(), classroomInfo) ;
     }
 }

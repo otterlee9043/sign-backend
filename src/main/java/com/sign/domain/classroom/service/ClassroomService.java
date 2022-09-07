@@ -1,8 +1,9 @@
-package com.sign.domain.classroom;
+package com.sign.domain.classroom.service;
 
-import com.sign.domain.member.LoginMember;
-import com.sign.domain.member.Member;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.sign.domain.classroom.entity.Classroom;
+import com.sign.domain.classroom.service.dto.ClassroomCreateForm;
+import com.sign.domain.member.entity.LoginMember;
+import com.sign.domain.member.entity.Member;
 
 import java.util.List;
 import java.util.Map;

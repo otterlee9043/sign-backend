@@ -1,11 +1,10 @@
-package com.sign.domain.classroom;
+package com.sign.domain.classroom.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sign.domain.member.Member;
+import com.sign.domain.member.entity.Member;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import javax.persistence.*;
 import java.util.*;

@@ -1,12 +1,14 @@
-package com.sign.domain.classroom;
+package com.sign.domain.classroom.service;
 
-import com.sign.domain.member.LoginMember;
-import com.sign.domain.member.Member;
+import com.sign.domain.classroom.entity.Classroom;
+import com.sign.domain.classroom.repository.ClassroomRepository;
+import com.sign.domain.classroom.service.dto.ClassroomCreateForm;
+import com.sign.domain.member.entity.LoginMember;
+import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
 import com.sign.domain.websocket.ChatEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component

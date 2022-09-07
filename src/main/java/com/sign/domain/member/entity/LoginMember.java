@@ -1,5 +1,6 @@
-package com.sign.domain.member;
+package com.sign.domain.member.entity;
 
+import com.sign.domain.member.entity.Member;
 import lombok.Getter;
 import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;

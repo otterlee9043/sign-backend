@@ -1,6 +1,6 @@
 package com.sign;
 
-import com.sign.domain.member.MemberSecurityService;
+import com.sign.domain.member.service.MemberSecurityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

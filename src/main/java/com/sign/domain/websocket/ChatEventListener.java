@@ -27,8 +27,8 @@ public class ChatEventListener {
     private final SimpMessageSendingOperations sendingOperations;
     private final Map<Integer, Map<Integer, String>> lastState = new ConcurrentHashMap<>();
     //roomId, seatNum, color
-    private final Map<Integer, Map<String, SeatInfo>> seatingCharts = new ConcurrentHashMap<>();
-    //roomId, sessionId, seatInfo(seatNum, username)
+    private final Map<Integer, Map<String, Integer>> seatingCharts = new ConcurrentHashMap<>();
+    //roomId, sessionId, seatNum
 
     private static final int roomSize = 40;
     @EventListener
@@ -38,12 +38,9 @@ public class ChatEventListener {
         String username = getHeaderValue(nativeHeaders, "username");
         String sessionId = getSessionId();
         log.info(">>> connected | sessionId={}", sessionId);
-//        log.info(">>> connected | [before] connectedUser={}", connectedUser);
         log.info(">>> connected | [before] lastState={}", lastState);
         log.info(">>> connected | [before] seatingCharts={}", seatingCharts);
-//        connectedUser.put(username, sessionId);
         if (seatingCharts.containsKey(roomId)) {
-            //방에 무조건 차례대로 앉게 하는 경우
             Map seatingChart = seatingCharts.get(roomId);
             Map classroomState = lastState.get(roomId);
             int seatNum = 0;
@@ -53,22 +50,19 @@ public class ChatEventListener {
                     break;
                 }
             }
-            seatingChart.put(sessionId, new SeatInfo(seatNum, username));
+            seatingChart.put(sessionId, seatNum);
 
             Map colorInfo = lastState.get(roomId);
             colorInfo.put(seatNum, "empty");
         } else {
-            //방에 첫번째로 접속하는 경우
             Map seatingChart = new ConcurrentHashMap<>();
-//            seatInfo.put(username, 0);
-            seatingChart.put(sessionId, new SeatInfo(0, username));
+            seatingChart.put(sessionId, 0);
             seatingCharts.put(roomId, seatingChart);
 
             Map colorInfo = new ConcurrentHashMap<>();
             colorInfo.put(0, "empty");
             lastState.put(roomId, colorInfo);
         }
-//        log.info(">>> connected | [after] connectedUser={}", connectedUser);
         log.info(">>> connected | [after] lastState={}", lastState);
         log.info(">>> connected | [after] seatingCharts={}", seatingCharts);
     }
@@ -77,13 +71,12 @@ public class ChatEventListener {
     public void handleSessionDisconnectEvent(SessionDisconnectEvent event){
         String sessionId = getSessionId();
         log.info(">>> disconnected | sessionId={}", sessionId);
-//        log.info(">>> disconnected | [before] connectedUser={}", connectedUser);
         log.info(">>> disconnected | [before] lastState={}", lastState);
         log.info(">>> disconnected | [before] seatingCharts={}", seatingCharts);
         for (Integer roomId : seatingCharts.keySet()) {
             if (seatingCharts.get(roomId).containsKey(sessionId)){
-                int seatNum = seatingCharts.get(roomId).get(sessionId).getSeatNum();
-                String username = seatingCharts.get(roomId).get(sessionId).getUsername();
+                int seatNum = seatingCharts.get(roomId).get(sessionId);
+//                String username = seatingCharts.get(roomId).get(sessionId).getUsername();
                 seatingCharts.get(roomId).remove(sessionId);
                 if(seatingCharts.get(roomId).isEmpty()) {
                     seatingCharts.remove(roomId);
@@ -92,16 +85,13 @@ public class ChatEventListener {
                 if(lastState.get(roomId).isEmpty()){
                     lastState.remove(roomId);
                 }
-//                connectedUser.remove(username);
 
                 sendingOperations.convertAndSend("/topic/room/" + roomId,
-                        new ClassroomMessage(ClassroomMessage.MessageType.EXIT, seatNum, roomId, username, null));
+                        new ClassroomMessage(ClassroomMessage.MessageType.EXIT, seatNum, roomId, null, null));
 
                 break;
             }
         }
-
-//        log.info(">>> disconnected | [after] connectedUser={}", connectedUser);
         log.info(">>> disconnected | [after] lastState={}", lastState);
         log.info(">>> disconnected | [after] seatingCharts={}", seatingCharts);
 
@@ -117,7 +107,7 @@ public class ChatEventListener {
         return lastState.get(roomId);
     }
 
-    public Map<String, SeatInfo> getSeatingChartByRoomId(String roomId){
+    public Map<String, Integer> getSeatingChartByRoomId(String roomId){
         return seatingCharts.get(roomId);
     }
 
@@ -140,9 +130,8 @@ public class ChatEventListener {
     }
 
     public Integer getMySeatPosition(Integer roomId, String sessionId) {
-        //String sessionId = roomId(username);
         log.info("seatingCharts={}", seatingCharts);
-        return seatingCharts.get(roomId).get(sessionId).getSeatNum();
+        return seatingCharts.get(roomId).get(sessionId);
     }
 
     public void color(Integer roomId, int seatNum, String color){
@@ -154,12 +143,11 @@ public class ChatEventListener {
     }
     public void changeSeat(Integer roomId, String sessionId, int oldSeatNum, int newSeatNum){
         Map<Integer, String> classroomState = lastState.get(roomId);
-        Map<String, SeatInfo> seatingChart = seatingCharts.get(roomId);
+        Map<String, Integer> seatingChart = seatingCharts.get(roomId);
         classroomState.put(newSeatNum, classroomState.get(oldSeatNum));
         classroomState.remove(oldSeatNum);
-        //String sessionId = connectedUser.get(username);
-        SeatInfo seatInfo = seatingChart.get(sessionId);
-        seatInfo.setSeatNum(newSeatNum);
-        seatingChart.put(sessionId, seatInfo);
+//        SeatInfo seatInfo = seatingChart.get(sessionId);
+//        seatInfo.setSeatNum(newSeatNum);
+        seatingChart.put(sessionId, newSeatNum);
     }
 }

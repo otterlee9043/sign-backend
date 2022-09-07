@@ -1,4 +1,4 @@
-package com.sign.domain.classroom;
+package com.sign.domain.classroom.service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

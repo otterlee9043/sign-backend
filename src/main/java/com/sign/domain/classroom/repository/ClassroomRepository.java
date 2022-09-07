@@ -1,6 +1,7 @@
-package com.sign.domain.classroom;
+package com.sign.domain.classroom.repository;
 
-import com.sign.domain.member.Member;
+import com.sign.domain.classroom.entity.Classroom;
+import com.sign.domain.member.entity.Member;
 
 import java.util.List;
 import java.util.Optional;
