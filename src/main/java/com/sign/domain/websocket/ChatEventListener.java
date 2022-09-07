@@ -14,6 +14,7 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 import java.util.List;
 import java.util.Map;
@@ -28,8 +29,7 @@ public class ChatEventListener {
     //roomId, seatNum, color
     private final Map<Integer, Map<String, SeatInfo>> seatingCharts = new ConcurrentHashMap<>();
     //roomId, sessionId, seatInfo(seatNum, username)
-    private final Map<String, String> connectedUser = new ConcurrentHashMap<>();
-    //username, sessionId
+
     private static final int roomSize = 40;
     @EventListener
     public void handleSessionConnectedEvent(SessionConnectedEvent event) {
@@ -38,10 +38,10 @@ public class ChatEventListener {
         String username = getHeaderValue(nativeHeaders, "username");
         String sessionId = getSessionId();
         log.info(">>> connected | sessionId={}", sessionId);
-        log.info(">>> connected | [before] connectedUser={}", connectedUser);
+//        log.info(">>> connected | [before] connectedUser={}", connectedUser);
         log.info(">>> connected | [before] lastState={}", lastState);
         log.info(">>> connected | [before] seatingCharts={}", seatingCharts);
-        connectedUser.put(username, sessionId);
+//        connectedUser.put(username, sessionId);
         if (seatingCharts.containsKey(roomId)) {
             //방에 무조건 차례대로 앉게 하는 경우
             Map seatingChart = seatingCharts.get(roomId);
@@ -68,7 +68,7 @@ public class ChatEventListener {
             colorInfo.put(0, "empty");
             lastState.put(roomId, colorInfo);
         }
-        log.info(">>> connected | [after] connectedUser={}", connectedUser);
+//        log.info(">>> connected | [after] connectedUser={}", connectedUser);
         log.info(">>> connected | [after] lastState={}", lastState);
         log.info(">>> connected | [after] seatingCharts={}", seatingCharts);
     }
@@ -77,7 +77,7 @@ public class ChatEventListener {
     public void handleSessionDisconnectEvent(SessionDisconnectEvent event){
         String sessionId = getSessionId();
         log.info(">>> disconnected | sessionId={}", sessionId);
-        log.info(">>> disconnected | [before] connectedUser={}", connectedUser);
+//        log.info(">>> disconnected | [before] connectedUser={}", connectedUser);
         log.info(">>> disconnected | [before] lastState={}", lastState);
         log.info(">>> disconnected | [before] seatingCharts={}", seatingCharts);
         for (Integer roomId : seatingCharts.keySet()) {
@@ -92,7 +92,7 @@ public class ChatEventListener {
                 if(lastState.get(roomId).isEmpty()){
                     lastState.remove(roomId);
                 }
-                connectedUser.remove(username);
+//                connectedUser.remove(username);
 
                 sendingOperations.convertAndSend("/topic/room/" + roomId,
                         new ClassroomMessage(ClassroomMessage.MessageType.EXIT, seatNum, roomId, username, null));
@@ -101,11 +101,17 @@ public class ChatEventListener {
             }
         }
 
-        log.info(">>> disconnected | [after] connectedUser={}", connectedUser);
+//        log.info(">>> disconnected | [after] connectedUser={}", connectedUser);
         log.info(">>> disconnected | [after] lastState={}", lastState);
         log.info(">>> disconnected | [after] seatingCharts={}", seatingCharts);
 
     }
+
+    @EventListener
+    public void handleSubscribeEvent(SessionSubscribeEvent event){
+        log.info("SessionSubscribeEvent={}", event);
+    }
+
 
     public Map<Integer, String> getRoomStatesByRoomId(Integer roomId){
         return lastState.get(roomId);
@@ -133,8 +139,8 @@ public class ChatEventListener {
         return nativeHeaders;
     }
 
-    public Integer getMySeatPosition(Integer roomId, String username) {
-        String sessionId = connectedUser.get(username);
+    public Integer getMySeatPosition(Integer roomId, String sessionId) {
+        //String sessionId = roomId(username);
         log.info("seatingCharts={}", seatingCharts);
         return seatingCharts.get(roomId).get(sessionId).getSeatNum();
     }
@@ -146,12 +152,12 @@ public class ChatEventListener {
     public String getColor(int roomId, int seatNum){
         return lastState.get(roomId).get(seatNum);
     }
-    public void changeSeat(Integer roomId, String username, int oldSeatNum, int newSeatNum){
+    public void changeSeat(Integer roomId, String sessionId, int oldSeatNum, int newSeatNum){
         Map<Integer, String> classroomState = lastState.get(roomId);
         Map<String, SeatInfo> seatingChart = seatingCharts.get(roomId);
         classroomState.put(newSeatNum, classroomState.get(oldSeatNum));
         classroomState.remove(oldSeatNum);
-        String sessionId = connectedUser.get(username);
+        //String sessionId = connectedUser.get(username);
         SeatInfo seatInfo = seatingChart.get(sessionId);
         seatInfo.setSeatNum(newSeatNum);
         seatingChart.put(sessionId, seatInfo);

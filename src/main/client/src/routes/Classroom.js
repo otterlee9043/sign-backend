@@ -30,6 +30,7 @@ function Room() {
   const messageRef = useRef();
   const chatRef = useRef();
   const chatSubsRef = useRef();
+  const queueSubsRef = useRef();
   const rowRef = useRef();
   const usernameRef = useRef();
   chatRef.current = chat;
@@ -42,12 +43,16 @@ function Room() {
 
   const onConnected = () => {
     classSubscription = stompClient.subscribe(`/topic/classroom/${roomId}`, onColorReceived);
+    queueSubsRef.current = stompClient.subscribe(`/queue/temp/classroom/${roomId}`, (received) => {
+      console.log(received);
+      queueSubsRef.current.unsubscribe();
+    });
     stompClient.send(
       `/app/classroom/${roomId}`,
       { roomId: roomId },
       JSON.stringify({ type: EVENT.ENTER, roomId: roomId, sender: usernameRef.current })
     );
-    getClassroomInfo();
+    // getClassroomInfo();
   };
 
   const onColorReceived = (received) => {

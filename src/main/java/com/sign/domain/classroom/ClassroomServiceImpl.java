@@ -98,7 +98,7 @@ public class ClassroomServiceImpl implements ClassroomService{
     }
 
     @Override
-    public Integer getMySeatPosition(Integer roomId, String username) {
-        return chatEventListener.getMySeatPosition(roomId, username);
+    public Integer getMySeatPosition(Integer roomId, String sessionId) {
+        return chatEventListener.getMySeatPosition(roomId, sessionId);
     }
 }
