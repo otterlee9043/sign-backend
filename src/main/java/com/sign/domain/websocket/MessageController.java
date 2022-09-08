@@ -19,7 +19,7 @@ public class MessageController {
     private final SimpMessageSendingOperations sendingOperations;
     private final ChatEventListener chatEventListener;
     @MessageMapping("/classroom/{roomId}")
-    public void enter (ClassroomMessage message, @DestinationVariable Integer roomId, @Header("simpSessionId") String sessionId){
+    public void enter (RoomMessage message, @DestinationVariable Integer roomId, @Header("simpSessionId") String sessionId){
         log.info("@DestinationVariable.roomId: {}", roomId);
         log.info("@Header.sessionId: {}", sessionId);
         switch (message.getType()){
@@ -43,8 +43,8 @@ public class MessageController {
     }
 
     @MessageMapping("/classroomInfo/{roomId}")
-    public void sendClassroomInfo(ClassroomMessage message, @DestinationVariable Integer roomId,  @Header("simpSessionId") String sessionId){
-        ClassroomInfo classroomInfo = new ClassroomInfo();
+    public void sendRoomInfo(RoomMessage message, @DestinationVariable Integer roomId,  @Header("simpSessionId") String sessionId){
+        RoomInfo classroomInfo = new RoomInfo();
         classroomInfo.setClassRoomStates(chatEventListener.getRoomStatesByRoomId(roomId));
         classroomInfo.setSeatNum(chatEventListener.getMySeatPosition(roomId, sessionId));
         log.info("Destination={}", "/queue/temp/classroom/" + roomId + "/user/" + message.getSender());

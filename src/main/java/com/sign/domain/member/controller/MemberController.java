@@ -1,6 +1,6 @@
 package com.sign.domain.member.controller;
 
-import com.sign.domain.classroom.service.ClassroomService;
+import com.sign.domain.classroom.service.RoomService;
 import com.sign.domain.member.entity.LoginMember;
 import com.sign.domain.member.service.MemberService;
 import com.sign.domain.member.service.dto.MemberSignupForm;
@@ -18,7 +18,7 @@ import javax.validation.Valid;
 @RequestMapping("/api/member")
 public class MemberController {
     private final MemberService memberService;
-    private final ClassroomService classroomService;
+    private final RoomService classroomService;
 
     @GetMapping("/join")
     public String signupForm(){
@@ -59,7 +59,7 @@ public class MemberController {
     }
 
 //    @PostMapping("api/room")
-//    public String createRoom(@ModelAttribute ClassroomDTO classroomDTO){
+//    public String createRoom(@ModelAttribute RoomDTO classroomDTO){
 //        classroomService.createRoom(classroomDTO.toEntity());
 //        return "room created";
 //    }

@@ -8,8 +8,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-//@EnableJpaRepositories(basePackages = {"com.sign.member.repository"})
-//@EntityScan(basePackages = {"com.sign.member"})
+
 @SpringBootApplication
 public class SignApplication {
 

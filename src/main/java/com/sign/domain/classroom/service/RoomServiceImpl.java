@@ -1,8 +1,8 @@
 package com.sign.domain.classroom.service;
 
-import com.sign.domain.classroom.entity.Classroom;
-import com.sign.domain.classroom.repository.ClassroomRepository;
-import com.sign.domain.classroom.service.dto.ClassroomCreateForm;
+import com.sign.domain.classroom.entity.Room;
+import com.sign.domain.classroom.repository.RoomRepository;
+import com.sign.domain.classroom.service.dto.RoomCreateForm;
 import com.sign.domain.member.entity.LoginMember;
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
@@ -21,56 +21,56 @@ import java.util.Set;
 @Component
 @RequiredArgsConstructor
 @Transactional
-public class ClassroomServiceImpl implements ClassroomService{
+public class RoomServiceImpl implements RoomService{
 
     private final MemberRepository memberRepository;
-    private final ClassroomRepository classroomRepository;
+    private final RoomRepository classroomRepository;
     private final ChatEventListener chatEventListener;
 
     // roomId, sessionId, color
     @Override
-    public Optional<Classroom> findRoomByRoomCode(String roomCode) {
+    public Optional<Room> findRoomByRoomCode(String roomCode) {
         return classroomRepository.findByCode(roomCode);
     }
 
     @Override
-    public List<Classroom> findRoomByRoomName(String roomName) {
+    public List<Room> findRoomByRoomName(String roomName) {
         return classroomRepository.findByName(roomName);
     }
 
     @Override
-    public Optional<Classroom> findRoomByRoomId(Long roomId) {
-        Optional<Classroom> result = classroomRepository.findById(roomId);
+    public Optional<Room> findRoomByRoomId(Long roomId) {
+        Optional<Room> result = classroomRepository.findById(roomId);
         return result;
     }
 
     @Override
-    public Set<Classroom> findJoiningRooms(Member member) {
+    public Set<Room> findJoiningRooms(Member member) {
         return member.getJoiningRooms();
     }
 
 
     @Override
-    public List<Classroom> findHostingRooms(Member host) {
+    public List<Room> findHostingRooms(Member host) {
         return classroomRepository.findByHost(host);
     }
 
     @Override
-    public Classroom createRoom(ClassroomCreateForm form, LoginMember loginMember) {
+    public Room createRoom(RoomCreateForm form, LoginMember loginMember) {
         //log.info("loginMember.getMember(): {}", loginMember.getMember());
         Member host = memberRepository.findById(loginMember.getMember().getId()).get();
-        Classroom classroom = new Classroom();
+        Room classroom = new Room();
         classroom.setRoomCode(form.getRoomCode());
         classroom.setRoomName(form.getRoomName());
         classroom.setHost(host);
-        Classroom created = classroomRepository.save(classroom);
+        Room created = classroomRepository.save(classroom);
         joinRoom(host, created);
 //        joinRoom(loginMember.getMember(), classroom.getRoomCode());
         return classroom;
     }
 
     @Override
-    public Classroom joinRoom(Member member, Classroom classroom) {
+    public Room joinRoom(Member member, Room classroom) {
         Member memberToJoin = memberRepository.findById(member.getId()).get();
         memberToJoin.addJoiningRoom(classroom);
         log.info("member.getJoiningRooms: {}",memberToJoin.getJoiningRooms());
@@ -79,7 +79,7 @@ public class ClassroomServiceImpl implements ClassroomService{
     }
 
     @Override
-    public boolean checkJoined(Member member, Classroom classroom) {
+    public boolean checkJoined(Member member, Room classroom) {
         Member checkingMember = memberRepository.findById(member.getId()).get();
         if (findJoiningRooms(checkingMember).contains(classroom)) {
             return true;
@@ -88,7 +88,7 @@ public class ClassroomServiceImpl implements ClassroomService{
     }
 
     @Override
-    public void deleteRoom(Classroom classroom) {
+    public void deleteRoom(Room classroom) {
         classroomRepository.delete(classroom);
     }
 

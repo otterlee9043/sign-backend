@@ -11,7 +11,7 @@ import java.util.Map;
 @Setter
 @ToString
 @RequiredArgsConstructor
-public class ClassroomInfo {
+public class RoomInfo {
     private Integer seatNum;
     private Map<Integer, String> classRoomStates;
 }

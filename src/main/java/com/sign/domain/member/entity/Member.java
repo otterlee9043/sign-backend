@@ -1,7 +1,7 @@
 package com.sign.domain.member.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sign.domain.classroom.entity.Classroom;
+import com.sign.domain.classroom.entity.Room;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,9 +30,9 @@ public class Member {
     @JoinTable(name = "JOINS",
             joinColumns = @JoinColumn(name = "MEMBER_ID"),
             inverseJoinColumns = @JoinColumn(name = "CLASSROOM_ID"))
-    private Set<Classroom> joiningRooms = new HashSet<>();
+    private Set<Room> joiningRooms = new HashSet<>();
 
-    public void addJoiningRoom(Classroom classroom){
+    public void addJoiningRoom(Room classroom){
         joiningRooms.add(classroom);
         classroom.getJoiningMembers().add(this);
     }

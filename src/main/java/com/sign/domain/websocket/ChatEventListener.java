@@ -87,7 +87,7 @@ public class ChatEventListener {
                 }
 
                 sendingOperations.convertAndSend("/topic/room/" + roomId,
-                        new ClassroomMessage(ClassroomMessage.MessageType.EXIT, seatNum, roomId, null, null));
+                        new RoomMessage(RoomMessage.MessageType.EXIT, seatNum, roomId, null, null));
 
                 break;
             }

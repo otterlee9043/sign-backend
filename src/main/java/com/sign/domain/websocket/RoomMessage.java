@@ -7,7 +7,7 @@ import lombok.*;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class ClassroomMessage {
+public class RoomMessage {
 
     public enum MessageType {
         ENTER, TALK, EXIT, CHANGE_SEAT

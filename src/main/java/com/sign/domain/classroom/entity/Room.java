@@ -13,7 +13,7 @@ import java.util.*;
 @Setter
 @Entity
 @NoArgsConstructor
-public class Classroom {
+public class Room {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CLASSROOM_ID")
     private Long id;
@@ -31,7 +31,7 @@ public class Classroom {
     @JsonIgnore
     private Set<Member> joiningMembers = new HashSet<Member>();
 
-    public Classroom (String roomName, Member host, String roomCode){
+    public Room (String roomName, Member host, String roomCode){
         this.roomName = roomName;
         this.host = host;
         this.roomCode = roomCode;

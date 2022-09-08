@@ -1,6 +1,6 @@
 package com.sign.domain.classroom.repository;
 
-import com.sign.domain.classroom.entity.Classroom;
+import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.member.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,59 +13,59 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Component
 @Transactional
-public class JpaRoomRepository implements ClassroomRepository{
+public class JpaRoomRepository implements RoomRepository{
 
     private final EntityManager em;
 
     @Override
-    public Classroom save(Classroom classroom) {
+    public Room save(Room classroom) {
         em.persist(classroom);
         return classroom;
     }
 
     @Override
-    public Optional<Classroom> findById(Long roomId) {
-        Classroom classroom = em.find(Classroom.class, roomId);
+    public Optional<Room> findById(Long roomId) {
+        Room classroom = em.find(Room.class, roomId);
         return Optional.ofNullable(classroom);
     }
 
     @Override
-    public List<Classroom> findByName(String roomName) {
-        List<Classroom> result = em.createQuery("select m from Classroom m where m.roomName =:name", Classroom.class)
+    public List<Room> findByName(String roomName) {
+        List<Room> result = em.createQuery("select m from Room m where m.roomName =:name", Room.class)
                 .setParameter("name", roomName)
                 .getResultList();
         return result;
     }
 
     @Override
-    public Optional<Classroom> findByCode(String roomCode) {
-        List<Classroom> result = em.createQuery("select m from Classroom m where m.roomCode =:roomCode", Classroom.class)
+    public Optional<Room> findByCode(String roomCode) {
+        List<Room> result = em.createQuery("select m from Room m where m.roomCode =:roomCode", Room.class)
                 .setParameter("roomCode", roomCode)
                 .getResultList();
         return result.stream().findAny();
     }
 
     @Override
-    public List<Classroom> findByHost(Member host) {
+    public List<Room> findByHost(Member host) {
         Long hostId = host.getId();
-        List<Classroom> result = em.createQuery("select m from Classroom m where m.hostId =:hostId", Classroom.class)
+        List<Room> result = em.createQuery("select m from Room m where m.hostId =:hostId", Room.class)
                 .setParameter("hostId", hostId)
                 .getResultList();
         return result;
     }
 
     @Override
-    public List<Classroom> findAll() {
-        return em.createQuery("select m from Classroom m", Classroom.class).getResultList();
+    public List<Room> findAll() {
+        return em.createQuery("select m from Room m", Room.class).getResultList();
     }
 
     @Override
-    public void delete(Classroom classroom) {
+    public void delete(Room classroom) {
         em.remove(classroom);
     }
 
     @Override
-    public boolean checkAttached(Classroom classroom){
+    public boolean checkAttached(Room classroom){
         return em.contains(classroom);
     }
 
