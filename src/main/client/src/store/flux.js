@@ -23,8 +23,7 @@ const getState = ({ getStore, getActions, setStore }) => {
       },
       syncTokenFromSessionStore: () => {
         const token = sessionStorage.getItem("token");
-        if (token && token != "" && token != undefined)
-          setStore({ token: token });
+        if (token && token != "" && token != undefined) setStore({ token: token });
       },
       signup: async (username, email, password) => {
         const opts = {
@@ -39,7 +38,7 @@ const getState = ({ getStore, getActions, setStore }) => {
           }),
         };
         try {
-          const response = await fetch("/api/signup", opts);
+          const response = await fetch("/api/member/join", opts);
           if (response.status !== 200) {
             alert("There has been some errors.");
             return false;
@@ -50,7 +49,7 @@ const getState = ({ getStore, getActions, setStore }) => {
           //setStore({ token: data.access_token });
           return true;
         } catch (error) {
-          console.error("There has been an error login");
+          console.error("There has been an error login", error);
         }
       },
       login: async (email, password) => {
@@ -98,9 +97,7 @@ const getState = ({ getStore, getActions, setStore }) => {
             setStore({ message: data.message });
             console.log(data.message);
           })
-          .catch((error) =>
-            console.log("Error loading message from backend", error)
-          );
+          .catch((error) => console.log("Error loading message from backend", error));
       },
       changeColor: (index, color) => {
         //get the store
