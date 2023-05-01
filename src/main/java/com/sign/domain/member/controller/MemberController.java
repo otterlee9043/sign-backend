@@ -6,6 +6,7 @@ import com.sign.domain.member.service.MemberService;
 import com.sign.domain.member.service.dto.MemberSignupForm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -26,17 +27,24 @@ public class MemberController {
         return "ok";
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler
+    public ErrorResult exHandler(Exception e){
+        log.error("[exceptionHandler] ex", e);
+        return new ErrorResult("BAD", e.getMessage());
+    }
+
     @PostMapping("/join")
     public String signup(@Valid MemberSignupForm form, BindingResult bindingResult){
         log.info("signup!");
         log.info("form={}", form);
         if (bindingResult.hasErrors()){
             log.info("errors={}", bindingResult.getAllErrors());
-            return "잘못된 양식입니다.";
+            throw new RuntimeException("잘못된 양식입니다.");
         }
         if (!form.getPassword1().equals(form.getPassword2())){
             bindingResult.rejectValue("password2", "passwordIncorrect", "2개의 패스워드가 일치하지 않습니다.");
-            return "비밀번호가 일치하지 않습니다.";
+            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
         memberService.join(form);
