@@ -1,17 +1,13 @@
 package com.sign.domain.member.service.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
 
-@Getter
-@Setter
-@ToString
+@Data
 public class MemberSignupForm {
 
     @Size(min = 4, max = 25)
@@ -19,7 +15,7 @@ public class MemberSignupForm {
     private String username;
 
     @NotEmpty(message = "비밀번호는 필수 항목입니다.")
-    private String password1;
+    private String password;
 
     @NotEmpty(message = "비밀번호 확인은 필수 항목입니다.")
     private String password2;

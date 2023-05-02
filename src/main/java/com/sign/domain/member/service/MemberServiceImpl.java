@@ -23,7 +23,7 @@ public class MemberServiceImpl implements MemberService {
         Member member = new Member();
         member.setUsername(form.getUsername());
         member.setEmail(form.getEmail());
-        member.setPassword(passwordEncoder.encode(form.getPassword1()));
+        member.setPassword(passwordEncoder.encode(form.getPassword()));
         memberRepository.save(member);
     }
 

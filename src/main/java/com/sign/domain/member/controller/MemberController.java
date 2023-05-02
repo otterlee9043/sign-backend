@@ -3,15 +3,22 @@ package com.sign.domain.member.controller;
 import com.sign.domain.classroom.service.RoomService;
 import com.sign.domain.member.entity.LoginMember;
 import com.sign.domain.member.service.MemberService;
+import com.sign.domain.member.service.dto.MemberSignupErrorResult;
 import com.sign.domain.member.service.dto.MemberSignupForm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -21,41 +28,34 @@ public class MemberController {
     private final MemberService memberService;
     private final RoomService classroomService;
 
-    @GetMapping("/join")
-    public String signupForm(){
-        log.info("GET join");
-        return "ok";
-    }
-
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler
-    public ErrorResult exHandler(Exception e){
+    public ResponseEntity exHandler(MethodArgumentNotValidException e){
         log.error("[exceptionHandler] ex", e);
-        return new ErrorResult("BAD", e.getMessage());
+        Map<String, String> errors = new HashMap<>();
+        e.getBindingResult().getAllErrors()
+                .forEach((error) -> {
+                    String fieldName = ((FieldError) error).getField();
+                    String errorMessage = error.getDefaultMessage();
+                    errors.put(fieldName, errorMessage);
+                });
+        MemberSignupErrorResult errorResult = MemberSignupErrorResult.builder()
+                .code("BAD")
+                .message("잘못된 양식")
+                .errors(errors)
+                .build();
+        return new ResponseEntity(errorResult, HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/join")
-    public String signup(@Valid MemberSignupForm form, BindingResult bindingResult){
+    public String signup(@RequestBody @Validated MemberSignupForm form){
         log.info("signup!");
         log.info("form={}", form);
-        if (bindingResult.hasErrors()){
-            log.info("errors={}", bindingResult.getAllErrors());
-            throw new RuntimeException("잘못된 양식입니다.");
-        }
-        if (!form.getPassword1().equals(form.getPassword2())){
-            bindingResult.rejectValue("password2", "passwordIncorrect", "2개의 패스워드가 일치하지 않습니다.");
-            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
-        }
-
         memberService.join(form);
 
         return "successfully joined!";
     }
 
-    @GetMapping("/login")
-    public String loginForm(){
-        return "GET login";
-    }
 
 
     @GetMapping("/username")
