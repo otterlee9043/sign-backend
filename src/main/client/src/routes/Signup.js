@@ -4,32 +4,80 @@ import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Context } from "../store/appContext";
 import { Formik, Form, Field, ErrorMessage } from "formik";
+import SignupValidationMessage from "../components/SignupValidationMessage.js";
+import axios from "axios";
 import * as Yup from "yup";
 
 function Signup() {
   const { store, actions } = useContext(Context);
+  const [emailBlurred, setEmailBlurred] = useState(false);
+  const [usernameBlurred, setUsernameBlurred] = useState(false);
 
   const validationSchema = Yup.object().shape({
-    email: Yup.string().email("올바른 이메일 형식이 아닙니다!").required("이메일을 입력하세요!"),
+    email: Yup.string().required("이메일을 입력하세요!").email("올바른 이메일 형식이 아닙니다!"),
+    // .when("email", {
+    //   is: emailBlurred,
+    //   then: Yup.string().test("Unique Email", "Email already in use", function (value) {
+    //     return new Promise((resolve, reject) => {
+    //       fetch(`/api/member/email/${value}/exists`).then(async (res) => {
+    //         const data = await res.json();
+    //         console.log(data);
+    //         if (data.duplicate) {
+    //           console.log("if");
+    //           resolve(false);
+    //         }
+    //         console.log("else");
+    //         resolve(true);
+    //       });
+    //     });
+    //   }),
+    // }),
+    // .test(
+    //   "Unique Email",
+    //   "Email already in use",
+    //   async (email) =>
+    //     await (await fetch(`/api/member/email/${email}/exists`)).json()["duplicate"]
+    // ),
+    // return new Promise((resolve, reject) => {
+    //   fetch(`/api/member/email/${value}/exists`).then(async (res) => {
+    //     const data = await res.json();
+    //     console.log(data);
+    //     if (data.duplicate) {
+    //       console.log("if");
+    //       resolve(false);
+    //     }
+    //     console.log("else");
+    //     resolve(true);
+    //   });
+    // });
+    // }),
     username: Yup.string()
+      .required("닉네임을 입력하세요!")
       .min(2, "닉네임은 최소 2글자 이상입니다!")
       .max(10, "닉네임은 최대 10글자입니다!")
       .matches(
         /^[가-힣a-zA-Z][^!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?\s]*$/,
         "닉네임에 특수문자가 포함되면 안되고 숫자로 시작하면 안됩니다!"
-      )
-      .required("닉네임을 입력하세요!"),
+      ),
     password: Yup.string()
+      .required("패스워드를 입력하세요!")
       .min(8, "비밀번호는 최소 8자리 이상입니다")
       .max(16, "비밀번호는 최대 16자리입니다!")
-      .required("패스워드를 입력하세요!")
       .matches(
         /^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[^\s]*$/,
         "알파벳, 숫자, 공백을 제외한 특수문자를 모두 포함해야 합니다!"
       ),
     password2: Yup.string()
-      .oneOf([Yup.ref("password"), null], "비밀번호가 일치하지 않습니다!")
-      .required("필수 입력 값입니다!"),
+      .required("필수 입력 값입니다!")
+      .oneOf([Yup.ref("password"), null], "비밀번호가 일치하지 않습니다!"),
+  });
+
+  const validationTest = Yup.object().shape({
+    email: Yup.string().test(
+      "Unique Email",
+      "Email already in use",
+      async (email) => await (await fetch(`/api/member/email/${email}/exists`)).json()["duplicate"]
+    ),
   });
 
   const navigate = useNavigate();
@@ -37,20 +85,21 @@ function Signup() {
   const handleClick = async (values) => {
     const { username, email, password, password2 } = values;
     const opts = {
+      url: "/api/member/join",
       method: "POST",
-      body: JSON.stringify({
+      headers: {
+        "content-type": "application/json",
+      },
+      data: {
         username: username,
         email: email,
         password: password,
         password2: password2,
-      }),
-      headers: new Headers({
-        "content-type": "application/json",
-      }),
+      },
     };
     try {
-      const response = await fetch("/api/member/join", opts);
-      const data = await response.json();
+      const response = await axios(opts);
+      const data = response.data;
       if (response.status === 200) {
         navigate("/");
       } else if (response.status === 400) {
@@ -89,11 +138,7 @@ function Signup() {
                   }}
                   autoComplete="off"
                 >
-                  <ErrorMessage
-                    className={styles["input-error"]}
-                    component="p"
-                    name="username"
-                  ></ErrorMessage>
+                  <SignupValidationMessage field="username"></SignupValidationMessage>
                   <Field
                     className={styles.input}
                     type="text"
@@ -107,7 +152,8 @@ function Signup() {
                     className={styles["input-error"]}
                     component="p"
                     name="email"
-                  ></ErrorMessage>
+                    validationSchema={validationTest}
+                  />
                   <Field
                     className={styles.input}
                     type="text"
@@ -117,11 +163,7 @@ function Signup() {
                     onChange={handleChange}
                     onBlur={handleBlur}
                   />
-                  <ErrorMessage
-                    className={styles["input-error"]}
-                    component="p"
-                    name="password"
-                  ></ErrorMessage>
+                  <SignupValidationMessage field="password"></SignupValidationMessage>
                   <Field
                     className={styles.input}
                     type="password"
@@ -131,11 +173,7 @@ function Signup() {
                     onChange={handleChange}
                     onBlur={handleBlur}
                   />
-                  <ErrorMessage
-                    className={styles["input-error"]}
-                    component="p"
-                    name="password2"
-                  ></ErrorMessage>
+                  <SignupValidationMessage field="password2"></SignupValidationMessage>
                   <Field
                     className={styles.input}
                     type="password"
