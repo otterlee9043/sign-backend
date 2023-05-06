@@ -3,20 +3,21 @@ package com.sign.domain.member.controller;
 import com.sign.domain.classroom.service.RoomService;
 import com.sign.domain.member.entity.LoginMember;
 import com.sign.domain.member.service.MemberService;
-import com.sign.domain.member.service.dto.MemberSignupErrorResult;
-import com.sign.domain.member.service.dto.MemberSignupForm;
+import com.sign.domain.member.controller.dto.MemberSignupErrorResult;
+import com.sign.domain.member.controller.dto.MemberSignupForm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.PersistenceException;
 import javax.validation.Valid;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,35 +29,30 @@ public class MemberController {
     private final MemberService memberService;
     private final RoomService classroomService;
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity exHandler(MethodArgumentNotValidException e){
-        log.error("[exceptionHandler] ex", e);
-        Map<String, String> errors = new HashMap<>();
-        e.getBindingResult().getAllErrors()
-                .forEach((error) -> {
-                    String fieldName = ((FieldError) error).getField();
-                    String errorMessage = error.getDefaultMessage();
-                    errors.put(fieldName, errorMessage);
-                });
-        MemberSignupErrorResult errorResult = MemberSignupErrorResult.builder()
-                .code("BAD")
-                .message("잘못된 양식")
-                .errors(errors)
-                .build();
-        return new ResponseEntity(errorResult, HttpStatus.BAD_REQUEST);
-    }
-
     @PostMapping("/join")
-    public String signup(@RequestBody @Validated MemberSignupForm form){
-        log.info("signup!");
+    public ResponseEntity signup(@RequestBody @Valid MemberSignupForm form){
         log.info("form={}", form);
+        Map<String, Object> result = new HashMap<>();
         memberService.join(form);
-
-        return "successfully joined!";
+        log.info("member {} joined", form.getUsername());
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @GetMapping("/username/{username}/exists")
+    public ResponseEntity checkUserByUsername(@PathVariable String username) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("duplicate", memberService.isUsernameExist(username));
+        log.info("[checkUserByUsername] check {} result {}", username, result);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
 
+    @GetMapping("/email/{email}/exists")
+    public ResponseEntity checkUserByEmail(@PathVariable String email) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("duplicate", memberService.isEmailExist(email));
+        log.info("[checkUserByEmail] check {} result {}", email, result);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
 
     @GetMapping("/username")
     public String username(@AuthenticationPrincipal LoginMember loginMember){
@@ -66,10 +62,5 @@ public class MemberController {
         return "expired";
     }
 
-//    @PostMapping("api/room")
-//    public String createRoom(@ModelAttribute RoomDTO classroomDTO){
-//        classroomService.createRoom(classroomDTO.toEntity());
-//        return "room created";
-//    }
 }
 

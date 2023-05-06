@@ -1,4 +1,4 @@
-package com.sign.domain.member.service.dto;
+package com.sign.domain.member.controller.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
