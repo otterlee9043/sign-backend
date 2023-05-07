@@ -1,4 +1,4 @@
-package com.sign.domain.member.entity;
+package com.sign.domain.member.security;
 
 import com.sign.domain.member.entity.Member;
 import lombok.Getter;

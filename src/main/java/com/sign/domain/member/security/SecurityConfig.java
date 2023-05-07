@@ -1,6 +1,6 @@
-package com.sign;
+package com.sign.domain.member.security;
 
-import com.sign.domain.member.service.MemberSecurityService;
+import com.sign.domain.member.security.MemberSecurityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +21,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class SecurityConfig {
 
     private final MemberSecurityService memberSecurityService;
+    private final JwtProvider jwtProvider;
 
     @Bean
 
