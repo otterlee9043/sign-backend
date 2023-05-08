@@ -9,7 +9,7 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 @Data
-public class MemberSignupForm {
+public class SignupRequest {
 
     @Pattern(regexp = "^[가-힣a-zA-Z][^!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?\\s]*$",
             message = "이름에는 특수문자를 포함할 수 없고 숫자로 시작할 수 없습니다.")

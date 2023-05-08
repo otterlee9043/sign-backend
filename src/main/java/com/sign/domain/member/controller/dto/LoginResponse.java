@@ -1,0 +1,19 @@
+package com.sign.domain.member.controller.dto;
+
+import com.sign.domain.member.entity.Authority;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class LoginResponse {
+    private String token;
+    private List<Authority> roles = new ArrayList<>();
+}
