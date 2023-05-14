@@ -1,25 +1,19 @@
 package com.sign.domain.member.controller;
 
 import com.sign.domain.classroom.service.RoomService;
-import com.sign.domain.member.entity.LoginMember;
+import com.sign.domain.member.security.LoginMember;
+import com.sign.domain.member.exception.DataDuplicateException;
 import com.sign.domain.member.service.MemberService;
-import com.sign.domain.member.controller.dto.MemberSignupErrorResult;
-import com.sign.domain.member.controller.dto.MemberSignupForm;
+import com.sign.domain.member.controller.dto.SignupRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.PersistenceException;
 import javax.validation.Valid;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -27,14 +21,14 @@ import java.util.Map;
 @RequestMapping("/api/member")
 public class MemberController {
     private final MemberService memberService;
-    private final RoomService classroomService;
 
     @PostMapping("/join")
-    public ResponseEntity signup(@RequestBody @Valid MemberSignupForm form){
-        log.info("form={}", form);
+    public ResponseEntity signup(@RequestBody @Valid SignupRequest request) throws Exception {
+        log.info("form={}", request);
         Map<String, Object> result = new HashMap<>();
-        memberService.join(form);
-        log.info("member {} joined", form.getUsername());
+
+        memberService.join(request);
+        log.info("member {} joined", request.getUsername());
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -54,13 +48,6 @@ public class MemberController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @GetMapping("/username")
-    public String username(@AuthenticationPrincipal LoginMember loginMember){
-        if (loginMember != null){
-            return loginMember.getUsername();
-        }
-        return "expired";
-    }
 
 }
 
