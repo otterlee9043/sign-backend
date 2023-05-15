@@ -44,6 +44,12 @@
   border: none;
 }
 
+.loginBtn:hover {
+  background: #0ca2d0;
+  transition: 0.4s;
+  cursor: pointer;
+}
+
 .errorMsg {
   width: 70%;
   padding: 10px;
@@ -55,4 +61,8 @@
 
 .input-error {
   color: tomato;
+}
+
+.disabled {
+  background: #5eafc7;
 }
