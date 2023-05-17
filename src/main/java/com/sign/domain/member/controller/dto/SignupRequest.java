@@ -1,5 +1,6 @@
 package com.sign.domain.member.controller.dto;
 
+import com.sign.domain.member.entity.Member;
 import lombok.*;
 
 import javax.persistence.*;
@@ -8,7 +9,8 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-@Data
+@Getter
+@RequiredArgsConstructor
 public class SignupRequest {
 
     @Pattern(regexp = "^[가-힣a-zA-Z][^!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?\\s]*$",

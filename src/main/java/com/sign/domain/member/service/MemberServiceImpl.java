@@ -7,7 +7,7 @@ import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.exception.DataDuplicateException;
 import com.sign.domain.member.repository.MemberRepository;
 import com.sign.domain.member.controller.dto.SignupRequest;
-import com.sign.domain.member.security.JwtProvider;
+import com.sign.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
