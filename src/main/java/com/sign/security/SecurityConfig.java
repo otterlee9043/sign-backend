@@ -1,15 +1,16 @@
-package com.sign.domain.member.security;
+package com.sign.security;
 
-import com.sign.domain.member.security.MemberSecurityService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sign.domain.member.controller.dto.AuthErrorResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.CorsConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,15 +19,18 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
@@ -36,6 +40,8 @@ public class SecurityConfig {
 
     private final MemberSecurityService memberSecurityService;
     private final JwtProvider jwtProvider;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
 
 //    @Bean
 //    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -55,53 +61,58 @@ public class SecurityConfig {
 //    }
 
 
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.
                 httpBasic().disable()
                 .csrf().disable()
-                .cors(c -> {
-                    CorsConfigurationSource source = request -> {
-                        CorsConfiguration config = new CorsConfiguration();
-                        config.setAllowedOrigins(
-                                List.of("*")
-                        );
-                        config.setAllowedMethods(
-                                List.of("*")
-                        );
-                        return config;
-                    };
-                    c.configurationSource(source);
-                })
+//                .cors(withDefaults())
+//                .cors(this::configureCors)
                 .sessionManagement().sessionCreationPolicy((SessionCreationPolicy.STATELESS))
                 .and()
                 .authorizeRequests()
-                .antMatchers("/api/member/join", "/api/member/login").permitAll()
-                .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/api/classrooms").hasRole("USER")
-                .anyRequest().denyAll()
+                    .antMatchers("/api/member/join", "/api/member/login").permitAll()
+                    .antMatchers("/admin/**").hasRole("ADMIN")
+                    .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling()
-                .accessDeniedHandler(new AccessDeniedHandler() {
-                    @Override
-                    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-                        response.setStatus(403);
-                        response.setCharacterEncoding("utf-8");
-                        response.setContentType("text/html; charset=UTF-8");
-                        response.getWriter().write("권한이 없는 사용자입니다.");
-                    }
-                })
-                .authenticationEntryPoint(new AuthenticationEntryPoint() {
-                    @Override
-                    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-                        response.setStatus(401);
-                        response.setCharacterEncoding("utf-8");
-                        response.setContentType("text/html; charset=UTF-8");
-                        response.getWriter().write("인증되지 않은 사용자입니다.");
-                    }
-                });
+                .accessDeniedHandler(this::handleAccessDenied)
+                .authenticationEntryPoint(this::handleAuthenticationException);
         return http.build();
+    }
+
+//    private void configureCors(CorsConfigurer c) {
+//        CorsConfigurationSource source = request -> {
+//            CorsConfiguration config = new CorsConfiguration();
+//            config.setAllowedOrigins(
+//                    List.of("http://localhost:3000/")
+//            );
+//            config.setAllowedMethods(
+//                    List.of("*")
+//            );
+//            return config;
+//        };
+//        c.configurationSource(source);
+//    }
+
+    private void handleAccessDenied(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+        response.setStatus(403);
+        response.setCharacterEncoding("utf-8");
+        response.setContentType("application/json; charset=UTF-8");
+        response.getWriter().write("권한이 없는 사용자입니다.");
+    }
+
+    private void handleAuthenticationException
+            (HttpServletRequest request,
+             HttpServletResponse response,
+             AuthenticationException authException) throws IOException, ServletException {
+        response.setStatus(401);
+        response.setCharacterEncoding("utf-8");
+        response.setContentType("application/json; charset=UTF-8");
+        AuthErrorResult result = AuthErrorResult.builder().message("인증되지 않은 사용자입니다.").build();
+        response.getWriter().write(objectMapper.writeValueAsString(result));
     }
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -109,8 +120,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    public MemberSecurityService memberSecurityService() {
-        return
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        configuration.setAllowedMethods(Arrays.asList("HEAD","POST","GET","DELETE","PUT"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 //    @Bean
 //    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {

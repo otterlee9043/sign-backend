@@ -1,4 +1,4 @@
-package com.sign.domain.member.security;
+package com.sign.security;
 
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
@@ -37,8 +37,6 @@ public class MemberSecurityService implements UserDetailsService {
         } else {
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
         }
-        LoginMember loginMember = new LoginMember(member, authorities);
-        log.info("loginMember={}", loginMember);
-        return loginMember;
+        return new LoginMember(member, authorities);
     }
 }
