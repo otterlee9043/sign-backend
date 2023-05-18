@@ -37,6 +37,9 @@ public class MemberSecurityService implements UserDetailsService {
         } else {
             authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
         }
-        return new LoginMember(member, authorities);
+        return new PrincipalDetail(new LoginMember(member, authorities));
+
     }
+
+
 }

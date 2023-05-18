@@ -41,6 +41,8 @@ public class SecurityConfig {
     private final MemberSecurityService memberSecurityService;
     private final JwtProvider jwtProvider;
 
+    private final OAuth2UserService oAuth2UserService;
+
     private ObjectMapper objectMapper = new ObjectMapper();
 
 //    @Bean
@@ -64,38 +66,35 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.
-                httpBasic().disable()
+        http
+                .httpBasic().disable()
                 .csrf().disable()
-//                .cors(withDefaults())
+                //                .cors(withDefaults())
 //                .cors(this::configureCors)
                 .sessionManagement().sessionCreationPolicy((SessionCreationPolicy.STATELESS))
                 .and()
                 .authorizeRequests()
-                    .antMatchers("/api/member/join", "/api/member/login").permitAll()
-                    .antMatchers("/admin/**").hasRole("ADMIN")
+                    .mvcMatchers("/api/member/join",
+                            "/api/member/login",
+                            "/api/member/username/*/exists",
+                            "/api/member/email/*/exists",
+                            "/oauth2/authorization/*",
+                            "/login/oauth2/code/*"
+                            ).permitAll()
+                    .mvcMatchers("/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling()
                 .accessDeniedHandler(this::handleAccessDenied)
-                .authenticationEntryPoint(this::handleAuthenticationException);
+                .authenticationEntryPoint(this::handleAuthenticationException)
+                .and()
+                .oauth2Login()
+                    .userInfoEndpoint()
+                        .userService(oAuth2UserService);
         return http.build();
     }
 
-//    private void configureCors(CorsConfigurer c) {
-//        CorsConfigurationSource source = request -> {
-//            CorsConfiguration config = new CorsConfiguration();
-//            config.setAllowedOrigins(
-//                    List.of("http://localhost:3000/")
-//            );
-//            config.setAllowedMethods(
-//                    List.of("*")
-//            );
-//            return config;
-//        };
-//        c.configurationSource(source);
-//    }
 
     private void handleAccessDenied(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
         response.setStatus(403);
@@ -135,5 +134,19 @@ public class SecurityConfig {
 //    @Bean
 //    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
 //        return authenticationConfiguration.getAuthenticationManager();
+//    }
+
+    //    private void configureCors(CorsConfigurer c) {
+//        CorsConfigurationSource source = request -> {
+//            CorsConfiguration config = new CorsConfiguration();
+//            config.setAllowedOrigins(
+//                    List.of("http://localhost:3000/")
+//            );
+//            config.setAllowedMethods(
+//                    List.of("*")
+//            );
+//            return config;
+//        };
+//        c.configurationSource(source);
 //    }
 }

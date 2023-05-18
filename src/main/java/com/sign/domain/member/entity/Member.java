@@ -2,13 +2,12 @@ package com.sign.domain.member.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sign.domain.classroom.entity.Room;
+import com.sign.domain.member.Role;
 import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -32,9 +31,12 @@ public class Member {
     @Column(unique = true)
     private String email;
 
-    @OneToMany(mappedBy = "member", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @Builder.Default
-    private List<Authority> roles = new ArrayList<>();
+    @Column
+    private String picture;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 
     @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)
@@ -48,8 +50,14 @@ public class Member {
         classroom.getJoiningMembers().add(this);
     }
 
-    public void setRoles(List<Authority> role) {
-        this.roles = role;
-        role.forEach(o -> o.setMember(this));
+    public Member update(String username, String picture) {
+        this.username = username;
+        this.picture = picture;
+
+        return this;
+    }
+
+    public String getRoleKey(){
+        return this.role.getKey();
     }
 }

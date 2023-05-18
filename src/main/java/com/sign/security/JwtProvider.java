@@ -1,5 +1,6 @@
 package com.sign.security;
 
+import com.sign.domain.member.Role;
 import com.sign.domain.member.entity.Authority;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -41,9 +42,9 @@ public class JwtProvider {
         secretKey = Keys.hmacShaKeyFor(salt.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String createToken(String username, List<Authority> roles) {
+    public String createToken(String username, Role role) {
         Claims claims = Jwts.claims().setSubject(username);
-        claims.put("roles", roles);
+        claims.put("role", role);
         Date now = new Date();
         return Jwts.builder()
                 .setClaims(claims)

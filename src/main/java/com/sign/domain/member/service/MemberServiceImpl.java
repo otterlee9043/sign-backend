@@ -1,8 +1,8 @@
 package com.sign.domain.member.service;
 
+import com.sign.domain.member.Role;
 import com.sign.domain.member.controller.dto.LoginRequest;
 import com.sign.domain.member.controller.dto.LoginResponse;
-import com.sign.domain.member.entity.Authority;
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.exception.DataDuplicateException;
 import com.sign.domain.member.repository.MemberRepository;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +33,7 @@ public class MemberServiceImpl implements MemberService {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .roles(Collections.singletonList(Authority.builder().name("ROLE_USER").build()))
+                .role(Role.USER)
                 .build();
         if (isUsernameExist(request.getUsername())) {
             List<String> fields = Arrays.asList("username");
@@ -55,8 +54,8 @@ public class MemberServiceImpl implements MemberService {
         }
 
         return LoginResponse.builder()
-                .roles(member.getRoles())
-                .token(jwtProvider.createToken(member.getUsername(), member.getRoles()))
+                .role(member.getRole())
+                .token(jwtProvider.createToken(member.getUsername(), member.getRole()))
                 .build();
     }
 
