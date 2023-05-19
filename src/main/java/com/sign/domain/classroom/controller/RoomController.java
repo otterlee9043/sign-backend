@@ -31,7 +31,7 @@ public class RoomController {
     public String create(@Validated @RequestBody RoomCreateForm form, BindingResult bindingResult,
                          @AuthenticationPrincipal LoginMember loginMember){
         log.info("form={}", form);
-        Room room = classroomService.createRoom(form, loginMember);
+        Room room = classroomService.createRoom(form, loginMember.getMember());
         log.info("Right before return response");
         return "classroom successfully created";
     }

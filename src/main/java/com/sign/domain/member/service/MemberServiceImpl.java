@@ -34,6 +34,7 @@ public class MemberServiceImpl implements MemberService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
+                .provider("sign")
                 .build();
         if (isUsernameExist(request.getUsername())) {
             List<String> fields = Arrays.asList("username");

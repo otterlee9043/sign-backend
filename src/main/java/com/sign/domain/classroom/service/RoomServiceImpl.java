@@ -3,7 +3,6 @@ package com.sign.domain.classroom.service;
 import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.classroom.repository.RoomRepository;
 import com.sign.domain.classroom.service.dto.RoomCreateForm;
-import com.sign.domain.member.entity.LoginMember;
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
 import com.sign.domain.websocket.ChatEventListener;
@@ -56,9 +55,9 @@ public class RoomServiceImpl implements RoomService{
     }
 
     @Override
-    public Room createRoom(RoomCreateForm form, LoginMember loginMember) {
+    public Room createRoom(RoomCreateForm form, Member member) {
         //log.info("loginMember.getMember(): {}", loginMember.getMember());
-        Member host = memberRepository.findById(loginMember.getMember().getId()).get();
+        Member host = memberRepository.findById(member.getId()).get();
         Room classroom = new Room();
         classroom.setRoomCode(form.getRoomCode());
         classroom.setRoomName(form.getRoomName());

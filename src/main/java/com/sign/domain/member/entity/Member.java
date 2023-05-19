@@ -24,7 +24,6 @@ public class Member {
     @Column(unique = true)
     private String username;
 
-    @NotNull
     private String password;
 
     @NotNull
@@ -37,6 +36,8 @@ public class Member {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    private String provider;
 
     @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)

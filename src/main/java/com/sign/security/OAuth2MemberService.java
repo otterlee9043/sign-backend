@@ -4,18 +4,18 @@ import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-
+@Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class OAuth2MemberService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private final MemberRepository memberRepository;
@@ -33,9 +33,7 @@ public class OAuth2MemberService implements OAuth2UserService<OAuth2UserRequest,
 
         Member member = saveOrUpdate(attributes);
 
-        return new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority(member.getRoleKey())), attributes.getAttributes(), attributes.getNameAttributeKey()
-        );
+        return new LoginMember(member, oAuth2User.getAttributes());
     }
 
     private Member saveOrUpdate(OAuthAttributes attributes) {

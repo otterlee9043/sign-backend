@@ -2,7 +2,6 @@ package com.sign.domain.classroom.service;
 
 import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.classroom.service.dto.RoomCreateForm;
-import com.sign.domain.member.entity.LoginMember;
 import com.sign.domain.member.entity.Member;
 
 import java.util.List;
@@ -22,7 +21,7 @@ public interface RoomService {
 
     List<Room> findHostingRooms(Member host);
 
-    Room createRoom(RoomCreateForm classroom, LoginMember loginMember);
+    Room createRoom(RoomCreateForm classroom, Member member);
 
     Room joinRoom(Member member, Room classroom);
 
