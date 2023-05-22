@@ -22,8 +22,9 @@ public class LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        FilterChain chain, Authentication authentication)
+                                        Authentication authentication)
             throws IOException, ServletException {
+        response.setStatus(HttpServletResponse.SC_OK);
         LoginMember loginMember = (LoginMember) authentication.getPrincipal();
         String email = loginMember.getUsername();
         String token = jwtProvider.createToken(email, loginMember.getMember().getRole());

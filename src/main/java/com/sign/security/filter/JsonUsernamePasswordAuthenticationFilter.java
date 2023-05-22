@@ -1,6 +1,7 @@
 package com.sign.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+@Slf4j
 public class JsonUsernamePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
     private final ObjectMapper objectMapper;
     public JsonUsernamePasswordAuthenticationFilter(ObjectMapper objectMapper){
@@ -26,6 +28,7 @@ public class JsonUsernamePasswordAuthenticationFilter extends AbstractAuthentica
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException, IOException, ServletException {
         if (request.getContentType() == null || !request.getContentType().equals("application/json")) {
+            log.error("filter content type 오류");
             throw new AuthenticationServiceException("Content type 오류");
         }
         String messageBody = StreamUtils.copyToString(request.getInputStream(), StandardCharsets.UTF_8);
@@ -34,7 +37,6 @@ public class JsonUsernamePasswordAuthenticationFilter extends AbstractAuthentica
 
         String email = usernamePasswordMap.get("email");
         String password = usernamePasswordMap.get("password");
-
         UsernamePasswordAuthenticationToken authRequest
                 = new UsernamePasswordAuthenticationToken(email, password);
 
