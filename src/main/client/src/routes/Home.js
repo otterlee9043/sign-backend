@@ -1,59 +1,71 @@
-import React, { useState, useEffect, useContext } from "react";
-import Button from "../components/Button.js";
+import React, { useState, useEffect, useContext, createContext } from "react";
+import NavLinkButton from "../components/NavLinkButton.js";
 import LoginBar from "../components/LoginBar.js";
 import RoomCard from "../components/RoomCard.js";
-import { Context } from "../store/appContext.js";
+import { useNavigate } from "react-router-dom";
 import styles from "./Home.module.css";
+
+export const CurrentUserContext = createContext(null);
 
 function Home() {
   const [rooms, setRooms] = useState([]);
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     async function getRooms() {
       try {
         const response = await fetch("/api/classrooms");
         if (response.status !== 200) {
-          alert("There has been some errors.");
+          console.log("There has been some errors.");
           return false;
         }
         const roomsJson = await response.json();
-
-        console.log(roomsJson)
         setRooms(roomsJson);
-        // if (username === "expired") setRooms([]);
-        // else setRooms([]);
-
       } catch (error) {
-        console.error("There has been an error login", error);
+        console.log("There has been an error login", error);
       }
     }
     getRooms();
   }, []);
 
-  return (
-    <div>
-      <LoginBar />
-      <br></br>
-      <div className={styles.right}>
-        <Button path="createroom" text="방 생성" btnType="room" />
-        <Button path="enterroom" text="방 참여" btnType="room" />
-      </div>
-      <div className="rooms">
-        <h2 className="left">참여한 방</h2>
-      </div>
+  const handleLogout = () => {
+    navigate("/");
+  };
 
+  return (
+    <CurrentUserContext.Provider
+      value={{
+        currentUser,
+        setCurrentUser,
+      }}
+    >
       <div>
-        {rooms.map((room) => (
-          <RoomCard
-            key={room.id}
-            id={room.id}
-            roomName={room.roomName}
-            host={room.host.username}
-          />
-        ))}
+        <LoginBar onLogout={handleLogout} />
+        <div className={styles.right}>
+          <NavLinkButton path="createroom" text="방 생성" btnType="room" />
+          <NavLinkButton path="enterroom" text="방 참여" btnType="room" />
+        </div>
+        <div className="room-container">
+          <h2 className={styles.left}>참여한 방</h2>
+          <div className="room">
+            {rooms.length > 0 ? (
+              rooms.map((room) => (
+                <RoomCard
+                  key={room.id}
+                  id={room.id}
+                  roomName={room.roomName}
+                  hostUsername={room.hostUsername}
+                  hostEmail={room.hostEmail}
+                />
+              ))
+            ) : (
+              <p className={styles["center"]}>참여한 방이 없습니다.</p>
+            )}
+          </div>
+        </div>
       </div>
-      {/* <span>{store.message}</span> */}
-    </div>
+    </CurrentUserContext.Provider>
   );
 }
 

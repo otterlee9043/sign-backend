@@ -1,9 +1,11 @@
 import styles from "./LoginBar.module.css";
-import { useState, useEffect } from "react";
+import { useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
+// import { CurrentUserContext } from "../contexts/CurrentUserContext";
+import { CurrentUserContext } from "../routes/Home";
 
 function LoginBar({ onLogout }) {
-  const [username, setUsername] = useState("");
+  const { currentUser, setCurrentUser } = useContext(CurrentUserContext);
 
   const logout = async () => {
     await fetch("/api/member/logout", { method: "POST" }).then(onLogout);
@@ -14,14 +16,11 @@ function LoginBar({ onLogout }) {
       const response = await fetch("/api/member/userInfo");
       if (!response.ok) {
         if (response.status === 401) {
-          setUsername("");
           return;
         }
       }
       const userInfo = await response.json();
-      console.log(userInfo);
-      const username = userInfo["username"];
-      setUsername(username);
+      setCurrentUser(userInfo);
     } catch (error) {
       console.error("There has been an error login", error);
     }
@@ -33,14 +32,19 @@ function LoginBar({ onLogout }) {
 
   return (
     <div className={styles.loginbar}>
-      {username === "" ? (
+      {currentUser ? (
+        <span className={styles["user-bar"]}>
+          <span>{currentUser.username}</span>
+          <Link to="#">
+            <div
+              className={`${styles["user"]} `}
+              style={{ backgroundImage: `url("${currentUser.picture}")` }}
+            ></div>
+          </Link>
+        </span>
+      ) : (
         <Link to="/login">
           <span>Log in</span>
-        </Link>
-      ) : (
-        <Link to="#">
-          <span>{username}, </span>
-          <span onClick={logout}>Logout</span>
         </Link>
       )}
     </div>
