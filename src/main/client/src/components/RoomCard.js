@@ -68,9 +68,9 @@ function Room({ id, roomName, hostUsername, hostEmail }) {
           <div className={styles.host}>{hostUsername}</div>
         </div>
         <div className={styles.buttons}>
-          <Button text="설정" btnType="edit" handleClick={handleButtonClick} />
+          <Button text="설정" type="edit" handleClick={handleButtonClick} />
           <br></br>
-          <Button text="삭제" btnType="delete" handleClick={deleteRoomName} />
+          <Button text="삭제" type="delete" handleClick={deleteRoomName} />
         </div>
       </div>
     </div>
@@ -83,10 +83,10 @@ function Room({ id, roomName, hostUsername, hostEmail }) {
         </div>
         <div className={styles.buttons}>
           {hostEmail === currentUser.email ? (
-            <Button text="설정" btnType="edit" handleClick={handleButtonClick} />
+            <Button text="설정" type="edit" handleClick={handleButtonClick} />
           ) : null}
           <br></br>
-          <NavLinkButton path={`classroom/${id}`} text="입장" btnType="enter" roomId={id} />
+          <NavLinkButton path={`classroom/${id}`} text="입장" type="enter" roomId={id} />
         </div>
       </div>
     </div>
