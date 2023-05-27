@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import styles from "./RoomForm.module.css";
 import Button from "../components/Button";
-import styles from "./CreateRoom.module.css";
-import StyledButton from "../components/StyledButton";
 function CreateRoom() {
   const [roomcode, setRoomcode] = useState("");
   const [roomname, setRoomname] = useState("");
@@ -29,7 +28,7 @@ function CreateRoom() {
       console.log("This came from the backend", data);
       if (data === "classroom successfully created") {
         //console.log(location.pathname);
-        navigate("/");
+        navigate("/home");
       } else if (data === "classroom successfully created") {
         setMessage("Room name already exists.");
       }
@@ -40,7 +39,7 @@ function CreateRoom() {
 
   return (
     <div className={styles.container}>
-      <div>
+      <div className={styles.wrapper}>
         {errorMsg == "" ? null : <div className={styles.errorMsg}>{errorMsg}</div>}
         <p className={styles.label}>입장 코드</p>
         <input
@@ -54,8 +53,7 @@ function CreateRoom() {
           type="text"
           onChange={(event) => setRoomname(event.target.value)}
         ></input>
-        {/* {<Button path="" text="방 생성" btnType="room" />} */}
-        <StyledButton text="방 생성" handler={createRoom} />
+        <Button text="방 생성" type="room" handleClick={createRoom} />
       </div>
     </div>
   );

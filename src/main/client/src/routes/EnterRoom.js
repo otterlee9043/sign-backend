@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import StyledButton from "../components/StyledButton";
-import styles from "./EnterRoom.module.css";
+import Button from "../components/Button";
+import styles from "./RoomForm.module.css";
 
 function EnterRoom() {
   const [roomcode, setRoomcode] = useState("");
@@ -56,7 +56,7 @@ function EnterRoom() {
 
   return (
     <div className={styles.container}>
-      <div>
+      <div className={styles.wrapper}>
         {errorMsg == "" ? null : <div className={styles.errorMsg}>{errorMsg}</div>}
         <p className={styles.label}>입장 코드</p>
         <input
@@ -64,7 +64,7 @@ function EnterRoom() {
           className={styles.input}
           onChange={(event) => setRoomcode(event.target.value)}
         ></input>
-        <StyledButton text="방 참가" handler={enterRoom} />
+        <Button text="방 참가" type="room" handleClick={enterRoom} />
       </div>
     </div>
   );

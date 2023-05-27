@@ -43,8 +43,8 @@ function Home() {
       <div>
         <LoginBar onLogout={handleLogout} />
         <div className={styles.right}>
-          <NavLinkButton path="createroom" text="방 생성" btnType="room" />
-          <NavLinkButton path="enterroom" text="방 참여" btnType="room" />
+          <NavLinkButton path="createroom" text="방 생성" type="room" />
+          <NavLinkButton path="enterroom" text="방 참여" type="room" />
         </div>
         <div className="room-container">
           <h2 className={styles.left}>참여한 방</h2>
