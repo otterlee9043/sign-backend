@@ -6,12 +6,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.Date;
 
 @NoArgsConstructor
 @Getter
 @Entity
-public class Join {
+public class Joins extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "JOIN_ID")
@@ -27,7 +26,7 @@ public class Join {
 
 
     @Builder
-    public Join(Member member, Room room) {
+    public Joins(Member member, Room room) {
         this.member = member;
         this.room = room;
     }
