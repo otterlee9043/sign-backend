@@ -1,39 +1,46 @@
 package com.sign.domain.classroom.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sign.domain.member.entity.Member;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.*;
 
 @Getter
-@Setter
 @Entity
+@ToString
 @NoArgsConstructor
 public class Room {
+
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CLASSROOM_ID")
     private Long id;
 
-    private String roomName;
+    @NotNull
+    private String name;
+
+    @Column(unique = true)
+    private String code;
 
     @OneToOne
     @JoinColumn(name = "MEMBER_ID")
     private Member host;
 
-    @Column(unique = true)
-    private String roomCode;
+    @OneToMany(mappedBy = "room", cascade = CascadeType.REMOVE)
+    private Set<Joins> joined = new HashSet<>();
 
-    @ManyToMany(mappedBy = "joiningRooms")
-    @JsonIgnore
-    private Set<Member> joiningMembers = new HashSet<Member>();
-
-    public Room (String roomName, Member host, String roomCode){
-        this.roomName = roomName;
+    @Builder
+    public Room (String name, Member host, String code){
+        this.name = name;
         this.host = host;
-        this.roomCode = roomCode;
+        this.code = code;
+    }
+
+    public void updateRoom(String name){
+        this.name = name;
     }
 }

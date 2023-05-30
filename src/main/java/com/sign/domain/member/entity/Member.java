@@ -1,7 +1,6 @@
 package com.sign.domain.member.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sign.domain.classroom.entity.Room;
+import com.sign.domain.classroom.entity.Joins;
 import com.sign.domain.member.Role;
 import lombok.*;
 
@@ -15,13 +14,13 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@ToString(of = {"id", "username", "email", "role"})
 public class Member {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MEMBER_ID")
     private Long id;
 
     @NotNull
-    @Column(unique = true)
     private String username;
 
     private String password;
@@ -39,17 +38,9 @@ public class Member {
 
     private String provider;
 
-    @JsonIgnore
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "JOINS",
-            joinColumns = @JoinColumn(name = "MEMBER_ID"),
-            inverseJoinColumns = @JoinColumn(name = "CLASSROOM_ID"))
-    private Set<Room> joiningRooms = new HashSet<>();
 
-    public void addJoiningRoom(Room classroom){
-        joiningRooms.add(classroom);
-        classroom.getJoiningMembers().add(this);
-    }
+    @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
+    private Set<Joins> joins = new HashSet<>();
 
     public Member update(String username, String picture) {
         this.username = username;
