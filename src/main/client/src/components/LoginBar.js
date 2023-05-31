@@ -2,7 +2,7 @@ import styles from "./LoginBar.module.css";
 import { useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 // import { CurrentUserContext } from "../contexts/CurrentUserContext";
-import { CurrentUserContext } from "../routes/Home";
+import { CurrentUserContext } from "../store/CurrentUserContext";
 
 function LoginBar({ onLogout }) {
   const { currentUser, setCurrentUser } = useContext(CurrentUserContext);
@@ -38,7 +38,11 @@ function LoginBar({ onLogout }) {
           <Link to="#">
             <div
               className={`${styles["user"]} `}
-              style={{ backgroundImage: `url("${currentUser.picture}")` }}
+              style={
+                currentUser.picture
+                  ? { backgroundImage: `url("${currentUser.picture}")` }
+                  : { backgroundImage: `url("logo512.png")` }
+              }
             ></div>
           </Link>
         </span>

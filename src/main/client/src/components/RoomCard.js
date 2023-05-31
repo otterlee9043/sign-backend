@@ -2,7 +2,7 @@ import styles from "./RoomCard.module.css";
 import NavLinkButton from "./NavLinkButton";
 import Button from "./Button";
 import { useContext, useState } from "react";
-import { CurrentUserContext } from "../routes/Home";
+import { CurrentUserContext } from "../store/CurrentUserContext";
 import { useNavigate } from "react-router";
 
 function Room({ id, roomName, hostUsername, hostEmail }) {
@@ -11,7 +11,7 @@ function Room({ id, roomName, hostUsername, hostEmail }) {
   const [savedRoomName, setSavedRoomName] = useState(roomName);
   const [newRoomName, setNewRoomName] = useState(roomName);
   const navigate = useNavigate();
-
+  console.log(currentUser);
   const handleButtonClick = () => {
     setEditing(!editing);
     if (roomName !== newRoomName) updateRoomName();
