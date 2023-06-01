@@ -1,5 +1,6 @@
 package com.sign.domain.classroom.repository;
 
+import com.sign.domain.classroom.entity.Joins;
 import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.member.entity.Member;
 
@@ -9,6 +10,8 @@ import java.util.Optional;
 public interface RoomRepository {
 
     Room save(Room classroom);
+
+    Joins save(Joins joins);
 
     Optional<Room> findById(Long roomId);
 

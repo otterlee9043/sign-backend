@@ -1,5 +1,6 @@
 package com.sign.domain.classroom.repository;
 
+import com.sign.domain.classroom.entity.Joins;
 import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.member.entity.Member;
 import lombok.RequiredArgsConstructor;
@@ -24,23 +25,29 @@ public class JpaRoomRepository implements RoomRepository{
     }
 
     @Override
+    public Joins save(Joins joins) {
+        em.persist(joins);
+        return joins;
+    }
+
+    @Override
     public Optional<Room> findById(Long roomId) {
         Room classroom = em.find(Room.class, roomId);
         return Optional.ofNullable(classroom);
     }
 
     @Override
-    public List<Room> findByName(String roomName) {
-        List<Room> result = em.createQuery("select m from Room m where m.roomName =:name", Room.class)
-                .setParameter("name", roomName)
+    public List<Room> findByName(String name) {
+        List<Room> result = em.createQuery("select m from Room m where m.name =:name", Room.class)
+                .setParameter("name", name)
                 .getResultList();
         return result;
     }
 
     @Override
-    public Optional<Room> findByCode(String roomCode) {
-        List<Room> result = em.createQuery("select m from Room m where m.roomCode =:roomCode", Room.class)
-                .setParameter("roomCode", roomCode)
+    public Optional<Room> findByCode(String code) {
+        List<Room> result = em.createQuery("select m from Room m where m.code =:code", Room.class)
+                .setParameter("code", code)
                 .getResultList();
         return result.stream().findAny();
     }
