@@ -1,14 +1,18 @@
-import React from "react";
+import { useContext } from "react";
 import Message from "./Message";
 import styles from "./ChatMessages.module.css";
+import { CurrentUserContext } from "../../contexts/CurrentUserContext";
 
-function ChatMessages({ chat, stateRef, usernameRef }) {
+function ChatMessages({ chat, stateRef }) {
+  const { currentUser } = useContext(CurrentUserContext);
   const EVENT = {
     ENTER: "ENTER",
     EXIT: "EXIT",
     TALK: "TALK",
     CHANGE_SEAT: "CHANGE_SEAT",
   };
+  console.log(chat);
+
   return (
     <ul className={styles.msgContainer}>
       {chat.map((data, index) => {
@@ -16,7 +20,7 @@ function ChatMessages({ chat, stateRef, usernameRef }) {
           case EVENT.ENTER:
             return (
               <div key={index} className={styles.announcWrapper}>
-                {data.sender === usernameRef.current ? (
+                {data.sender === currentUser.username ? (
                   <div>
                     {index !== 0 ? <hr></hr> : null}
                     <span>{data.row}번째 줄 대화방</span>
@@ -33,7 +37,7 @@ function ChatMessages({ chat, stateRef, usernameRef }) {
               </div>
             );
           case EVENT.TALK:
-            return stateRef.current + 1 == data.seatNum ? (
+            return stateRef.current.seatNum == data.seatNum ? (
               <Message key={index} myMessage={true} data={data}></Message>
             ) : (
               <Message key={index} myMessage={false} data={data}></Message>
