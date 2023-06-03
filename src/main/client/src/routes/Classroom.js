@@ -1,20 +1,16 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import styles from "./Classroom.module.css";
 import NavBar from "../components/NavBar.js";
 import Circle from "../components/classroom/Circle";
 import SeatCircle from "../components/classroom/SeatCircle";
 import ColorCircle from "../components/classroom/ColorCircle";
+import Chatroom from "../components/classroom/Chatroom";
 
-import { connectToWebSocket } from "../utils/websocket";
-import { onConnected, onColorReceived } from "../utils/messageHandler";
 import { EVENT, colors, columnNum } from "../utils/classroomUtils";
 import { useParams } from "react-router-dom";
-import SockJS from "sockjs-client";
-import { over } from "stompjs";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
-import Chatroom from "../components/classroom/Chatroom";
+
 import { useStompConnection } from "../utils/stompConnection";
-// let stompClient = null;
 
 function Room() {
   const { currentUser } = useContext(CurrentUserContext);
@@ -26,10 +22,11 @@ function Room() {
   const [chat, setChat] = useState([]);
   const [chatSubscription, setChatSubsription] = useState(null); // stompClient.subscribe의 리턴 값
 
-  const chatRef = useRef([]); // 채팅 메시지 리스트, onMessageReceived에서 호출
   const onMessageReceived = (received) => {
     const parsedMsg = JSON.parse(received.body);
-    setChat([...chatRef.current, parsedMsg]);
+    setChat((chat) => {
+      return [...chat, parsedMsg];
+    });
   };
 
   const { stompClient, stateRef, rowRef } = useStompConnection(
@@ -40,80 +37,95 @@ function Room() {
     setSeats
   );
 
-  let changeSeat = null;
-  let selectColor = null;
+  const selectColor = useCallback(
+    (color) => {
+      stompClient.send(
+        `/app/classroom/${roomId}`,
+        {},
+        JSON.stringify({
+          type: EVENT.TALK,
+          roomId: roomId,
+          message: color,
+          seatNum: stateRef.current.seatNum,
+        })
+      );
+    },
+    [stompClient, stateRef]
+  );
 
-  useEffect(() => {
-    if (stompClient && stompClient.connected) {
-      selectColor = (color) => {
+  const changeSeat = useCallback(
+    (seatNum) => {
+      console.log(stateRef.current);
+      const prevSeatNum = stateRef.current.seatNum;
+      const newRow = parseInt(seatNum / columnNum) + 1;
+      stompClient.send(
+        `/app/classroom/${roomId}`,
+        {},
+        JSON.stringify({
+          type: EVENT.CHANGE_SEAT,
+          roomId: roomId,
+          message: seatNum + 1,
+          seatNum: stateRef.current.seatNum,
+        })
+      );
+      if (newRow !== rowRef.current) {
         stompClient.send(
-          `/app/classroom/${roomId}`,
+          `/app/classroom/${roomId}/chat/${rowRef.current}`,
           {},
           JSON.stringify({
-            type: EVENT.TALK,
-            roomId: roomId,
-            message: color,
+            type: EVENT.EXIT,
             seatNum: stateRef.current.seatNum,
+            content: null,
           })
         );
-      };
-
-      changeSeat = (seatNum) => {
-        console.log(stateRef.current);
-        const prevSeatNum = stateRef.current.seatNum;
-        const newRow = parseInt(seatNum / columnNum) + 1;
-        stompClient.send(
-          `/app/classroom/${roomId}`,
-          {},
-          JSON.stringify({
-            type: EVENT.CHANGE_SEAT,
-            roomId: roomId,
-            message: seatNum + 1,
-            seatNum: stateRef.current.seatNum,
-          })
-        );
-        if (newRow !== rowRef.current) {
+        chatSubscription.unsubscribe();
+        rowRef.current = newRow;
+        setChatSubsription((_) => {
+          const subscription = stompClient.subscribe(
+            `/topic/classroom/${roomId}/chat/${rowRef.current}`,
+            onMessageReceived
+          );
           stompClient.send(
             `/app/classroom/${roomId}/chat/${rowRef.current}`,
             {},
             JSON.stringify({
-              type: EVENT.EXIT,
-              seatNum: stateRef.current.seatNum,
+              type: EVENT.ENTER,
+              seatNum: seatNum,
+              row: rowRef.current,
               content: null,
             })
           );
-          chatSubscription.unsubscribe();
-          rowRef.current = newRow;
-          setChatSubsription((_) => {
-            const subscription = stompClient.subscribe(
-              `/topic/classroom/${roomId}/chat/${rowRef.current}`,
-              onMessageReceived
-            );
-            stompClient.send(
-              `/app/classroom/${roomId}/chat/${rowRef.current}`,
-              {},
-              JSON.stringify({
-                type: EVENT.ENTER,
-                seatNum: seatNum,
-                row: rowRef.current,
-                content: null,
-              })
-            );
-            return subscription;
+          return subscription;
+        });
+      } else {
+        setChat((chat) => {
+          chat.forEach((message) => {
+            if (message.seatNum === prevSeatNum) {
+              message.seatNum = seatNum;
+            }
           });
-        } else {
-          setChat((chat) => {
-            chat.forEach((message) => {
-              if (message.seatNum === prevSeatNum) {
-                message.seatNum = seatNum;
-              }
-            });
-            return chat;
-          });
-        }
-      };
-    }
-  }, [stompClient]);
+          return chat;
+        });
+      }
+    },
+    [stompClient, stateRef, chatSubscription, chat]
+  );
+
+  const sendMessage = useCallback(
+    (message) => {
+      stompClient.send(
+        `/app/classroom/${stateRef.current.roomId}/chat/${rowRef.current}`,
+        {},
+        JSON.stringify({
+          type: EVENT.TALK,
+          seatNum: stateRef.current.seatNum,
+          content: message,
+          sender: currentUser.username,
+        })
+      );
+    },
+    [stompClient, stateRef]
+  );
 
   useEffect(() => {
     window.onpopstate = () => {
@@ -142,7 +154,12 @@ function Room() {
               ) : color !== "empty" ? (
                 <Circle key={index} size="small" state={color} emoji="" />
               ) : (
-                <SeatCircle key={index} index={index} color={color} changeSeat={changeSeat} />
+                <SeatCircle
+                  key={index}
+                  index={index}
+                  color={color}
+                  changeSeat={() => changeSeat(index)}
+                />
               )
             )}
           </div>
@@ -156,8 +173,8 @@ function Room() {
       <Chatroom
         visible={visible}
         chat={chat}
-        stompClient={stompClient}
         stateRef={stateRef}
+        sendMessage={sendMessage}
       ></Chatroom>
     </div>
   );
