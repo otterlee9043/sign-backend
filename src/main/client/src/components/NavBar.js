@@ -1,20 +1,24 @@
 import styles from "./NavBar.module.css";
-import { MdArrowBack, MdPerson, MdQuestionAnswer, MdGroups } from "react-icons/md";
-import { Link } from "react-router-dom";
+import { MdArrowBack, MdQuestionAnswer } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
-function NavBar({ mode, roomId, handler = null }) {
-  console.log();
-  console.log(`/classroom/${roomId}/chat`);
+function NavBar({ mode, openChatroom, disconnect }) {
+  const navigate = useNavigate();
   return (
     <div className={styles.navBar}>
       <div className={styles.left}>
-        <a path={mode == "classroom" ? "/" : `/classroom/${roomId}`}>
+        <span
+          onClick={() => {
+            disconnect();
+            navigate("/home");
+          }}
+        >
           <MdArrowBack size="40" />
-        </a>
+        </span>
       </div>
       <div className={styles.right}>
         {mode == "classroom" ? (
-          <span onClick={handler}>
+          <span onClick={openChatroom}>
             <MdQuestionAnswer size="40" />
           </span>
         ) : null}
