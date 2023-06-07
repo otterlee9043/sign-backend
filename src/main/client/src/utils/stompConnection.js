@@ -1,24 +1,38 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { over } from "stompjs";
 import SockJS from "sockjs-client";
 import { EVENT, columnNum } from "./classroomUtils";
 
-export function useStompConnection(
-  roomId,
-  currentUser,
-  onMessageReceived,
-  setChatSubsription,
-  setSeats
-) {
+export const useStompConnection = (roomId, currentUser, setCurrentUser, setSeats, setChat) => {
   const [stompClient, setStompClient] = useState(null);
   const stateRef = useRef({});
   const rowRef = useRef();
+
+  const onMessageReceived = (received) => {
+    const parsedMsg = JSON.parse(received.body);
+    setChat((chat) => {
+      return [...chat, parsedMsg];
+    });
+  };
 
   useEffect(() => {
     const Sock = new SockJS("http://localhost:8080/ws");
     const client = over(Sock);
     setStompClient(client);
   }, [roomId, currentUser]);
+
+  useEffect(async () => {
+    try {
+      const response = await fetch("/api/member/userInfo");
+      if (!response.ok) {
+        return;
+      }
+      const userInfo = await response.json();
+      setCurrentUser(userInfo);
+    } catch (error) {
+      console.error("There has been an error login", error);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (stompClient) {
@@ -96,7 +110,7 @@ export function useStompConnection(
           case EVENT.CHANGE_SEAT:
             setSeats((oldSeats) => {
               let newSeats = [...oldSeats];
-              newSeats[parseInt(parsedMsg.message)] = oldSeats[parsedMsg.seatNum];
+              newSeats[parseInt(parsedMsg.message) - 1] = oldSeats[parsedMsg.seatNum];
               newSeats[parsedMsg.seatNum - 1] = "empty";
               return newSeats;
             });
@@ -124,5 +138,82 @@ export function useStompConnection(
       );
     }
   }, [stompClient]);
-  return { stompClient, stateRef, rowRef };
-}
+
+  const selectColor = useCallback(
+    (color) => {
+      stompClient.send(
+        `/app/classroom/${roomId}`,
+        {},
+        JSON.stringify({
+          type: EVENT.TALK,
+          roomId: stateRef.current.roomId,
+          message: color,
+          seatNum: stateRef.current.seatNum,
+        })
+      );
+    },
+    [stompClient, stateRef]
+  );
+
+  const [chatSubscription, setChatSubsription] = useState(null);
+
+  const changeSeat = useCallback(
+    (seatNum) => {
+      console.log(stateRef.current);
+      const prevSeatNum = stateRef.current.seatNum;
+      const newRow = parseInt(seatNum / columnNum) + 1;
+      stompClient.send(
+        `/app/classroom/${stateRef.current.roomId}`,
+        {},
+        JSON.stringify({
+          type: EVENT.CHANGE_SEAT,
+          roomId: stateRef.current.roomId,
+          message: seatNum + 1,
+          seatNum: stateRef.current.seatNum,
+        })
+      );
+      if (newRow !== rowRef.current) {
+        stompClient.send(
+          `/app/classroom/${roomId}/chat/${rowRef.current}`,
+          {},
+          JSON.stringify({
+            type: EVENT.EXIT,
+            seatNum: stateRef.current.seatNum,
+            content: null,
+          })
+        );
+        chatSubscription.unsubscribe();
+        rowRef.current = newRow;
+        setChatSubsription((_) => {
+          const subscription = stompClient.subscribe(
+            `/topic/classroom/${roomId}/chat/${rowRef.current}`,
+            onMessageReceived
+          );
+          stompClient.send(
+            `/app/classroom/${roomId}/chat/${rowRef.current}`,
+            {},
+            JSON.stringify({
+              type: EVENT.ENTER,
+              seatNum: seatNum,
+              row: rowRef.current,
+              content: null,
+            })
+          );
+          return subscription;
+        });
+      } else {
+        setChat((chat) => {
+          chat.forEach((message) => {
+            if (message.seatNum === prevSeatNum) {
+              message.seatNum = seatNum;
+            }
+          });
+          return chat;
+        });
+      }
+    },
+    [stompClient, stateRef, chatSubscription]
+  );
+
+  return { stompClient, stateRef, rowRef, selectColor, changeSeat };
+};

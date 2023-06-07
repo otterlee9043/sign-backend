@@ -6,109 +6,24 @@ import SeatCircle from "../components/classroom/SeatCircle";
 import ColorCircle from "../components/classroom/ColorCircle";
 import Chatroom from "../components/classroom/Chatroom";
 
-import { EVENT, colors, columnNum } from "../utils/classroomUtils";
-import { useParams } from "react-router-dom";
+import { EVENT, colors } from "../utils/classroomUtils";
+import { useParams, useNavigate } from "react-router-dom";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
-
 import { useStompConnection } from "../utils/stompConnection";
 
 function Room() {
-  const { currentUser } = useContext(CurrentUserContext);
+  const { currentUser, setCurrentUser } = useContext(CurrentUserContext);
   const params = useParams();
   const roomId = parseInt(params.roomId);
   const [visible, setVisible] = useState(false);
-
-  const [seats, setSeats] = useState(new Array(40).fill("empty"));
+  const [seats, setSeats] = useState(new Array(10).fill("empty"));
   const [chat, setChat] = useState([]);
-  const [chatSubscription, setChatSubsription] = useState(null); // stompClient.subscribe의 리턴 값
 
-  const onMessageReceived = (received) => {
-    const parsedMsg = JSON.parse(received.body);
-    setChat((chat) => {
-      return [...chat, parsedMsg];
-    });
-  };
-
-  const { stompClient, stateRef, rowRef } = useStompConnection(
+  const { stompClient, stateRef, rowRef, selectColor, changeSeat } = useStompConnection(
     roomId,
     currentUser,
-    onMessageReceived,
-    setChatSubsription,
-    setSeats
-  );
-
-  const selectColor = useCallback(
-    (color) => {
-      stompClient.send(
-        `/app/classroom/${roomId}`,
-        {},
-        JSON.stringify({
-          type: EVENT.TALK,
-          roomId: roomId,
-          message: color,
-          seatNum: stateRef.current.seatNum,
-        })
-      );
-    },
-    [stompClient, stateRef]
-  );
-
-  const changeSeat = useCallback(
-    (seatNum) => {
-      console.log(stateRef.current);
-      const prevSeatNum = stateRef.current.seatNum;
-      const newRow = parseInt(seatNum / columnNum) + 1;
-      stompClient.send(
-        `/app/classroom/${roomId}`,
-        {},
-        JSON.stringify({
-          type: EVENT.CHANGE_SEAT,
-          roomId: roomId,
-          message: seatNum + 1,
-          seatNum: stateRef.current.seatNum,
-        })
-      );
-      if (newRow !== rowRef.current) {
-        stompClient.send(
-          `/app/classroom/${roomId}/chat/${rowRef.current}`,
-          {},
-          JSON.stringify({
-            type: EVENT.EXIT,
-            seatNum: stateRef.current.seatNum,
-            content: null,
-          })
-        );
-        chatSubscription.unsubscribe();
-        rowRef.current = newRow;
-        setChatSubsription((_) => {
-          const subscription = stompClient.subscribe(
-            `/topic/classroom/${roomId}/chat/${rowRef.current}`,
-            onMessageReceived
-          );
-          stompClient.send(
-            `/app/classroom/${roomId}/chat/${rowRef.current}`,
-            {},
-            JSON.stringify({
-              type: EVENT.ENTER,
-              seatNum: seatNum,
-              row: rowRef.current,
-              content: null,
-            })
-          );
-          return subscription;
-        });
-      } else {
-        setChat((chat) => {
-          chat.forEach((message) => {
-            if (message.seatNum === prevSeatNum) {
-              message.seatNum = seatNum;
-            }
-          });
-          return chat;
-        });
-      }
-    },
-    [stompClient, stateRef, chatSubscription, chat]
+    setSeats,
+    setChat
   );
 
   const sendMessage = useCallback(
@@ -127,16 +42,19 @@ function Room() {
     [stompClient, stateRef]
   );
 
-  useEffect(() => {
-    window.onpopstate = () => {
-      stompClient.disconnect();
-    };
-    window.addEventListener("beforeunload", (event) => {
-      event.preventDefault();
-      event.returnValue = "";
-      stompClient.disconnect();
-    });
-  }, []);
+  const disconnect = useCallback(() => {
+    stompClient.disconnect();
+    console.log(stompClient);
+  }, [stompClient]);
+
+  // useEffect(() => {
+  //   window.onpopstate = disconnect;
+  //   window.addEventListener("beforeunload", (event) => {
+  //     event.preventDefault();
+  //     event.returnValue = "";
+  //     disconnect();
+  //   });
+  // }, []);
 
   const openChatroom = () => {
     setVisible((visible) => !visible);
@@ -144,7 +62,12 @@ function Room() {
 
   return (
     <div className={styles.wrapper}>
-      <NavBar mode="classroom" roomId={roomId} handler={openChatroom} />
+      <NavBar
+        mode="classroom"
+        roomId={roomId}
+        openChatroom={openChatroom}
+        disconnect={disconnect}
+      />
       <div className={styles.classroom}>
         <div className={styles.container}>
           <div className={styles.seats}>
