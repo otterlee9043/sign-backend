@@ -3,7 +3,7 @@ import { over } from "stompjs";
 import SockJS from "sockjs-client";
 import { EVENT, columnNum } from "./classroomUtils";
 
-export const useStompConnection = (roomId, currentUser, setCurrentUser, setSeats, setChat) => {
+export const useStompConnection = (roomId, currentUser, setSeats, setChat) => {
   const [stompClient, setStompClient] = useState(null);
   const stateRef = useRef({});
   const rowRef = useRef();
@@ -21,16 +21,22 @@ export const useStompConnection = (roomId, currentUser, setCurrentUser, setSeats
     setStompClient(client);
   }, [roomId, currentUser]);
 
-  useEffect(async () => {
-    try {
-      const response = await fetch("/api/member/userInfo");
-      if (!response.ok) {
-        return;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("/api/member/userInfo");
+        if (!response.ok) {
+          return;
+        }
+        const userInfo = await response.json();
+        setCurrentUser(userInfo);
+      } catch (error) {
+        console.error("There has been an error login", error);
       }
-      const userInfo = await response.json();
-      setCurrentUser(userInfo);
-    } catch (error) {
-      console.error("There has been an error login", error);
+    };
+
+    if (!currentUser) {
+      fetchData();
     }
   }, [currentUser]);
 
@@ -215,5 +221,25 @@ export const useStompConnection = (roomId, currentUser, setCurrentUser, setSeats
     [stompClient, stateRef, chatSubscription]
   );
 
-  return { stompClient, stateRef, rowRef, selectColor, changeSeat };
+  const sendMessage = useCallback(
+    (message) => {
+      stompClient.send(
+        `/app/classroom/${stateRef.current.roomId}/chat/${rowRef.current}`,
+        {},
+        JSON.stringify({
+          type: EVENT.TALK,
+          seatNum: stateRef.current.seatNum,
+          content: message,
+          sender: currentUser.username,
+        })
+      );
+    },
+    [stompClient, stateRef]
+  );
+
+  const disconnect = useCallback(() => {
+    stompClient.disconnect();
+  }, [stompClient]);
+
+  return { stateRef, selectColor, changeSeat, sendMessage, disconnect };
 };

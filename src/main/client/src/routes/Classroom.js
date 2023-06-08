@@ -6,55 +6,44 @@ import SeatCircle from "../components/classroom/SeatCircle";
 import ColorCircle from "../components/classroom/ColorCircle";
 import Chatroom from "../components/classroom/Chatroom";
 
-import { EVENT, colors } from "../utils/classroomUtils";
-import { useParams, useNavigate } from "react-router-dom";
+import CircularProgress from "@mui/material/CircularProgress";
+
+import { colors } from "../utils/classroomUtils";
+import { useParams } from "react-router-dom";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
 import { useStompConnection } from "../utils/stompConnection";
 
-function Room() {
+const CurrentUserFetcher = ({ children }) => {
   const { currentUser, setCurrentUser } = useContext(CurrentUserContext);
+  useEffect(() => {
+    if (!currentUser) {
+      fetch("/api/member/userInfo")
+        .then((response) => response.json())
+        .then((data) => {
+          setCurrentUser(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+        });
+    }
+  }, []);
+
+  return currentUser ? React.cloneElement(children, { currentUser }) : <CircularProgress />;
+};
+
+function Room({ currentUser }) {
   const params = useParams();
   const roomId = parseInt(params.roomId);
   const [visible, setVisible] = useState(false);
   const [seats, setSeats] = useState(new Array(10).fill("empty"));
   const [chat, setChat] = useState([]);
 
-  const { stompClient, stateRef, rowRef, selectColor, changeSeat } = useStompConnection(
+  const { stateRef, selectColor, changeSeat, sendMessage, disconnect } = useStompConnection(
     roomId,
     currentUser,
     setSeats,
     setChat
   );
-
-  const sendMessage = useCallback(
-    (message) => {
-      stompClient.send(
-        `/app/classroom/${stateRef.current.roomId}/chat/${rowRef.current}`,
-        {},
-        JSON.stringify({
-          type: EVENT.TALK,
-          seatNum: stateRef.current.seatNum,
-          content: message,
-          sender: currentUser.username,
-        })
-      );
-    },
-    [stompClient, stateRef]
-  );
-
-  const disconnect = useCallback(() => {
-    stompClient.disconnect();
-    console.log(stompClient);
-  }, [stompClient]);
-
-  // useEffect(() => {
-  //   window.onpopstate = disconnect;
-  //   window.addEventListener("beforeunload", (event) => {
-  //     event.preventDefault();
-  //     event.returnValue = "";
-  //     disconnect();
-  //   });
-  // }, []);
 
   const openChatroom = () => {
     setVisible((visible) => !visible);
@@ -103,4 +92,12 @@ function Room() {
   );
 }
 
-export default Room;
+const ClassRoom = () => {
+  return (
+    <CurrentUserFetcher>
+      <Room />
+    </CurrentUserFetcher>
+  );
+};
+
+export default ClassRoom;
