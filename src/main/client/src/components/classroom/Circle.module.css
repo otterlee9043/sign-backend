@@ -60,6 +60,13 @@
   background-color: rgb(146, 146, 146);
 }
 
+.unselected {
+  background-color: rgb(146, 146, 146);
+  border: solid 3px white;
+  width: 54px;
+  height: 54px;
+}
+
 .red {
   background-color: #ff4d00;
 }
