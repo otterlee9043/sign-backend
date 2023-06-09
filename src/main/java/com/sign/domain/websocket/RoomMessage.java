@@ -5,13 +5,10 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class RoomMessage {
-
-    public enum MessageType {
-        ENTER, TALK, EXIT, CHANGE_SEAT
-    }
 
     private MessageType type;
     private Integer seatNum;

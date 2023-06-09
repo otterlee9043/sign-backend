@@ -2,7 +2,6 @@ package com.sign.domain.websocket;
 
 import lombok.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -13,10 +12,6 @@ import java.util.Locale;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class ChatroomMessage {
-    public enum MessageType {
-        ENTER, TALK, EXIT, CHANGE_SEAT
-    }
-
     private MessageType type;
     private Integer seatNum;
     private Integer row;
