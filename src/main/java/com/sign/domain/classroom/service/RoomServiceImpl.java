@@ -1,23 +1,24 @@
 package com.sign.domain.classroom.service;
 
+import com.sign.domain.classroom.controller.dto.RoomUpdateRequest;
+import com.sign.domain.classroom.entity.Joins;
 import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.classroom.repository.RoomRepository;
-import com.sign.domain.classroom.service.dto.RoomCreateForm;
+import com.sign.domain.classroom.controller.dto.RoomCreateRequest;
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
 import com.sign.domain.websocket.ChatEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
-@Component
+@Service
 @RequiredArgsConstructor
 @Transactional
 public class RoomServiceImpl implements RoomService{
@@ -26,7 +27,6 @@ public class RoomServiceImpl implements RoomService{
     private final RoomRepository classroomRepository;
     private final ChatEventListener chatEventListener;
 
-    // roomId, sessionId, color
     @Override
     public Optional<Room> findRoomByRoomCode(String roomCode) {
         return classroomRepository.findByCode(roomCode);
@@ -45,7 +45,9 @@ public class RoomServiceImpl implements RoomService{
 
     @Override
     public Set<Room> findJoiningRooms(Member member) {
-        return member.getJoiningRooms();
+        return member.getJoins().stream()
+                .map(Joins::getRoom)
+                .collect(Collectors.toSet());
     }
 
 
@@ -55,25 +57,26 @@ public class RoomServiceImpl implements RoomService{
     }
 
     @Override
-    public Room createRoom(RoomCreateForm form, Member member) {
-        //log.info("loginMember.getMember(): {}", loginMember.getMember());
-        Member host = memberRepository.findById(member.getId()).get();
-        Room classroom = new Room();
-        classroom.setRoomCode(form.getRoomCode());
-        classroom.setRoomName(form.getRoomName());
-        classroom.setHost(host);
+    public Room createRoom(RoomCreateRequest request, Member host) {
+        Room classroom = Room.builder()
+                        .name(request.getRoomName())
+                                .code(request.getRoomCode())
+                                        .host(host)
+                                                .build();
+
         Room created = classroomRepository.save(classroom);
-        joinRoom(host, created);
-//        joinRoom(loginMember.getMember(), classroom.getRoomCode());
-        return classroom;
+        log.info("createdRoom: {}", created);
+        return joinRoom(host, created);
     }
 
     @Override
     public Room joinRoom(Member member, Room classroom) {
         Member memberToJoin = memberRepository.findById(member.getId()).get();
-        memberToJoin.addJoiningRoom(classroom);
-        log.info("member.getJoiningRooms: {}",memberToJoin.getJoiningRooms());
-        memberRepository.save(memberToJoin);
+        Joins joins = Joins.builder()
+                .member(memberToJoin)
+                .room(classroom)
+                .build();
+        classroomRepository.save(joins);
         return classroom;
     }
 
@@ -87,8 +90,19 @@ public class RoomServiceImpl implements RoomService{
     }
 
     @Override
-    public void deleteRoom(Room classroom) {
-        classroomRepository.delete(classroom);
+    public void updateRoom(Room room, RoomUpdateRequest request) {
+        room.updateRoom(request.getRoomName());
+    }
+
+    @Override
+    public void deleteRoom(Room classroom, Member member) {
+        log.info("classroom.getHost(): {}", classroom.getHost());
+        log.info("member: {}", member);
+        if (classroom.getHost().getId().equals(member.getId())) {
+            classroomRepository.delete(classroom);
+        } else {
+            throw new AccessDeniedException("방을 수정할 권한이 없습니다.");
+        }
     }
 
 
@@ -100,5 +114,9 @@ public class RoomServiceImpl implements RoomService{
     @Override
     public Integer getMySeatPosition(Integer roomId, String sessionId) {
         return chatEventListener.getMySeatPosition(roomId, sessionId);
+    }
+
+    public boolean doesRoomCodeExist(String roomCode) {
+        return classroomRepository.findByCode(roomCode).isPresent();
     }
 }
