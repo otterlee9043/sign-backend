@@ -13,8 +13,12 @@ import { useParams } from "react-router-dom";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
 import { useStompConnection } from "../utils/stompConnection";
 
-const CurrentUserFetcher = ({ children }) => {
+const InitDataFetcher = ({ children }) => {
+  const params = useParams();
+  const roomId = parseInt(params.roomId);
+
   const { currentUser, setCurrentUser } = useContext(CurrentUserContext);
+  const [roomInfo, setRoomInfo] = useState(null);
   useEffect(() => {
     if (!currentUser) {
       fetch("/api/member/userInfo")
@@ -26,19 +30,32 @@ const CurrentUserFetcher = ({ children }) => {
           console.error("Error fetching data:", error);
         });
     }
+    fetch(`/api/classroom/${roomId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        setRoomInfo(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+      });
   }, []);
 
-  return currentUser ? React.cloneElement(children, { currentUser }) : <CircularProgress />;
+  return currentUser && roomInfo ? (
+    React.cloneElement(children, { currentUser, roomInfo })
+  ) : (
+    <CircularProgress />
+  );
 };
 
-function Room({ currentUser }) {
+function Room({ currentUser, roomInfo }) {
+  console.log(roomInfo);
   const params = useParams();
   const roomId = parseInt(params.roomId);
   const [visible, setVisible] = useState(false);
-  const [seats, setSeats] = useState(new Array(10).fill("empty"));
+  const [seats, setSeats] = useState(new Array(roomInfo["capacity"]).fill("empty"));
   const [chat, setChat] = useState([]);
 
-  const { stateRef, selectColor, changeSeat, sendMessage, disconnect } = useStompConnection(
+  const { seatNumRef, selectColor, changeSeat, sendMessage, disconnect } = useStompConnection(
     roomId,
     currentUser,
     setSeats,
@@ -61,7 +78,7 @@ function Room({ currentUser }) {
         <div className={styles.container}>
           <div className={styles.seats}>
             {seats.map((color, index) =>
-              index === stateRef.current.seatNum - 1 ? (
+              index === seatNumRef.current - 1 ? (
                 <Circle key={index} size="small" state={color} emoji="" mySeat={true} />
               ) : color !== "empty" ? (
                 <Circle key={index} size="small" state={color} emoji="" />
@@ -75,17 +92,17 @@ function Room({ currentUser }) {
               )
             )}
           </div>
-        </div>
-        <div className={styles.colors}>
-          {colors.map((color, index) => (
-            <ColorCircle key={index} color={color} selectColor={selectColor} />
-          ))}
+          <div className={styles.colors}>
+            {colors.map((color, index) => (
+              <ColorCircle key={index} color={color} selectColor={selectColor} />
+            ))}
+          </div>
         </div>
       </div>
       <Chatroom
         visible={visible}
         chat={chat}
-        stateRef={stateRef}
+        stateRef={seatNumRef}
         sendMessage={sendMessage}
       ></Chatroom>
     </div>
@@ -94,9 +111,9 @@ function Room({ currentUser }) {
 
 const ClassRoom = () => {
   return (
-    <CurrentUserFetcher>
+    <InitDataFetcher>
       <Room />
-    </CurrentUserFetcher>
+    </InitDataFetcher>
   );
 };
 
