@@ -1,5 +1,6 @@
 package com.sign.domain.websocket;
 
+import com.sign.domain.classroom.service.RoomService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -12,12 +13,17 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @RequiredArgsConstructor
 public class RoomEventHandler {
-    private final SimpMessageSendingOperations sendingOperations;
+
+
+    private final RoomService roomService;
+
     //roomId, sessionId, seatNum
     private final Map<Long, Map<Integer, String>> lastState = new ConcurrentHashMap<>();
     //roomId, seatNum, color
     private final Map<Long, Map<String, Integer>> seatingCharts = new ConcurrentHashMap<>();
-    private void sit(String sessionId, Long roomId) {
+
+
+    public void sit(String sessionId, Long roomId) {
         Integer capacity = roomService.getRoomCapacity(roomId);
         if (seatingCharts.containsKey(roomId)) {
             // 입장한 사람이 있는 경우
@@ -48,10 +54,13 @@ public class RoomEventHandler {
         }
     }
 
-    private void leave(String sessionId) {
+    public RoomMessage leave(String sessionId) {
+        Integer seatNum = null;
+        Long leavingRoomId = null;
         for (Long roomId : seatingCharts.keySet()) {
             if (seatingCharts.get(roomId).containsKey(sessionId)){
-                int seatNum = seatingCharts.get(roomId).get(sessionId);
+                seatNum = seatingCharts.get(roomId).get(sessionId);
+                leavingRoomId = roomId;
                 seatingCharts.get(roomId).remove(sessionId);
 
                 if (seatingCharts.get(roomId).isEmpty()) {
@@ -62,13 +71,10 @@ public class RoomEventHandler {
                 if (lastState.get(roomId).isEmpty()){
                     lastState.remove(roomId);
                 }
-
-                sendingOperations.convertAndSend("/topic/room/" + roomId,
-                        new RoomMessage(MessageType.EXIT, seatNum, roomId, null, null));
-
                 break;
             }
         }
+        return new RoomMessage(MessageType.EXIT, seatNum, leavingRoomId, null, null);
     }
 
     public void color(Integer roomId, int seatNum, String color){
@@ -82,6 +88,11 @@ public class RoomEventHandler {
         classroomState.put(newSeatNum, classroomState.get(oldSeatNum));
         classroomState.remove(oldSeatNum);
         seatingChart.put(sessionId, newSeatNum);
+    }
+
+    public boolean isRoomAccessible(Long roomId) {
+        Integer capacity = roomService.getRoomCapacity(roomId);
+        return !(seatingCharts.get(roomId).size() >= capacity);
     }
 
     public Integer getMySeatPosition(Long roomId, String sessionId) {
