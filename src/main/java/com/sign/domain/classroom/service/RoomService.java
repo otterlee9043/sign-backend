@@ -12,11 +12,11 @@ import java.util.Set;
 
 public interface RoomService {
 
-    Optional<Room> findRoomByRoomCode(String roomCode);
+    Room findRoomByRoomCode(String roomCode);
 
     List<Room> findRoomByRoomName(String roomName);
 
-    Optional<Room> findRoomByRoomId(Long roomId);
+    Room findRoomByRoomId(Long roomId);
 
     Set<Room> findJoiningRooms(Member member);
 
@@ -31,9 +31,7 @@ public interface RoomService {
     void updateRoom(Room room, RoomUpdateRequest request);
     void deleteRoom(Room room, Member member);
 
-    Map<Integer, String> getRoomStates(Integer roomId);
-
-    Integer getMySeatPosition(Integer roomId, String username);
+    Integer getRoomCapacity(Long roomId);
 
     boolean doesRoomCodeExist(String roomCode);
 }

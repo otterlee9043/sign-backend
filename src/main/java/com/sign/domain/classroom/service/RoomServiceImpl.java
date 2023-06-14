@@ -3,11 +3,12 @@ package com.sign.domain.classroom.service;
 import com.sign.domain.classroom.controller.dto.RoomUpdateRequest;
 import com.sign.domain.classroom.entity.Joins;
 import com.sign.domain.classroom.entity.Room;
+import com.sign.domain.classroom.exception.NotFoundException;
+import com.sign.domain.classroom.exception.RoomCapacityExceededException;
 import com.sign.domain.classroom.repository.RoomRepository;
 import com.sign.domain.classroom.controller.dto.RoomCreateRequest;
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
-import com.sign.domain.websocket.ChatEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,11 +26,11 @@ public class RoomServiceImpl implements RoomService{
 
     private final MemberRepository memberRepository;
     private final RoomRepository classroomRepository;
-    private final ChatEventListener chatEventListener;
 
     @Override
-    public Optional<Room> findRoomByRoomCode(String roomCode) {
-        return classroomRepository.findByCode(roomCode);
+    public Room findRoomByRoomCode(String roomCode) {
+        return classroomRepository.findByCode(roomCode).orElseThrow(() ->
+                new NotFoundException("해당 입장 코드의 방을 찾을 수 없습니다."));
     }
 
     @Override
@@ -38,9 +39,9 @@ public class RoomServiceImpl implements RoomService{
     }
 
     @Override
-    public Optional<Room> findRoomByRoomId(Long roomId) {
-        Optional<Room> result = classroomRepository.findById(roomId);
-        return result;
+    public Room findRoomByRoomId(Long roomId) {
+         return classroomRepository.findById(roomId).orElseThrow(() ->
+                new NotFoundException("해당 ID의 방을 찾을 수 없습니다."));
     }
 
     @Override
@@ -59,19 +60,24 @@ public class RoomServiceImpl implements RoomService{
     @Override
     public Room createRoom(RoomCreateRequest request, Member host) {
         Room classroom = Room.builder()
-                        .name(request.getRoomName())
-                                .code(request.getRoomCode())
-                                        .host(host)
-                                                .build();
-
+                .name(request.getRoomName())
+                .host(host)
+                .code(request.getRoomCode())
+                .capacity(request.getCapacity())
+                .build();
         Room created = classroomRepository.save(classroom);
-        log.info("createdRoom: {}", created);
         return joinRoom(host, created);
     }
 
     @Override
     public Room joinRoom(Member member, Room classroom) {
         Member memberToJoin = memberRepository.findById(member.getId()).get();
+        Set<Joins> joined = classroom.getJoined();
+        int numberOfJoins = joined.size();
+        log.info("joined.size(): {}", joined.size());
+
+        if (numberOfJoins >= classroom.getCapacity())
+            throw new RoomCapacityExceededException();
         Joins joins = Joins.builder()
                 .member(memberToJoin)
                 .room(classroom)
@@ -96,8 +102,6 @@ public class RoomServiceImpl implements RoomService{
 
     @Override
     public void deleteRoom(Room classroom, Member member) {
-        log.info("classroom.getHost(): {}", classroom.getHost());
-        log.info("member: {}", member);
         if (classroom.getHost().getId().equals(member.getId())) {
             classroomRepository.delete(classroom);
         } else {
@@ -107,16 +111,12 @@ public class RoomServiceImpl implements RoomService{
 
 
     @Override
-    public Map<Integer, String> getRoomStates(Integer roomId) {
-        return chatEventListener.getRoomStatesByRoomId(roomId);
+    public boolean doesRoomCodeExist(String roomCode) {
+        return classroomRepository.findByCode(roomCode).isPresent();
     }
 
     @Override
-    public Integer getMySeatPosition(Integer roomId, String sessionId) {
-        return chatEventListener.getMySeatPosition(roomId, sessionId);
-    }
-
-    public boolean doesRoomCodeExist(String roomCode) {
-        return classroomRepository.findByCode(roomCode).isPresent();
+    public Integer getRoomCapacity(Long roomId) {
+        return findRoomByRoomId(roomId).getCapacity();
     }
 }
