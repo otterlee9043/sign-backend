@@ -11,6 +11,16 @@
   height: 60px;
 }
 
+.size-5 {
+  width: 60px;
+  height: 60px;
+}
+
+.size-10 {
+  width: 30px;
+  height: 30px;
+}
+
 .large {
   width: 250px;
   height: 250px;
@@ -40,6 +50,9 @@
 .large > .emoji {
   font-size: 150px;
 }
+
+.circle-wrapper {
+}
 .circle {
   display: inline-block;
   position: relative;
@@ -62,9 +75,22 @@
 
 .unselected {
   background-color: rgb(146, 146, 146);
+}
+
+.size-5.unselected {
   border: solid 3px white;
   width: 54px;
   height: 54px;
+}
+
+.size-10.unselected {
+  border: solid 2px white;
+  width: 26px;
+  height: 26px;
+}
+
+.size-10 .I {
+  font-size: 20px;
 }
 
 .red {
@@ -84,5 +110,25 @@
 }
 
 .blue {
+  background-color: #0094ff;
+}
+
+.blue-1 {
+  background-color: #ffffff;
+}
+
+.blue-2 {
+  background-color: #adddff;
+}
+
+.blue-3 {
+  background-color: #6fc3ff;
+}
+
+.blue-4 {
+  background-color: #35abff;
+}
+
+.blue-5 {
   background-color: #0094ff;
 }

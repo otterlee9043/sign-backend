@@ -48,15 +48,16 @@ const InitDataFetcher = ({ children }) => {
 };
 
 function Room({ currentUser, roomInfo }) {
-  console.log(roomInfo);
   const params = useParams();
   const roomId = parseInt(params.roomId);
   const [visible, setVisible] = useState(false);
+  const column = roomInfo["capacity"] > 50 ? 10 : 5;
   const [seats, setSeats] = useState(new Array(roomInfo["capacity"]).fill("empty"));
   const [chat, setChat] = useState([]);
 
   const { seatNumRef, selectColor, changeSeat, sendMessage, disconnect } = useStompConnection(
     roomId,
+    column,
     currentUser,
     setSeats,
     setChat
@@ -71,20 +72,22 @@ function Room({ currentUser, roomInfo }) {
       <NavBar
         mode="classroom"
         roomId={roomId}
-        openChatroom={openChatroom}
-        disconnect={disconnect}
+        leftButtonHandler={disconnect}
+        roomName={roomInfo.roomName}
+        rightButtonHandler={openChatroom}
       />
       <div className={styles.classroom}>
         <div className={styles.container}>
           <div className={styles.seats}>
             {seats.map((color, index) =>
               index === seatNumRef.current - 1 ? (
-                <Circle key={index} size="small" state={color} emoji="" mySeat={true} />
+                <Circle key={index} size={column} state={color} emoji="" mySeat={true} />
               ) : color !== "empty" ? (
-                <Circle key={index} size="small" state={color} emoji="" />
+                <Circle key={index} size={column} state={color} emoji="" />
               ) : (
                 <SeatCircle
                   key={index}
+                  size={column}
                   index={index}
                   color={color}
                   changeSeat={() => changeSeat(index)}

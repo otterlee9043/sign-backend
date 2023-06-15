@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { over } from "stompjs";
 import SockJS from "sockjs-client";
-import { EVENT, columnNum } from "./classroomUtils";
+import { EVENT } from "./classroomUtils";
 
-export const useStompConnection = (roomId, currentUser, setSeats, setChat) => {
+export const useStompConnection = (roomId, columnNum, currentUser, setSeats, setChat) => {
   const [stompClient, setStompClient] = useState(null);
+  const [roomSubscription, setRoomSubscription] = useState(null);
+  const [chatSubscription, setChatSubsription] = useState(null);
+
   const seatNumRef = useRef();
   const rowRef = useRef();
 
@@ -24,10 +27,14 @@ export const useStompConnection = (roomId, currentUser, setSeats, setChat) => {
   useEffect(() => {
     if (stompClient) {
       const onConnected = () => {
-        stompClient.subscribe(`/topic/classroom/${roomId}`, onMessageReceived);
-
+        setRoomSubscription(
+          stompClient.subscribe(`/topic/classroom/${roomId}`, onMessageReceived, {
+            roomId: roomId,
+          })
+        );
+        console.log("roomSubscription", roomSubscription);
         const queueSub = stompClient.subscribe(
-          `/queue/temp/classroom/${roomId}/user/${currentUser.username}`,
+          `/queue/temp/classroom/${roomId}/user/${currentUser.email}`,
           (received) => {
             const classroomInfo = JSON.parse(received.body);
             seatNumRef.current = classroomInfo.seatNum;
@@ -58,14 +65,15 @@ export const useStompConnection = (roomId, currentUser, setSeats, setChat) => {
             });
 
             queueSub.unsubscribe();
-          }
+          },
+          { roomId: roomId }
         );
 
         stompClient.send(
           `/app/classroomInfo/${roomId}`,
           {},
           JSON.stringify({
-            sender: currentUser.username,
+            sender: currentUser.email,
           })
         );
       };
@@ -85,7 +93,7 @@ export const useStompConnection = (roomId, currentUser, setSeats, setChat) => {
           case EVENT.CHANGE_SEAT:
             setSeats((oldSeats) => {
               let newSeats = [...oldSeats];
-              newSeats[parseInt(parsedMsg.message) - 1] = oldSeats[parsedMsg.seatNum];
+              newSeats[parseInt(parsedMsg.message) - 1] = oldSeats[parsedMsg.seatNum - 1];
               newSeats[parsedMsg.seatNum - 1] = "empty";
               return newSeats;
             });
@@ -105,15 +113,15 @@ export const useStompConnection = (roomId, currentUser, setSeats, setChat) => {
         });
       };
 
-      stompClient.connect(
-        { roomId: roomId, username: currentUser.username },
-        onConnected,
-        (error) => {
-          console.error(error);
-        }
-      );
+      stompClient.connect({ roomId: roomId }, onConnected, (error) => {
+        console.error(error);
+      });
     }
   }, [stompClient]);
+
+  useEffect(() => {
+    console.log(roomSubscription);
+  }, [roomSubscription]);
 
   const selectColor = useCallback(
     (color) => {
@@ -130,8 +138,6 @@ export const useStompConnection = (roomId, currentUser, setSeats, setChat) => {
     },
     [stompClient, seatNumRef]
   );
-
-  const [chatSubscription, setChatSubsription] = useState(null);
 
   const changeSeat = useCallback(
     (seatNum) => {
@@ -157,6 +163,7 @@ export const useStompConnection = (roomId, currentUser, setSeats, setChat) => {
             content: null,
           })
         );
+        setChat([]);
         chatSubscription.unsubscribe();
         rowRef.current = newRow;
         setChatSubsription((_) => {
@@ -199,7 +206,6 @@ export const useStompConnection = (roomId, currentUser, setSeats, setChat) => {
           type: EVENT.TALK,
           seatNum: seatNumRef.current,
           content: message,
-          sender: currentUser.username,
         })
       );
     },
