@@ -43,16 +43,14 @@
     0 -1px rgb(43, 43, 43);
 }
 
-.small > .emoji {
+.size-5 .emoji {
   font-size: 40px;
 }
 
-.large > .emoji {
-  font-size: 150px;
+.size-10 .emoji {
+  font-size: 20px;
 }
 
-.circle-wrapper {
-}
 .circle {
   display: inline-block;
   position: relative;
@@ -66,7 +64,6 @@
   top: 0px;
   left: 0px;
   margin: auto;
-  /* transform: translate(50%, 50%); */
 }
 
 .empty {

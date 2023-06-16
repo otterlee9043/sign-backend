@@ -1,15 +1,14 @@
 import React from "react";
-import Circle from "./Circle";
+import styles from "./Circle.module.css";
 
 function ColorCircle({ color, selectColor }) {
   return (
-    <span
+    <div
+      className={`${styles.seat} ${styles[color]} ${styles.small} ${styles.color}`}
       onClick={() => {
         selectColor(color);
       }}
-    >
-      <Circle size="small" state={color} />
-    </span>
+    ></div>
   );
 }
 
