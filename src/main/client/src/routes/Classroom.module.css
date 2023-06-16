@@ -27,5 +27,14 @@
 
 .colors {
   display: inline-block;
+}
+
+.expression-wrapper {
+  width: 340px;
+  min-height: 80px;
   margin-top: 20px;
+}
+
+.width300 {
+  width: 300px;
 }

@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import styles from "./Classroom.module.css";
 import NavBar from "../components/NavBar.js";
-import Circle from "../components/classroom/Circle";
-import SeatCircle from "../components/classroom/SeatCircle";
+import { Seat, EmptySeat, MySeat } from "../components/Seat";
 import ColorCircle from "../components/classroom/ColorCircle";
+import Emoji from "../components/Emoji";
 import Chatroom from "../components/classroom/Chatroom";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 
 import CircularProgress from "@mui/material/CircularProgress";
 
-import { colors } from "../utils/classroomUtils";
+import { colors, emojis } from "../utils/classroomUtils";
 import { useParams } from "react-router-dom";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
 import { useStompConnection } from "../utils/stompConnection";
@@ -52,21 +54,19 @@ function Room({ currentUser, roomInfo }) {
   const roomId = parseInt(params.roomId);
   const [visible, setVisible] = useState(false);
   const column = roomInfo["capacity"] > 50 ? 10 : 5;
-  const [seats, setSeats] = useState(new Array(roomInfo["capacity"]).fill("empty"));
+  const [seats, setSeats] = useState(new Array(roomInfo["capacity"]).fill(["empty", ""]));
   const [chat, setChat] = useState([]);
 
-  const { seatNumRef, selectColor, changeSeat, sendMessage, disconnect } = useStompConnection(
-    roomId,
-    column,
-    currentUser,
-    setSeats,
-    setChat
-  );
+  const { seatNumRef, selectColor, changeSeat, sendMessage, selectEmoji, disconnect } =
+    useStompConnection(roomId, column, currentUser, setSeats, setChat);
 
   const openChatroom = () => {
     setVisible((visible) => !visible);
   };
 
+  useEffect(() => {
+    console.log(seats);
+  }, [seats]);
   return (
     <div className={styles.wrapper}>
       <NavBar
@@ -79,26 +79,39 @@ function Room({ currentUser, roomInfo }) {
       <div className={styles.classroom}>
         <div className={styles.container}>
           <div className={styles.seats}>
-            {seats.map((color, index) =>
-              index === seatNumRef.current - 1 ? (
-                <Circle key={index} size={column} state={color} emoji="" mySeat={true} />
-              ) : color !== "empty" ? (
-                <Circle key={index} size={column} state={color} emoji="" />
-              ) : (
-                <SeatCircle
+            {seats.map((state, index) =>
+              state[0] !== "empty" ? (
+                <Seat
                   key={index}
                   size={column}
                   index={index}
-                  color={color}
-                  changeSeat={() => changeSeat(index)}
+                  color={state[0]}
+                  emoji={state[1]}
+                  mySeat={index === seatNumRef.current - 1}
+                  setSeats={setSeats}
                 />
+              ) : (
+                <EmptySeat key={index} size={column} changeSeat={() => changeSeat(index)} />
               )
             )}
           </div>
-          <div className={styles.colors}>
-            {colors.map((color, index) => (
-              <ColorCircle key={index} color={color} selectColor={selectColor} />
-            ))}
+          <div className={styles["expression-wrapper"]}>
+            <Swiper>
+              <SwiperSlide>
+                <div className={styles.colors}>
+                  {colors.map((color, index) => (
+                    <ColorCircle key={index} color={color} selectColor={selectColor} />
+                  ))}
+                </div>
+              </SwiperSlide>
+              <SwiperSlide>
+                <div>
+                  {emojis.map((emoji, index) => (
+                    <Emoji key={index} emoji={emoji} selectEmoji={selectEmoji}></Emoji>
+                  ))}
+                </div>
+              </SwiperSlide>
+            </Swiper>
           </div>
         </div>
       </div>

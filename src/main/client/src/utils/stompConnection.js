@@ -84,8 +84,11 @@ export const useStompConnection = (roomId, columnNum, currentUser, setSeats, set
           case EVENT.ENTER:
             color(parsedMsg.seatNum, "unselected");
             break;
-          case EVENT.TALK:
+          case EVENT.COLOR:
             color(parsedMsg.seatNum, parsedMsg.message);
+            break;
+          case EVENT.DRAW_EMOJI:
+            drawEmoji(parsedMsg.seatNum, parsedMsg.message);
             break;
           case EVENT.EXIT:
             color(parsedMsg.seatNum, "empty");
@@ -94,7 +97,7 @@ export const useStompConnection = (roomId, columnNum, currentUser, setSeats, set
             setSeats((oldSeats) => {
               let newSeats = [...oldSeats];
               newSeats[parseInt(parsedMsg.message) - 1] = oldSeats[parsedMsg.seatNum - 1];
-              newSeats[parsedMsg.seatNum - 1] = "empty";
+              newSeats[parsedMsg.seatNum - 1] = ["empty", ""];
               return newSeats;
             });
             if (parsedMsg.seatNum === seatNumRef.current) {
@@ -108,7 +111,15 @@ export const useStompConnection = (roomId, columnNum, currentUser, setSeats, set
       const color = (seatNum, receivedColor) => {
         setSeats((oldSeats) => {
           let newSeats = [...oldSeats];
-          newSeats[seatNum - 1] = receivedColor;
+          newSeats[seatNum - 1][0] = receivedColor;
+          return newSeats;
+        });
+      };
+
+      const drawEmoji = (seatNum, receivedEmoji) => {
+        setSeats((oldSeats) => {
+          let newSeats = [...oldSeats];
+          newSeats[seatNum - 1][1] = receivedEmoji;
           return newSeats;
         });
       };
@@ -119,19 +130,31 @@ export const useStompConnection = (roomId, columnNum, currentUser, setSeats, set
     }
   }, [stompClient]);
 
-  useEffect(() => {
-    console.log(roomSubscription);
-  }, [roomSubscription]);
-
   const selectColor = useCallback(
     (color) => {
       stompClient.send(
         `/app/classroom/${roomId}`,
         {},
         JSON.stringify({
-          type: EVENT.TALK,
+          type: EVENT.COLOR,
           roomId: roomId,
           message: color,
+          seatNum: seatNumRef.current,
+        })
+      );
+    },
+    [stompClient, seatNumRef]
+  );
+
+  const selectEmoji = useCallback(
+    (emoji) => {
+      stompClient.send(
+        `/app/classroom/${roomId}`,
+        {},
+        JSON.stringify({
+          type: EVENT.DRAW_EMOJI,
+          roomId: roomId,
+          message: emoji,
           seatNum: seatNumRef.current,
         })
       );
@@ -216,5 +239,5 @@ export const useStompConnection = (roomId, columnNum, currentUser, setSeats, set
     stompClient.disconnect();
   }, [stompClient]);
 
-  return { seatNumRef, selectColor, changeSeat, sendMessage, disconnect };
+  return { seatNumRef, selectColor, changeSeat, sendMessage, selectEmoji, disconnect };
 };
