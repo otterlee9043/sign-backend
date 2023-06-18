@@ -1,6 +1,9 @@
 .navBar {
   font-size: 34px;
   margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
 }
 
 .navBar > div > a {

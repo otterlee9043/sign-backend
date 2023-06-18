@@ -1,9 +1,9 @@
 import styles from "./RoomForm.module.css";
-import Button from "../components/Button";
+import button_styles from "../components/Button.module.css";
 import { validationSchema } from "../schemas/CreateRoomSchema";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { useFormik } from "formik";
+import NavBar from "../components/NavBar.js";
 
 function CreateRoom() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ function CreateRoom() {
       roomCode: "",
       capacity: "",
     },
-    validateOnMount: false,
+    validateOnMount: true,
     validationSchema: validationSchema,
   });
 
@@ -35,8 +35,7 @@ function CreateRoom() {
       const response = await fetch("/api/classrooms", opts);
       if (response.ok) {
         navigate("/home");
-      }
-      if (response.status !== 200) {
+      } else {
         alert("There has been some errors.");
         return false;
       }
@@ -47,6 +46,7 @@ function CreateRoom() {
 
   return (
     <div className={styles.container}>
+      <NavBar mode="default" />
       <div className={styles.wrapper}>
         <form
           onSubmit={(e) => {
@@ -91,7 +91,14 @@ function CreateRoom() {
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
           ></input>
-          <Button text="방 생성" type="room" handleClick={createRoom} />
+
+          <button
+            className={`${button_styles.btn} ${button_styles.room}`}
+            type="submit"
+            disabled={!formik.isValid || formik.isSubmitting}
+          >
+            방 생성
+          </button>
         </form>
       </div>
     </div>
