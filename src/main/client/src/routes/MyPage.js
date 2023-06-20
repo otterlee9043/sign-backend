@@ -1,12 +1,16 @@
 import styles from "./RoomForm.module.css";
 import NavBar from "../components/NavBar.js";
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { CurrentUserContext } from "../contexts/CurrentUserContext";
 
 function MyPage() {
+  const { setCurrentUser } = useContext(CurrentUserContext);
   const navigate = useNavigate();
   const logout = async () => {
     fetch("/api/member/logout", { method: "POST" })
       .then(() => {
+        setCurrentUser(null);
         navigate("/");
       })
       .catch((error) => {

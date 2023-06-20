@@ -1,17 +1,45 @@
-import React, { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
+import CircularProgress from "@mui/material/CircularProgress";
 
-// Create the context
-const CurrentUserContext = createContext();
+export const CurrentUserContext = createContext(null);
 
-// Create a provider component
-const CurrentUserContextProvider = ({ children }) => {
-  const [value, setValue] = useState({});
+const injectContext = (PassedComponent) => {
+  const StoreWrapper = (props) => {
+    const [currentUser, setCurrentUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+      const getUser = async () => {
+        try {
+          const response = await fetch("/api/member/userInfo");
+          if (!response.ok) {
+            if (response.status === 401) {
+              return;
+            }
+          }
+          const userInfo = await response.json();
+          setCurrentUser(userInfo);
+          console.log("setCurrentUser");
+        } catch (error) {
+          console.error("There has been an error login", error);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-  return (
-    <CurrentUserContext.Provider value={{ value, setValue }}>
-      {children}
-    </CurrentUserContext.Provider>
-  );
+      getUser();
+    }, []);
+
+    if (loading) {
+      return <CircularProgress />;
+    }
+
+    return (
+      <CurrentUserContext.Provider value={{ currentUser, setCurrentUser }}>
+        <PassedComponent {...props} />
+      </CurrentUserContext.Provider>
+    );
+  };
+  return StoreWrapper;
 };
 
-export { CurrentUserContext, CurrentUserContextProvider };
+export default injectContext;

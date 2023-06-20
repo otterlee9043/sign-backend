@@ -6,26 +6,24 @@ import MyRoom from "./routes/MyRoom.js";
 import Login from "./routes/Login.js";
 import Signup from "./routes/Signup.js";
 import Main from "./routes/Main.js";
-import Confirmed from "./routes/Confirmed.js";
-import injectContext from "./store/appContext";
+import injectContext from "./contexts/CurrentUserContext.js";
 import CreateRoom from "./routes/CreateRoom.js";
 import EnterRoom from "./routes/EnterRoom.js";
-import Chatroom from "./routes/Chatroom.js";
+import MyPage from "./routes/MyPage.js";
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Main />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/main" element={<Main />} />
         <Route path="/classroom/:roomId" element={<Classroom />} />
-        <Route path="/classroom/:roomId/chat" element={<Chatroom />} />
         <Route path="/mystate" element={<MyRoom />} />
-        <Route path="/confirm/:token" element={<Confirmed />} />
         <Route path="/createroom" element={<CreateRoom />} />
         <Route path="/enterroom" element={<EnterRoom />} />
+        <Route path="/mypage" element={<MyPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,15 +1,14 @@
-import React, { useEffect } from "react";
 import styles from "./Login.module.css";
-import { useContext, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Context } from "../store/appContext";
+import { useState, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { CurrentUserContext } from "../contexts/CurrentUserContext";
 
-function Login({ msg }) {
-  const { store, actions } = useContext(Context);
+function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setMessage] = useState("");
   const navigate = useNavigate();
+  const { setCurrentUser } = useContext(CurrentUserContext);
 
   const handleClick = async () => {
     const opts = {
@@ -24,11 +23,29 @@ function Login({ msg }) {
     };
     try {
       const response = await fetch("/api/member/login", opts);
-      if (response.status !== 200) {
+      if (response.ok) {
+        getUser().then(() => {
+          navigate("/home");
+        });
+      } else {
         alert("There has been some errors.");
         return false;
       }
-      navigate("/home");
+    } catch (error) {
+      console.error("There has been an error login", error);
+    }
+  };
+
+  const getUser = async () => {
+    try {
+      const response = await fetch("/api/member/userInfo");
+      if (!response.ok) {
+        if (response.status === 401) {
+          return;
+        }
+      }
+      const userInfo = await response.json();
+      setCurrentUser(userInfo);
     } catch (error) {
       console.error("There has been an error login", error);
     }
@@ -65,18 +82,12 @@ function Login({ msg }) {
             </button>
             <br></br>
             <a href="http://localhost:8080/oauth2/authorization/google">
-              <button
-                className={`${styles["login-button"]} ${styles["login-google"]}`}
-                onClick={loginByGoogle}
-              >
+              <button className={`${styles["login-button"]} ${styles["login-google"]}`}>
                 Google 로그인
               </button>
             </a>
             <a href="http://localhost:8080/oauth2/authorization/kakao">
-              <button
-                className={`${styles["login-button"]} ${styles["login-kakao"]}`}
-                onClick={loginByKakao}
-              >
+              <button className={`${styles["login-button"]} ${styles["login-kakao"]}`}>
                 카카오 로그인
               </button>
             </a>

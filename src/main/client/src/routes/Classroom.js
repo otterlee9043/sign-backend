@@ -5,10 +5,10 @@ import { Seat, EmptySeat, MySeat } from "../components/Seat";
 import ColorCircle from "../components/classroom/ColorCircle";
 import Emoji from "../components/Emoji";
 import Chatroom from "../components/classroom/Chatroom";
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
 
 import CircularProgress from "@mui/material/CircularProgress";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 
 import { colors, emojis } from "../utils/classroomUtils";
 import { useParams } from "react-router-dom";
