@@ -62,6 +62,11 @@ public class JpaRoomRepository implements RoomRepository{
     }
 
     @Override
+    public List<Member> findJoiningMemberById(String roomId) {
+        return null;
+    }
+
+    @Override
     public List<Room> findAll() {
         return em.createQuery("select m from Room m", Room.class).getResultList();
     }

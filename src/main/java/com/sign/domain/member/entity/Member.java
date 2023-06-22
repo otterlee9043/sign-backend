@@ -5,7 +5,10 @@ import com.sign.domain.member.Role;
 import lombok.*;
 
 import javax.persistence.*;
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,12 +23,14 @@ public class Member {
     @Column(name = "MEMBER_ID")
     private Long id;
 
+    @Pattern(regexp = "^[가-힣a-zA-Z][^!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?\\s]*$")
     @NotNull
+    @Size(min = 2, max = 10)
     private String username;
 
     private String password;
 
-    @NotNull
+    @Email
     @Column(unique = true)
     private String email;
 

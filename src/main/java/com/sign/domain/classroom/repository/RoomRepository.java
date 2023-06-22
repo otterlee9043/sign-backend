@@ -23,6 +23,8 @@ public interface RoomRepository {
 
     List<Room> findAll();
 
+    List<Member> findJoiningMemberById(String roomId);
+
     void delete(Room classroom);
 
     boolean checkAttached(Room classroom);

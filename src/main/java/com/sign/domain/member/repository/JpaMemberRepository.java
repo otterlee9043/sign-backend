@@ -4,6 +4,7 @@ import com.sign.domain.member.entity.Member;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-@Component
+@Repository
 @Transactional
 public class JpaMemberRepository implements MemberRepository{
 

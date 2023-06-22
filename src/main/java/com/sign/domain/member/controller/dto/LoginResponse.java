@@ -1,7 +1,6 @@
 package com.sign.domain.member.controller.dto;
 
 import com.sign.domain.member.Role;
-import com.sign.domain.member.entity.Authority;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

@@ -14,8 +14,8 @@ public interface MemberService {
 
     Optional<Member> findMember(Long memberId);
 
-    boolean isUsernameExist(String username);
+    boolean doesUsernameExist(String username);
 
-    boolean isEmailExist(String email);
+    boolean doesEmailExist(String email);
 }
 

@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import javax.persistence.*;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.*;
 
@@ -26,6 +28,10 @@ public class Room {
     @Column(unique = true)
     private String code;
 
+    @Min(value = 1)
+    @Max(value = 100)
+    private Integer capacity;
+
     @OneToOne
     @JoinColumn(name = "MEMBER_ID")
     private Member host;
@@ -34,10 +40,11 @@ public class Room {
     private Set<Joins> joined = new HashSet<>();
 
     @Builder
-    public Room (String name, Member host, String code){
+    public Room (String name, Member host, String code, Integer capacity){
         this.name = name;
         this.host = host;
         this.code = code;
+        this.capacity = capacity;
     }
 
     public void updateRoom(String name){

@@ -7,8 +7,9 @@ import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.exception.DataDuplicateException;
 import com.sign.domain.member.repository.MemberRepository;
 import com.sign.domain.member.controller.dto.SignupRequest;
-import com.sign.security.JwtProvider;
+import com.sign.global.security.authentication.JwtProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Component
 @Transactional
 @RequiredArgsConstructor
@@ -29,6 +31,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public void join(SignupRequest request) throws Exception {
+        log.info("join | {}", request.getPassword());
         Member member = Member.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -36,9 +39,9 @@ public class MemberServiceImpl implements MemberService {
                 .role(Role.USER)
                 .provider("sign")
                 .build();
-        if (isUsernameExist(request.getUsername())) {
+        if (doesUsernameExist(request.getUsername())) {
             List<String> fields = Arrays.asList("username");
-            if (isEmailExist(request.getEmail())){
+            if (doesEmailExist(request.getEmail())){
                 fields.add("email");
             }
             throw new DataDuplicateException("중복된 입력값", fields);
@@ -48,7 +51,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public LoginResponse login(LoginRequest request) {
-        Member member = memberRepository.findByUsername(request.getUsername()).orElseThrow(() ->
+        Member member = memberRepository.findByEmail(request.getEmail()).orElseThrow(() ->
                 new BadCredentialsException("존재하지 않는 계정입니다."));
         if(!passwordEncoder.matches(request.getPassword(), member.getPassword())){
             throw new BadCredentialsException("잘못된 비밀번호입니다.");
@@ -66,12 +69,12 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public boolean isUsernameExist(String username) {
+    public boolean doesUsernameExist(String username) {
         return memberRepository.findByUsername(username).isPresent();
     }
 
     @Override
-    public boolean isEmailExist(String email) {
+    public boolean doesEmailExist(String email) {
         return memberRepository.findByEmail(email).isPresent();
     }
 }
