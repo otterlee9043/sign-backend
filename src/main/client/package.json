@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@emotion/cache": "^11.10.1",
     "@emotion/react": "^11.10.0",
     "@emotion/styled": "^11.10.0",
@@ -15,12 +16,14 @@
     "formik": "^2.2.9",
     "net": "^1.0.2",
     "react": "^18.2.0",
+    "react-cookie": "^4.1.1",
     "react-dom": "^18.2.0",
     "react-icons": "^4.4.0",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
     "sockjs-client": "^1.6.1",
     "stompjs": "^2.3.3",
+    "swiper": "^9.4.1",
     "web-vitals": "^2.1.4",
     "yup": "^1.1.1"
   },
@@ -48,5 +51,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.22.5",
+    "@babel/preset-react": "^7.22.5"
   }
 }
