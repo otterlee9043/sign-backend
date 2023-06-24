@@ -14,15 +14,7 @@ const emailSchema = Yup.string()
   .email("올바른 이메일 형식이 아닙니다.");
 
 export const validationSchema = Yup.object().shape({
-  username: usernameSchema.test("username", "사용 중인 이름입니다.", async (username) => {
-    if (await usernameSchema.isValid(username)) {
-      const res = await fetch(`/api/member/username/${username}/exists`);
-      const data = await res.json();
-      const result = data["duplicate"];
-      return !result;
-    }
-    return true;
-  }),
+  username: usernameSchema,
   email: emailSchema.test("email", "사용 중인 이메일입니다.", async (email) => {
     if (await emailSchema.isValid(email)) {
       const res = await fetch(`/api/member/email/${email}/exists`);
