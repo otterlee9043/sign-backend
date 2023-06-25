@@ -33,11 +33,12 @@ function Signup() {
     };
     try {
       const response = await fetch("/api/member/join", opts);
-      const data = await response.json();
+
       if (response.ok) {
-        navigate("/");
+        navigate("/login");
       }
       if (response.status === 400 || response.status === 409) {
+        const data = await response.json();
         formik.setErrors(data.errors);
       }
     } catch (error) {
@@ -105,7 +106,10 @@ function Signup() {
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
             />
-            <button className={styles.loginBtn} type="submit">
+            <button
+              className={`${styles["login-button"]} ${styles["login-button-blue"]}`}
+              type="submit"
+            >
               Sign up
             </button>
           </form>
