@@ -17,7 +17,6 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final JwtProvider jwtProvider;
-    private final MemberRepository memberRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -28,5 +27,6 @@ public class LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
         String email = loginMember.getUsername();
         String token = jwtProvider.createToken(email, loginMember.getMember().getRole());
         jwtProvider.sendToken(response, token);
+        log.info("User {} logged in successfully from {}", loginMember.getMember().getId(), request.getRemoteAddr());
     }
 }

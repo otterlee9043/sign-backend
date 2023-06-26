@@ -21,13 +21,14 @@ import java.io.IOException;
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtProvider jwtProvider;
-    private final MemberRepository memberRepository;
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        log.info("OAuth 로그인 성공!");
-        LoginMember principal = (LoginMember) authentication.getPrincipal();
+    public void onAuthenticationSuccess(HttpServletRequest request,
+                                        HttpServletResponse response,
+                                        Authentication authentication)
+            throws IOException, ServletException {
+        LoginMember loginMember = (LoginMember) authentication.getPrincipal();
 
-        String token = jwtProvider.createToken(principal.getUsername(), principal.getMember().getRole());
+        String token = jwtProvider.createToken(loginMember.getUsername(), loginMember.getMember().getRole());
         Cookie cookie = new Cookie("token", token);
         cookie.setMaxAge(1 * 60 * 60);
         cookie.setSecure(true);
@@ -35,5 +36,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         cookie.setPath("/");
         response.addCookie(cookie);
         response.sendRedirect("http://localhost:3000/home");
+        log.info("User {} logged in successfully via {} from {}",
+                loginMember.getMember().getId(), loginMember.getMember().getProvider(), request.getRemoteAddr());
     }
 }
