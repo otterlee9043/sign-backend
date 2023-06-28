@@ -2,7 +2,6 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./routes/Home.js";
 import Classroom from "./routes/Classroom.js";
-import MyRoom from "./routes/MyRoom.js";
 import Login from "./routes/Login.js";
 import Signup from "./routes/Signup.js";
 import Main from "./routes/Main.js";
@@ -20,7 +19,6 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/classroom/:roomId" element={<Classroom />} />
-        <Route path="/mystate" element={<MyRoom />} />
         <Route path="/createroom" element={<CreateRoom />} />
         <Route path="/enterroom" element={<EnterRoom />} />
         <Route path="/mypage" element={<MyPage />} />
