@@ -8,15 +8,6 @@
 }
 
 .user {
-  display: inline-block;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: cover;
-  margin-left: 10px;
 }
 
 .user-bar {
@@ -26,8 +17,22 @@
   margin-bottom: 10px;
 }
 
-.profile-img {
+.default-img {
 }
 
-.default-img {
+.profile-wrapper {
+  position: relative;
+}
+
+.profile-img {
+  z-index: 1;
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  margin-left: 10px;
 }
