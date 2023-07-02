@@ -51,6 +51,10 @@ function Login() {
     }
   };
 
+  const handleOnKeyPress = (event) => {
+    if (event.key === "Enter") handleClick();
+  };
+
   return (
     <div>
       <div className={styles.wrapper}>
@@ -73,6 +77,7 @@ function Login() {
               placeholder="Password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              onKeyDown={handleOnKeyPress}
             />
             <button
               className={`${styles["login-button"]} ${styles["login-button-blue"]}`}
