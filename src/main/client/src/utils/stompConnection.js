@@ -21,6 +21,7 @@ export const useStompConnection = (roomId, columnNum, currentUser, setSeats, set
   useEffect(() => {
     const Sock = new SockJS("http://localhost:8080/ws");
     const client = over(Sock);
+    client.debug = () => {};
     setStompClient(client);
   }, [roomId, currentUser]);
 
@@ -32,7 +33,6 @@ export const useStompConnection = (roomId, columnNum, currentUser, setSeats, set
             roomId: roomId,
           })
         );
-        console.log("roomSubscription", roomSubscription);
         const queueSub = stompClient.subscribe(
           `/queue/temp/classroom/${roomId}/user/${currentUser.email}`,
           (received) => {
@@ -236,7 +236,9 @@ export const useStompConnection = (roomId, columnNum, currentUser, setSeats, set
   );
 
   const disconnect = useCallback(() => {
-    stompClient.disconnect();
+    if (stompClient !== null) {
+      stompClient.disconnect();
+    }
   }, [stompClient]);
 
   return { seatNumRef, selectColor, changeSeat, sendMessage, selectEmoji, disconnect };

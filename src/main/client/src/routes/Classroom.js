@@ -1,7 +1,9 @@
+import { createBrowserHistory } from "history";
 import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./Classroom.module.css";
 import NavBar from "../components/NavBar.js";
-import { Seat, EmptySeat, MySeat } from "../components/Seat";
+import { Seat, EmptySeat } from "../components/Seat";
 import ColorCircle from "../components/classroom/ColorCircle";
 import Emoji from "../components/Emoji";
 import Chatroom from "../components/classroom/Chatroom";
@@ -52,6 +54,7 @@ const InitDataFetcher = ({ children }) => {
 function Room({ currentUser, roomInfo }) {
   const params = useParams();
   const roomId = parseInt(params.roomId);
+  const history = createBrowserHistory();
   const [visible, setVisible] = useState(false);
   const column = roomInfo["capacity"] > 50 ? 10 : 5;
   const [seats, setSeats] = useState(new Array(roomInfo["capacity"]).fill(["empty", ""]));
@@ -59,14 +62,18 @@ function Room({ currentUser, roomInfo }) {
 
   const { seatNumRef, selectColor, changeSeat, sendMessage, selectEmoji, disconnect } =
     useStompConnection(roomId, column, currentUser, setSeats, setChat);
-
   const openChatroom = () => {
     setVisible((visible) => !visible);
   };
 
   useEffect(() => {
-    console.log(seats);
-  }, [seats]);
+    history.listen(() => {
+      if (history.action === "POP") {
+        disconnect();
+      }
+    });
+  }, [disconnect]);
+
   return (
     <div className={styles.wrapper}>
       <NavBar
