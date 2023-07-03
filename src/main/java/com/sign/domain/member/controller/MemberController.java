@@ -23,23 +23,20 @@ import java.util.*;
 public class MemberController {
     private final MemberService memberService;
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/join")
-    public ResponseEntity signup(@RequestBody @Valid SignupRequest request) throws Exception {
-        log.info("form={}", request);
+    public void signup(@RequestBody @Valid SignupRequest request) throws Exception {
         memberService.join(request);
-        log.info("member {} joined", request.getUsername());
-        return new ResponseEntity<>(null, HttpStatus.OK);
     }
 
     @GetMapping("/userInfo")
-    public ResponseEntity userInfo(@AuthenticationPrincipal LoginMember loginMember, HttpSession session){
+    public MemberInfo userInfo(@AuthenticationPrincipal LoginMember loginMember, HttpSession session){
         Member member = loginMember.getMember();
-        MemberInfo memberInfo = MemberInfo.builder()
+        return MemberInfo.builder()
                 .username(member.getUsername())
                 .email(member.getEmail())
                 .picture(member.getPicture())
                 .build();
-        return new ResponseEntity<>(memberInfo, HttpStatus.OK);
     }
 
 

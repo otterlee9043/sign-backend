@@ -31,17 +31,17 @@ public class RoomController {
     private final RoomService classroomService;
     private final MemberService memberService;
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/api/classrooms")
-    public ResponseEntity create(@Validated @RequestBody RoomCreateRequest request,
+    public void create(@Validated @RequestBody RoomCreateRequest request,
                                  @AuthenticationPrincipal LoginMember loginMember){
         classroomService.createRoom(request, loginMember.getMember());
-        return new ResponseEntity<>(null, HttpStatus.CREATED);
     }
 
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/api/classrooms")
     public Set<RoomResponse> joiningRooms(@AuthenticationPrincipal LoginMember loginMember){
-        log.info("/api/classrooms");
         Member member = memberService.findMember(loginMember.getMember().getId()).get();
         Set<Room> joiningRooms = classroomService.findJoiningRooms(member);
         return joiningRooms.stream()
@@ -56,55 +56,55 @@ public class RoomController {
     }
 
 
+    @ResponseStatus(HttpStatus.OK)
     @PostMapping("/api/classroom/{roomId}/join")
-    public ResponseEntity join(@PathVariable Long roomId, @AuthenticationPrincipal LoginMember loginMember){
+    public void join(@PathVariable Long roomId, @AuthenticationPrincipal LoginMember loginMember){
         Room room = classroomService.findRoomByRoomId(roomId);
         classroomService.joinRoom(loginMember.getMember(), room);
-        return new ResponseEntity<>(null, HttpStatus.OK);
     }
 
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/api/classroom/{roomId}")
-    public ResponseEntity enter(@PathVariable Long roomId, @AuthenticationPrincipal LoginMember loginMember){
+    public RoomResponse enter(@PathVariable Long roomId, @AuthenticationPrincipal LoginMember loginMember){
         Room room = classroomService.findRoomByRoomId(roomId);
-        RoomResponse roomResponse = RoomResponse.builder()
+        return RoomResponse.builder()
                 .id(room.getId())
                 .roomName(room.getName())
                 .capacity(room.getCapacity())
                 .hostEmail(room.getHost().getEmail())
                 .hostUsername(room.getHost().getUsername())
                 .build();
-
-        return new ResponseEntity<>(roomResponse, HttpStatus.OK);
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @PutMapping("/api/classroom/{roomId}")
     public void updateRoom(@PathVariable Long roomId, @RequestBody RoomUpdateRequest request,
                                          @AuthenticationPrincipal LoginMember loginMember) {
-        log.info("updateRoom | new room name: {}", request.getRoomName());
         Room room = classroomService.findRoomByRoomId(roomId);
 
         if (!room.getHost().getId().equals(loginMember.getMember().getId())){
-            log.info("방 주인이 아님");
             throw new AccessDeniedException("방을 수정할 권한이 없습니다.");
         }
         classroomService.updateRoom(room, request);
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/api/classroom/{roomId}")
     public void deleteRoom(@PathVariable Long roomId, @AuthenticationPrincipal LoginMember loginMember){
         Room room = classroomService.findRoomByRoomId(roomId);
         classroomService.deleteRoom(room, loginMember.getMember());
-
     }
 
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/api/classrooms/byCode/{roomCode}")
-    public ResponseEntity findRoomByCode(@PathVariable String roomCode) {
+    public RoomResponse findRoomByCode(@PathVariable String roomCode) {
         Room room = classroomService.findRoomByRoomCode(roomCode);
-        return new ResponseEntity<>(RoomMapper.toRoomInfo(room), HttpStatus.OK);
+        return RoomMapper.toRoomInfo(room);
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/api/classroom/roomCode/{roomCode}/exists")
     public ResponseEntity checkRoomCodeExistence(@PathVariable String roomCode) {
         Map<String, Object> result = new HashMap<>();
