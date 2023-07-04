@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { over } from "stompjs";
 import SockJS from "sockjs-client";
 import { EVENT } from "./classroomUtils";
@@ -8,6 +9,7 @@ export const useStompConnection = (roomId, columnNum, currentUser, setSeats, set
   const [roomSubscription, setRoomSubscription] = useState(null);
   const [chatSubscription, setChatSubsription] = useState(null);
 
+  const navigate = useNavigate();
   const seatNumRef = useRef();
   const rowRef = useRef();
 
@@ -28,11 +30,7 @@ export const useStompConnection = (roomId, columnNum, currentUser, setSeats, set
   useEffect(() => {
     if (stompClient) {
       const onConnected = () => {
-        setRoomSubscription(
-          stompClient.subscribe(`/topic/classroom/${roomId}`, onMessageReceived, {
-            roomId: roomId,
-          })
-        );
+        setRoomSubscription(stompClient.subscribe(`/topic/classroom/${roomId}`, onMessageReceived));
         const queueSub = stompClient.subscribe(
           `/queue/temp/classroom/${roomId}/user/${currentUser.email}`,
           (received) => {
@@ -65,8 +63,7 @@ export const useStompConnection = (roomId, columnNum, currentUser, setSeats, set
             });
 
             queueSub.unsubscribe();
-          },
-          { roomId: roomId }
+          }
         );
 
         stompClient.send(
@@ -125,7 +122,10 @@ export const useStompConnection = (roomId, columnNum, currentUser, setSeats, set
       };
 
       stompClient.connect({ roomId: roomId }, onConnected, (error) => {
+        // 방에서 내보내야 함
+        console.log("There is");
         console.error(error);
+        navigate("/home");
       });
     }
   }, [stompClient]);
