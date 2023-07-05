@@ -22,7 +22,7 @@ public class MemberExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler
     public SignupErrorResult exHandler(MethodArgumentNotValidException e){
-        log.error("[MethodArgumentNotValidException] ex", e);
+        log.warn("MethodArgumentNotValidException occurred. Message: ", e.getMessage());
         Map<String, String> errors = new HashMap<>();
         e.getBindingResult().getAllErrors()
                 .forEach((error) -> {
@@ -36,13 +36,13 @@ public class MemberExceptionHandler {
                 .errors(errors)
                 .build();
         return errorResult;
-    }
+     }
 
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler
     public SignupErrorResult dataDuplicateExceptionHandler(DataDuplicateException e){
-        log.error("[dataDuplicateExceptionHandler] ex", e);
+        log.warn("DataDuplicateException occurred. Message: ", e.getMessage());
         Map<String, String> errors = new HashMap<>();
         List<String> fields = e.getFields();
         if (fields.contains("username")) errors.put("username", "사용 중인 이름입니다.");
