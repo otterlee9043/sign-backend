@@ -43,6 +43,8 @@ public class Member {
 
     private String provider;
 
+    private String refreshToken;
+
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
     private Set<Joins> joins = new HashSet<>();
@@ -50,6 +52,12 @@ public class Member {
     public Member update(String username, String picture) {
         this.username = username;
         this.picture = picture;
+
+        return this;
+    }
+
+    public Member updateRefreshToken(String newRefreshToken) {
+        this.refreshToken = newRefreshToken;
 
         return this;
     }

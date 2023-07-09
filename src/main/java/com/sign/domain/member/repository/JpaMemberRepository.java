@@ -50,6 +50,13 @@ public class JpaMemberRepository implements MemberRepository{
     }
 
     @Override
+    public Optional<Member> findByRefreshToken(String refreshToken) {
+        return em.createQuery("select m from Member m where m.refreshToken =:refreshToken", Member.class)
+                .setParameter("refreshToken", refreshToken)
+                .getResultList().stream().findAny();
+    }
+
+    @Override
     public List<Member> findAll() {
         return em.createQuery("select m from Member m", Member.class).getResultList();
     }

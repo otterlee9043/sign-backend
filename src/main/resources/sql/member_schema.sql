@@ -7,5 +7,6 @@ CREATE TABLE MEMBER (
   email VARCHAR(255) NOT NULL,
   picture VARCHAR(255),
   role VARCHAR(255) NOT NULL,
+  refresh_token VARCHAR(255),
   provider VARCHAR(255)
 );

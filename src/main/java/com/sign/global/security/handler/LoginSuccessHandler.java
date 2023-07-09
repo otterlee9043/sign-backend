@@ -17,16 +17,19 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final JwtProvider jwtProvider;
+    private final MemberRepository memberRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        Authentication authentication)
-            throws IOException, ServletException {
-        response.setStatus(HttpServletResponse.SC_OK);
+                                        Authentication authentication) {
         LoginMember loginMember = (LoginMember) authentication.getPrincipal();
         String email = loginMember.getUsername();
-        String token = jwtProvider.createToken(email, loginMember.getMember().getRole());
-        jwtProvider.sendToken(response, token);
+        String accessToken = jwtProvider.createAccessToken(email);
+        String refreshToken = jwtProvider.createRefreshToken();
+
+        jwtProvider.sendAccessAndRefreshToken(response, accessToken, refreshToken);
+        jwtProvider.updateRefreshToken(email, refreshToken);
+
         log.info("User {} logged in successfully from {}", loginMember.getMember().getId(), request.getRemoteAddr());
     }
 }

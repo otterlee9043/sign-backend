@@ -16,5 +16,7 @@ public interface MemberRepository {
     Optional<Member> findByUsername(String username);
 
     public Optional<Member> findByEmail(String email);
+
+    public Optional<Member> findByRefreshToken(String refreshToken);
     boolean checkAttached(Member member);
 }

@@ -28,14 +28,14 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             throws IOException, ServletException {
         LoginMember loginMember = (LoginMember) authentication.getPrincipal();
 
-        String token = jwtProvider.createToken(loginMember.getUsername(), loginMember.getMember().getRole());
-        Cookie cookie = new Cookie("token", token);
-        cookie.setMaxAge(1 * 60 * 60);
-        cookie.setSecure(true);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        response.addCookie(cookie);
-        response.sendRedirect("http://localhost:3000/home");
+        String accessToken = jwtProvider.createAccessToken(loginMember.getUsername());
+        String refreshToken = jwtProvider.createRefreshToken();
+        response.addHeader(jwtProvider.getAccessTokenHeader(), "Bearer " + accessToken);
+        response.addHeader(jwtProvider.getRefreshTokenHeader(), "Bearer " + refreshToken);
+
+        jwtProvider.sendAccessAndRefreshToken(response, accessToken, refreshToken);
+        jwtProvider.updateRefreshToken(loginMember.getUsername(), refreshToken);
+
         log.info("User {} logged in successfully via {} from {}",
                 loginMember.getMember().getId(), loginMember.getMember().getProvider(), request.getRemoteAddr());
     }

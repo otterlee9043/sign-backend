@@ -1,6 +1,8 @@
 package com.sign.global.security.authentication;
 
 import com.sign.domain.member.Role;
+import com.sign.domain.member.entity.Member;
+import com.sign.domain.member.repository.MemberRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -30,25 +32,50 @@ public class JwtProvider {
     @Value("${jwt.secret.key}")
     private String salt;
 
+    @Value("${jwt.access.expiration}")
+    private Long accessTokenExpirationPeriod;
+
+    @Value("${jwt.refresh.expiration}")
+    private Long refreshTokenExpirationPeriod;
+
     private Key secretKey;
 
-    private final long exp = 1000L * 60 * 60;
+    private final String accessTokenHeader = "Access-Token";
+    private final String refreshTokenHeader = "Refresh-Token";
 
     private final MemberSecurityService userDetailService;
+    private final MemberRepository memberRepository;
+
+    public String getAccessTokenHeader() {
+        return accessTokenHeader;
+    }
+
+    public String getRefreshTokenHeader() {
+        return refreshTokenHeader;
+    }
+
 
     @PostConstruct
     protected void init() {
         secretKey = Keys.hmacShaKeyFor(salt.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String createToken(String username, Role role) {
+    public String createAccessToken(String username) {
         Claims claims = Jwts.claims().setSubject(username);
-        claims.put("role", role);
         Date now = new Date();
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + exp))
+                .setExpiration(new Date(now.getTime() + accessTokenExpirationPeriod))
+                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String createRefreshToken() {
+        Date now = new Date();
+        return Jwts.builder()
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + refreshTokenExpirationPeriod))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -63,17 +90,25 @@ public class JwtProvider {
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
-    public String resolveToken(HttpServletRequest request) {
-        if (request.getCookies() != null) {
-            Optional<Cookie> tokenCookie = Arrays.stream(request.getCookies())
-                    .filter(cookie -> cookie.getName().equals("token")).findFirst();
-            if (tokenCookie.isPresent())
-                return tokenCookie.get().getValue();
-        }
-        return null;
+
+    public Optional<String> extractRefreshToken(HttpServletRequest request) {
+        return Optional.ofNullable(request.getHeader(refreshTokenHeader))
+                .filter(refreshToken -> refreshToken.startsWith("BEARER"))
+                .map(refreshToken -> refreshToken.replace("BEARER", ""));
     }
 
-    public boolean validateToken(String token) {
+    public Optional<String> extractAccessToken(HttpServletRequest request) {
+        return Optional.ofNullable(request.getHeader(accessTokenHeader))
+                .filter(refreshToken -> refreshToken.startsWith("BEARER"))
+                .map(refreshToken -> refreshToken.replace("BEARER", ""));
+    }
+
+    public Optional<String> extractEmail(String accessToken) {
+        return Optional.ofNullable(Jwts.parserBuilder().setSigningKey(secretKey).build()
+                .parseClaimsJws(accessToken).getBody().getSubject());
+    }
+
+    public boolean isTokenValid(String token) {
         try {
             Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
             return !claims.getBody().getExpiration().before(new Date());
@@ -82,13 +117,23 @@ public class JwtProvider {
         }
     }
 
-    public void sendToken(HttpServletResponse response, String token) {
+    public void sendAccessToken(HttpServletResponse response, String accessToken) {
         response.setStatus(HttpServletResponse.SC_OK);
-        Cookie cookie = new Cookie("token", token);
-        cookie.setMaxAge(1 * 60 * 60);
-        cookie.setSecure(true);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        response.addCookie(cookie);
+        response.setHeader(accessTokenHeader, accessToken);
     }
+
+    public void sendAccessAndRefreshToken(HttpServletResponse response, String accessToken, String refreshToken) {
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader(accessTokenHeader, accessToken);
+        response.setHeader(refreshTokenHeader, refreshToken);
+    }
+
+    public void updateRefreshToken(String email, String refreshToken) {
+        memberRepository.findByEmail(email)
+                .ifPresentOrElse(
+                        member -> memberRepository.save(member.updateRefreshToken(refreshToken)),
+                        () -> new Exception("일치하는 회원이 없습니다.")
+                );
+    }
+
 }

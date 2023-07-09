@@ -69,7 +69,8 @@ public class SecurityConfig {
                             "/api/member/email/*/exists",
                             "/oauth2/authorization/*",
                             "/login/oauth2/code/*",
-                            "/css/**","/images/**","/js/**","/favicon.ico"
+                            "/css/**","/images/**","/js/**","/favicon.ico",
+                            "/swagger-ui/**", "/v3/api-docs/**"
                             ).permitAll()
                     .mvcMatchers("/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
@@ -98,7 +99,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(){
-        return new JwtAuthenticationFilter(jwtProvider);
+        return new JwtAuthenticationFilter(jwtProvider, memberRepository);
     }
     @Bean
     public LoginSuccessHandler loginSuccessHandler() {

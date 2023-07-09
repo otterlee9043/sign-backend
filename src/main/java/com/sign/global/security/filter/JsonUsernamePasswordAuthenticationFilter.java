@@ -7,6 +7,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.util.StreamUtils;
 
 import javax.servlet.ServletException;
@@ -19,24 +20,29 @@ import java.util.Map;
 @Slf4j
 public class JsonUsernamePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
     private final ObjectMapper objectMapper;
+    private static final String DEFAULT_LOGIN_REQUEST_URL = "/api/member/login";
+    private static final String HTTP_METHOD = "POST";
+    private static final String CONTENT_TYPE = "application/json";
+    private static final String USERNAME_KEY = "email";
+    private static final String PASSWORD_KEY = "password";
+
     public JsonUsernamePasswordAuthenticationFilter(ObjectMapper objectMapper){
-        super("/api/member/login");
+        super(new AntPathRequestMatcher(DEFAULT_LOGIN_REQUEST_URL, HTTP_METHOD));
         this.objectMapper = objectMapper;
     }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException, IOException, ServletException {
-        if (request.getContentType() == null || !request.getContentType().equals("application/json")) {
-            log.error("filter content type 오류");
-            throw new AuthenticationServiceException("Content type 오류");
+        if (request.getContentType() == null || !request.getContentType().equals(CONTENT_TYPE)) {
+            throw new AuthenticationServiceException("Content type 오류: " +  request.getContentType());
         }
         String messageBody = StreamUtils.copyToString(request.getInputStream(), StandardCharsets.UTF_8);
 
         Map<String, String> usernamePasswordMap = objectMapper.readValue(messageBody, Map.class);
 
-        String email = usernamePasswordMap.get("email");
-        String password = usernamePasswordMap.get("password");
+        String email = usernamePasswordMap.get(USERNAME_KEY);
+        String password = usernamePasswordMap.get(PASSWORD_KEY);
         UsernamePasswordAuthenticationToken authRequest
                 = new UsernamePasswordAuthenticationToken(email, password);
 
