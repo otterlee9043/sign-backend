@@ -1,22 +1,24 @@
 package com.sign.domain.member.repository;
 
+import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.member.entity.Member;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface MemberRepository {
+public interface MemberRepository extends JpaRepository<Member, Long> {
 
-    Member save(Member member);
-
-    Optional<Member> findById(Long memberId);
-
-    List<Member> findAll();
+//    Member save(Member member);
+//
+//    Optional<Member> findById(Long memberId);
+//
+//    List<Member> findAll();
 
     Optional<Member> findByUsername(String username);
 
-    public Optional<Member> findByEmail(String email);
+    Optional<Member> findByEmail(String email);
 
-    public Optional<Member> findByRefreshToken(String refreshToken);
-    boolean checkAttached(Member member);
+    Optional<Member> findByRefreshToken(String refreshToken);
+
 }

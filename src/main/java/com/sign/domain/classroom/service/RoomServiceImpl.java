@@ -5,6 +5,7 @@ import com.sign.domain.classroom.entity.Joins;
 import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.classroom.exception.NotFoundException;
 import com.sign.domain.classroom.exception.RoomCapacityExceededException;
+import com.sign.domain.classroom.repository.JoinsRepository;
 import com.sign.domain.classroom.repository.RoomRepository;
 import com.sign.domain.classroom.controller.dto.RoomCreateRequest;
 import com.sign.domain.member.entity.Member;
@@ -26,6 +27,7 @@ public class RoomServiceImpl implements RoomService{
 
     private final MemberRepository memberRepository;
     private final RoomRepository classroomRepository;
+    private final JoinsRepository joinsRepository;
 
     @Override
     public Room findRoomByRoomCode(String roomCode) {
@@ -82,7 +84,7 @@ public class RoomServiceImpl implements RoomService{
                 .member(memberToJoin)
                 .room(classroom)
                 .build();
-        classroomRepository.save(joins);
+        joinsRepository.save(joins);
         return classroom;
     }
 
