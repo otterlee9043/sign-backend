@@ -1,6 +1,7 @@
 import { createBrowserHistory } from "history";
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import styles from "./Classroom.module.css";
 import NavBar from "../components/NavBar.js";
 import { Seat, EmptySeat } from "../components/Seat";
@@ -25,20 +26,16 @@ const InitDataFetcher = ({ children }) => {
   const [roomInfo, setRoomInfo] = useState(null);
   useEffect(() => {
     if (!currentUser) {
-      fetch("/api/member/userInfo")
-        .then((response) => response.json())
-        .then((data) => {
-          setCurrentUser(data);
-        })
+      axios
+        .get("/member/userInfo")
+        .then((response) => setCurrentUser(response.data))
         .catch((error) => {
           console.error("Error fetching data:", error);
         });
     }
-    fetch(`/api/classroom/${roomId}`)
-      .then((response) => response.json())
-      .then((data) => {
-        setRoomInfo(data);
-      })
+    axios
+      .get(`/classroom/${roomId}`)
+      .then((response) => setRoomInfo(response.data))
       .catch((error) => {
         console.error("Error fetching data:", error);
       });

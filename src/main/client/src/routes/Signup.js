@@ -1,4 +1,5 @@
 import styles from "./Login.module.css";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { validationSchema } from "../schemas/SignupSchema";
@@ -18,31 +19,14 @@ function Signup() {
   const navigate = useNavigate();
 
   const handleClick = async (values) => {
-    const { username, email, password, password2 } = values;
-    const opts = {
-      method: "POST",
-      body: JSON.stringify({
-        username: username,
-        email: email,
-        password: password,
-        password2: password2,
-      }),
-      headers: new Headers({
-        "content-type": "application/json",
-      }),
-    };
     try {
-      const response = await fetch("/api/member/join", opts);
-
-      if (response.ok) {
-        navigate("/login");
-      }
-      if (response.status === 400 || response.status === 409) {
-        const data = await response.json();
+      const response = await axios.post("/member/join", values);
+      navigate("/login");
+    } catch (error) {
+      if (error.response) {
+        const data = error.response.data;
         formik.setErrors(data.errors);
       }
-    } catch (error) {
-      console.error("There has been an error login", error);
     }
   };
 

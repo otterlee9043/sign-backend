@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import axios from "axios";
 import Button from "../components/Button";
 import styles from "./RoomForm.module.css";
 import RoomCard from "../components/RoomCard";
@@ -13,49 +14,34 @@ function EnterRoom() {
 
   const findRoomByRoomcode = async () => {
     try {
-      const response = await fetch(`/api/classrooms/byCode/${roomcode}`);
-      if (response.ok) {
-        const result = await response.json();
-        console.log("result", result);
-        setErrorMessage(null);
-        setFoundRoom(result);
-      } else {
-        setFoundRoom(null);
-        if (response.status === 404) {
-          const result = await response.json();
-          setErrorMessage(result["message"]);
-        } else {
-          console.log(response);
-        }
-      }
+      const response = await axios.get(`/classrooms/byCode/${roomcode}`);
+      const result = response.data;
+      console.log("result", result);
+      setErrorMessage(null);
+      setFoundRoom(result);
     } catch (error) {
-      console.error("There has been error while getting room Id", error);
-    }
-  };
-
-  const enterRoom = async () => {
-    const opts = {
-      method: "POST",
-      body: JSON.stringify({
-        roomCode: roomcode,
-      }),
-      headers: new Headers({
-        "content-type": "application/json",
-      }),
-    };
-
-    try {
-      const response = await fetch(`/api/classroom/${foundRoom["id"]}/join`, opts);
-      if (response.ok) {
-        navigate("/home");
-      } else if (response.status === 409) {
+      setFoundRoom(null);
+      if (error.response && error.response.status === 404) {
         const result = await response.json();
         setErrorMessage(result["message"]);
       } else {
         console.log(response);
       }
+    }
+  };
+
+  const enterRoom = async () => {
+    try {
+      await axios.post(`/classroom/${foundRoom["id"]}/join`, {
+        roomCode: roomcode,
+      });
+      navigate("/home");
     } catch (error) {
-      console.error("There has been an error login");
+      if (error.response && error.response.status === 409) {
+        setErrorMessage(error.response.data["message"]);
+      } else {
+        console.log(response);
+      }
     }
   };
 

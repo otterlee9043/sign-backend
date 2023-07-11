@@ -1,4 +1,5 @@
 import styles from "./RoomForm.module.css";
+import axios from "axios";
 import button_styles from "../components/Button.module.css";
 import { validationSchema } from "../schemas/CreateRoomSchema";
 import { useNavigate } from "react-router-dom";
@@ -19,26 +20,9 @@ function CreateRoom() {
   });
 
   const createRoom = async (values) => {
-    const { roomName, roomCode, capacity } = values;
-    const opts = {
-      method: "POST",
-      body: JSON.stringify({
-        roomName: roomName,
-        roomCode: roomCode,
-        capacity: capacity,
-      }),
-      headers: new Headers({
-        "content-type": "application/json",
-      }),
-    };
     try {
-      const response = await fetch("/api/classrooms", opts);
-      if (response.ok) {
-        navigate("/home");
-      } else {
-        alert("There has been some errors.");
-        return false;
-      }
+      await axios.post("/classrooms", values);
+      navigate("/home");
     } catch (error) {
       console.error("There has been an error login");
     }

@@ -1,4 +1,5 @@
 import styles from "./RoomForm.module.css";
+import axios from "axios";
 import NavBar from "../components/NavBar.js";
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
@@ -8,14 +9,13 @@ function MyPage() {
   const { setCurrentUser } = useContext(CurrentUserContext);
   const navigate = useNavigate();
   const logout = async () => {
-    fetch("/api/member/logout", { method: "POST" })
-      .then(() => {
-        setCurrentUser(null);
-        navigate("/");
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    try {
+      await axios.post("/member/logout");
+      setCurrentUser(null);
+      navigate("/");
+    } catch {
+      console.log(error);
+    }
   };
   return (
     <div className={styles.container}>

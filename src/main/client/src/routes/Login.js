@@ -1,4 +1,5 @@
 import styles from "./Login.module.css";
+import axios from "axios";
 import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CurrentUserContext } from "../contexts/CurrentUserContext";
@@ -10,44 +11,45 @@ function Login() {
   const navigate = useNavigate();
   const { setCurrentUser } = useContext(CurrentUserContext);
 
+  // axios.interceptors.response.use(
+  //   (response) => {
+  //     if (response.config.method === "options") {
+  //       // Handle the OPTIONS response separately
+  //       console.log("Received OPTIONS response:", response);
+  //       return null; // Return null to ignore the OPTIONS response
+  //     }
+  //     return response;
+  //   },
+  //   (error) => {
+  //     return Promise.reject(error);
+  //   }
+  // );
+
   const handleClick = async () => {
-    const opts = {
-      method: "POST",
-      body: JSON.stringify({
+    try {
+      const response = await axios.post("/member/login", {
         email: email,
         password: password,
-      }),
-      headers: new Headers({
-        "content-type": "application/json",
-      }),
-    };
-    try {
-      const response = await fetch("/api/member/login", opts);
-      if (response.ok) {
-        getUser().then(() => {
-          navigate("/home");
-        });
-      } else {
-        alert("There has been some errors.");
-        return false;
-      }
+      });
+      const headers = response.headers;
+      axios.defaults.headers.common["Access-Token"] = headers["access-token"];
     } catch (error) {
       console.error("There has been an error login", error);
     }
+
+    getUser().then(() => {
+      navigate("/home");
+    });
   };
 
   const getUser = async () => {
     try {
-      const response = await fetch("/api/member/userInfo");
-      if (!response.ok) {
-        if (response.status === 401) {
-          return;
-        }
-      }
-      const userInfo = await response.json();
+      const response = await axios.get("/member/userInfo");
+      console.log(response);
+      const userInfo = response.data;
       setCurrentUser(userInfo);
     } catch (error) {
-      console.error("There has been an error login", error);
+      console.error("There has been an error getUser", error);
     }
   };
 

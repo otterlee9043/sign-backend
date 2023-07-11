@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import NavLinkButton from "../components/NavLinkButton.js";
 import LoginBar from "../components/LoginBar.js";
 import RoomCard from "../components/RoomCard.js";
@@ -9,13 +10,9 @@ function Home() {
   useEffect(() => {
     async function getRooms() {
       try {
-        const response = await fetch("/api/classrooms");
-        if (response.ok) {
-          const roomsJson = await response.json();
-          setRooms(roomsJson);
-        } else {
-          console.log("There has been some errors.");
-        }
+        const response = await axios.get("/classrooms");
+        const roomsJson = response.data;
+        setRooms(roomsJson);
       } catch (error) {
         console.log("There has been an error login", error);
       }
