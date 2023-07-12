@@ -1,6 +1,5 @@
 package com.sign.global.security.authentication;
 
-import com.sign.domain.member.Role;
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
 import io.jsonwebtoken.Claims;
@@ -9,9 +8,11 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +27,7 @@ import java.util.Date;
 import java.util.Optional;
 
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class JwtProvider {
@@ -80,9 +82,18 @@ public class JwtProvider {
                 .compact();
     }
 
-    public Authentication getAuthentication(String token) {
-        UserDetails userDetails = userDetailService.loadUserByUsername(this.getUsername(token));
+    public Authentication getAuthentication(String accessToken) {
+        UserDetails userDetails = userDetailService.loadUserByUsername(this.getUsername(accessToken));
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+    }
+
+    public Authentication getAuthentication(Member member) {
+        UserDetails userDetails = new LoginMember(member);
+        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
+    }
+
+    public void saveAuthentication(Authentication authentication) {
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     public String getUsername(String token) {
@@ -90,22 +101,18 @@ public class JwtProvider {
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
-
     public Optional<String> extractRefreshToken(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader(refreshTokenHeader))
-                .filter(refreshToken -> refreshToken.startsWith("BEARER"))
-                .map(refreshToken -> refreshToken.replace("BEARER", ""));
+        if (request.getCookies() != null) {
+            return Arrays.stream(request.getCookies())
+                    .filter(cookie -> cookie.getName().equals(refreshTokenHeader))
+                    .map(Cookie::getValue)
+                    .findFirst();
+        }
+        return Optional.empty();
     }
 
     public Optional<String> extractAccessToken(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader(accessTokenHeader))
-                .filter(refreshToken -> refreshToken.startsWith("BEARER"))
-                .map(refreshToken -> refreshToken.replace("BEARER", ""));
-    }
-
-    public Optional<String> extractEmail(String accessToken) {
-        return Optional.ofNullable(Jwts.parserBuilder().setSigningKey(secretKey).build()
-                .parseClaimsJws(accessToken).getBody().getSubject());
+        return Optional.ofNullable(request.getHeader(accessTokenHeader));
     }
 
     public boolean isTokenValid(String token) {
@@ -119,13 +126,20 @@ public class JwtProvider {
 
     public void sendAccessToken(HttpServletResponse response, String accessToken) {
         response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("Access-Control-Expose-Headers", accessTokenHeader);
         response.setHeader(accessTokenHeader, accessToken);
     }
 
-    public void sendAccessAndRefreshToken(HttpServletResponse response, String accessToken, String refreshToken) {
+    public void sendAccessAndRefreshToken(HttpServletResponse response, String accessToken, String refreshToken){
         response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("Access-Control-Expose-Headers", accessTokenHeader);
         response.setHeader(accessTokenHeader, accessToken);
-        response.setHeader(refreshTokenHeader, refreshToken);
+        Cookie cookie = new Cookie(refreshTokenHeader, refreshToken);
+        cookie.setMaxAge(refreshTokenExpirationPeriod.intValue());
+        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        response.addCookie(cookie);
     }
 
     public void updateRefreshToken(String email, String refreshToken) {
