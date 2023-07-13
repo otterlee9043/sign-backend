@@ -1,4 +1,5 @@
 import * as Yup from "yup";
+import axios from "axios";
 
 const usernameSchema = Yup.string()
   .required("이름을 입력하세요.")
@@ -17,9 +18,8 @@ export const validationSchema = Yup.object().shape({
   username: usernameSchema,
   email: emailSchema.test("email", "사용 중인 이메일입니다.", async (email) => {
     if (await emailSchema.isValid(email)) {
-      const res = await fetch(`/api/member/email/${email}/exists`);
-      const data = await res.json();
-      const result = data["duplicate"];
+      const ressponse = await axios.get(`/member/email/${email}/exists`);
+      const result = ressponse.data["duplicate"];
       return !result;
     }
     return true;

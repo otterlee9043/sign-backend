@@ -1,4 +1,5 @@
 import * as Yup from "yup";
+import axios from "axios";
 
 const roomCodeSchema = Yup.string().required("입장 코드를 입력하세요.");
 
@@ -9,9 +10,8 @@ export const validationSchema = Yup.object().shape({
     .max(30, "방 이름은 최대 30글자입니다."),
   roomCode: roomCodeSchema.test("roomName", "사용 중인 입장 코드입니다.", async (roomCode) => {
     if (await roomCodeSchema.isValid(roomCode)) {
-      const res = await fetch(`/api/classroom/roomCode/${roomCode}/exists`);
-      const data = await res.json();
-      const result = data["duplicate"];
+      const response = await axios.get(`/classroom/roomCode/${roomCode}/exists`);
+      const result = response.data["duplicate"];
       return !result;
     }
   }),
