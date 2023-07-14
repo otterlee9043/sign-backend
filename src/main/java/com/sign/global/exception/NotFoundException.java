@@ -1,4 +1,4 @@
-package com.sign.domain.classroom.exception;
+package com.sign.global.exception;
 
 public class NotFoundException extends RuntimeException {
 
