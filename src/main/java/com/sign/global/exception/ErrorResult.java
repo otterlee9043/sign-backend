@@ -9,7 +9,7 @@ import java.util.Map;
 @Data
 @Builder
 @AllArgsConstructor
-public class SignupErrorResult {
+public class ErrorResult {
     private String code;
     private String message;
     private Map<String, String> errors;
