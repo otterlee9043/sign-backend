@@ -1,10 +1,17 @@
 import styles from "./Login.module.css";
 import axios from "axios";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { validationSchema } from "../schemas/SignupSchema";
+import Button from "@mui/material/Button";
+import theme from "../utils/theme";
+import { ThemeProvider } from "@mui/material/styles";
 
 function Signup() {
+  const [completeEmail, setCompleteEmail] = useState("");
+  const [hasChange, setHasChange] = useState(true);
+  const [validationResult, setValidationResult] = useState(false);
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -12,15 +19,19 @@ function Signup() {
       password: "",
       password2: "",
     },
+    // validationSchema: validationSchema(completeEmail, setCompleteEmail),
+    validationSchema: validationSchema(hasChange, validationResult, setValidationResult),
     validateOnMount: true,
-    validationSchema: validationSchema,
+    validateOnChange: false,
+    validateOnBlur: true,
   });
 
   const navigate = useNavigate();
 
   const handleClick = async (values) => {
+    console.log(values);
     try {
-      const response = await axios.post("/member/join", values);
+      await axios.post("/members", values);
       navigate("/login");
     } catch (error) {
       if (error.response) {
@@ -28,6 +39,13 @@ function Signup() {
         formik.setErrors(data.errors);
       }
     }
+  };
+
+  const onBlur = (e) => {
+    console.log(formik.values.email, completeEmail);
+    setHasChange(formik.values.email !== completeEmail);
+    formik.handleBlur(e);
+    setCompleteEmail(formik.values.email);
   };
 
   return (
@@ -52,7 +70,7 @@ function Signup() {
               placeholder="Username"
               value={formik.values.username}
               onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
+              onBlur={onBlur}
             />
             {formik.touched.email && formik.errors.email ? (
               <p className={styles["input-error"]}>{formik.errors.email}</p>
@@ -63,8 +81,10 @@ function Signup() {
               name="email"
               placeholder="Email"
               value={formik.values.email}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
+              onChange={(e) => {
+                formik.handleChange(e);
+              }}
+              onBlur={onBlur}
             />
             {formik.touched.password && formik.errors.password ? (
               <p className={styles["input-error"]}>{formik.errors.password}</p>
@@ -76,7 +96,7 @@ function Signup() {
               placeholder="Password"
               value={formik.values.password}
               onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
+              onBlur={onBlur}
             />
             {formik.touched.password2 && formik.errors.password2 ? (
               <p className={styles["input-error"]}>{formik.errors.password2}</p>
@@ -88,14 +108,19 @@ function Signup() {
               placeholder="Password Confirmation"
               value={formik.values.password2}
               onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
+              onBlur={onBlur}
             />
-            <button
-              className={`${styles["login-button"]} ${styles["login-button-blue"]}`}
-              type="submit"
-            >
-              Sign up
-            </button>
+            <ThemeProvider theme={theme}>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                type="submit"
+                disabled={!formik.isValid || formik.isSubmitting}
+              >
+                Sign up
+              </Button>
+            </ThemeProvider>
           </form>
         </div>
       </div>
