@@ -1,53 +1,95 @@
 package com.sign.domain.member.controller;
 
-import com.sign.domain.member.controller.dto.MemberInfo;
+import com.sign.domain.classroom.controller.dto.RoomResponse;
+import com.sign.domain.classroom.entity.Room;
+import com.sign.domain.classroom.service.RoomService;
+import com.sign.domain.member.controller.dto.MemberProfile;
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.service.MemberService;
 import com.sign.domain.member.controller.dto.SignupRequest;
+import com.sign.global.exception.DataDuplicateException;
 import com.sign.global.security.authentication.LoginMember;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/member")
+@RequestMapping("/api/v1")
 public class MemberController {
     private final MemberService memberService;
+    private final RoomService classroomService;
 
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/join")
+    @PostMapping("/members")
     public void signup(@RequestBody @Valid SignupRequest request) throws Exception {
+        log.info("signup~~~");
         memberService.join(request);
     }
 
-    @GetMapping("/userInfo")
-    public MemberInfo userInfo(@AuthenticationPrincipal LoginMember loginMember, HttpSession session){
+
+    @GetMapping("/member")
+    public MemberProfile getMyProfile(@AuthenticationPrincipal LoginMember loginMember){
+        return MemberProfile.from(loginMember.getMember());
+    }
+
+    @DeleteMapping("/member/{memberId}")
+    public void unregister(@PathVariable Long memberId, @AuthenticationPrincipal LoginMember loginMember) {
         Member member = loginMember.getMember();
-        return MemberInfo.builder()
-                .username(member.getUsername())
-                .email(member.getEmail())
-                .picture(member.getPicture())
-                .build();
+        if (memberId.equals(member.getId())) {
+            memberService.deleteMember(member);
+        }
+    }
+
+    @GetMapping("/member/{memberId}/profile")
+    public MemberProfile getProfile(@PathVariable Long memberId){
+        Member member = memberService.findMember(memberId);
+        return MemberProfile.from(member);
     }
 
 
-    @GetMapping("/email/{email}/exists")
-    public ResponseEntity checkUserByEmail(@PathVariable String email) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("duplicate", memberService.doesEmailExist(email));
-        log.info("[checkUserByEmail] check {} result {}", email, result);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/member/{memberId}/classrooms")
+    public List<RoomResponse> getJoiningRooms(@PathVariable Long memberId){
+        Member member = memberService.findMember(memberId);
+        List<Room> joiningRooms = classroomService.findJoiningRooms(member);
+
+        return joiningRooms.stream()
+                .map(room -> RoomResponse.from(room))
+                .collect(Collectors.toList());
     }
 
 
+    @ResponseStatus(HttpStatus.OK)
+    @PutMapping("/member/{memberId}/classroom/{roomId}")
+    public void join(@PathVariable Long memberId, @PathVariable Long roomId){
+        Room room = classroomService.findRoomByRoomId(roomId);
+        Member member = memberService.findMember(memberId);
+        classroomService.joinRoom(member, room);
+    }
+
+
+    @ResponseStatus(HttpStatus.OK)
+    @PatchMapping("/member/{memberId}/classroom/{roomId}")
+    public void enter(@PathVariable Long memberId, @PathVariable Long roomId) {
+        Room room = classroomService.findRoomByRoomId(roomId);
+        Member member = memberService.findMember(memberId);
+        classroomService.enterRoom(room, member);
+    }
+
+
+    @GetMapping("/members/email/{email}/duplication")
+    public void checkEmail(@PathVariable String email) {
+        if (memberService.doesEmailExist(email)) {
+            throw new DataDuplicateException("이미 사용 중인 이메일입니다.");
+        };
+    }
 }
 
