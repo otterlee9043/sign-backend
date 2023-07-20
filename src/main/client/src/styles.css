@@ -10,16 +10,33 @@ a:hover {
   text-decoration: none;
 }
 
+/* CSS for window width greater than or equal to 768px (mobile devices) */
+@media (min-width: 768px) {
+  body {
+    width: 768px; /* Fixed width of 500px */
+  }
+}
+
+/* CSS for window width smaller than 768px (smaller devices) */
+@media (max-width: 767px) {
+  body {
+    width: 100vw; /* 100% of viewport width */
+  }
+}
+
 body {
-  max-width: 380px;
-  margin: 0 auto;
+  text-align: center;
   background: rgb(48, 48, 48);
   color: white;
-  height: 100vh;
+  margin: auto;
 }
 
 div {
   text-align: center;
+}
+
+#root {
+  margin: auto;
 }
 
 .rooms {
@@ -27,6 +44,5 @@ div {
 }
 
 #root {
-  padding: 35px 10px;
-  height: -webkit-fill-available;
+  padding: 35px 20px;
 }
