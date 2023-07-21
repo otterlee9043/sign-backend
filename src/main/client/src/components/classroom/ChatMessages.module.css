@@ -2,6 +2,7 @@
   height: 85%;
   overflow-y: scroll;
   padding: 0px;
+  margin-top: 0px;
 }
 
 .msgContainer hr {

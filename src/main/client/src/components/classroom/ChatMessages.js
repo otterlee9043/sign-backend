@@ -1,20 +1,19 @@
-import { useContext } from "react";
+import { useContext, useEffect, useRef } from "react";
 import Message from "./Message";
 import styles from "./ChatMessages.module.css";
 import { CurrentUserContext } from "../../contexts/CurrentUserContext";
+import { EVENT } from "../../utils/classroomUtils";
 
 function ChatMessages({ chat, stateRef }) {
   const { currentUser } = useContext(CurrentUserContext);
-  const EVENT = {
-    ENTER: "ENTER",
-    EXIT: "EXIT",
-    TALK: "TALK",
-    CHANGE_SEAT: "CHANGE_SEAT",
-  };
-  console.log(chat);
+  const scrollRef = useRef();
+
+  useEffect(() => {
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [chat]);
 
   return (
-    <ul className={styles.msgContainer}>
+    <ul className={styles.msgContainer} ref={scrollRef}>
       {chat.map((data, index) => {
         switch (data.type) {
           case EVENT.ENTER:
@@ -37,7 +36,7 @@ function ChatMessages({ chat, stateRef }) {
               </div>
             );
           case EVENT.TALK:
-            return stateRef.current.seatNum == data.seatNum ? (
+            return stateRef.current == data.seatNum ? (
               <Message key={index} myMessage={true} data={data}></Message>
             ) : (
               <Message key={index} myMessage={false} data={data}></Message>

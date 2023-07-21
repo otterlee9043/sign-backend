@@ -4,7 +4,9 @@
 
 .chatroom {
   background-color: rgba(48, 48, 48, 0.9);
-  position: absolute;
+  position: sticky;
+  top: 0;
+  z-index: 9999;
   width: 100%;
-  height: -webkit-fill-available;
+  height: 85vh;
 }
