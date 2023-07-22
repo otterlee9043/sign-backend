@@ -44,6 +44,13 @@
   flex-grow: 1;
 }
 
+.roomInfo-detail {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-right: 5px;
+}
+
 .host {
   text-align: left;
 }
