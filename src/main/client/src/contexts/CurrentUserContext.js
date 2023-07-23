@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from "react";
+import axios from "axios";
 import CircularProgress from "@mui/material/CircularProgress";
 
 export const CurrentUserContext = createContext(null);
@@ -10,19 +11,13 @@ const injectContext = (PassedComponent) => {
     useEffect(() => {
       const getUser = async () => {
         try {
-          const response = await fetch("/api/member/userInfo");
-          if (!response.ok) {
-            if (response.status === 401) {
-              return;
-            }
-          }
-          const userInfo = await response.json();
+          const response = await axios.get("/member");
+          const userInfo = response.data;
           setCurrentUser(userInfo);
-          console.log("setCurrentUser");
+          axios.defaults.headers.common["Access-Token"] = response.headers["access-token"];
+          setLoading(false);
         } catch (error) {
           console.error("There has been an error login", error);
-        } finally {
-          setLoading(false);
         }
       };
 
