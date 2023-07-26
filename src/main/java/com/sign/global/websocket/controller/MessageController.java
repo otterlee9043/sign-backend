@@ -23,7 +23,7 @@ public class MessageController {
     private final ChatroomService chatroomService;
 
     @MessageMapping("/classroom/{roomId}")
-    public void enter(RoomMessage message, @DestinationVariable Long roomId, @Header("simpSessionId") String sessionId){
+    public void handleMessage(RoomMessage message, @DestinationVariable Long roomId, @Header("simpSessionId") String sessionId){
         if (message.getType().equals(MessageType.COLOR)) {
             chatroomService.color(roomId, message.getSeatNum(), message.getMessage());
         } else if (message.getType().equals(MessageType.DRAW_EMOJI)) {
@@ -45,9 +45,9 @@ public class MessageController {
     }
 
     @MessageMapping("/classroomInfo/{roomId}")
-    public void sendRoomInfo(RoomMessage message,
-                             @DestinationVariable Long roomId,
-                             @Header("simpSessionId") String sessionId){
+    public void enter(RoomMessage message,
+                     @DestinationVariable Long roomId,
+                     @Header("simpSessionId") String sessionId){
         RoomInfo classroomInfo = new RoomInfo();
         classroomInfo.setClassRoomStates(chatroomService.getRoomStatesByRoomId(roomId));
         classroomInfo.setSeatNum(chatroomService.getMySeatPosition(roomId, sessionId));
