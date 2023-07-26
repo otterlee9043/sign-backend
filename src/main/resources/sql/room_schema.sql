@@ -7,4 +7,4 @@ CREATE TABLE ROOM (
   capacity INT NOT NULL,
   MEMBER_ID BIGINT,
   FOREIGN KEY (MEMBER_ID) REFERENCES Member (MEMBER_ID)
-);
+) default character set utf8 collate utf8_general_ci;
