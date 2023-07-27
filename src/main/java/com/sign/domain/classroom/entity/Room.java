@@ -14,7 +14,6 @@ import java.util.*;
 
 @Getter
 @Entity
-@ToString
 @NoArgsConstructor
 public class Room {
 
@@ -32,8 +31,8 @@ public class Room {
     @Max(value = 100)
     private Integer capacity;
 
-    @OneToOne
-    @JoinColumn(name = "MEMBER_ID")
+    @ManyToOne
+    @JoinColumn(name = "MEMBER_ID", updatable = false)
     private Member host;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.REMOVE)

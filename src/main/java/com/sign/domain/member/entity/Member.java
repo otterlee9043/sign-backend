@@ -1,6 +1,7 @@
 package com.sign.domain.member.entity;
 
 import com.sign.domain.classroom.entity.Joins;
+import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.member.Role;
 import lombok.*;
 
@@ -9,7 +10,9 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -17,7 +20,6 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@ToString(of = {"id", "username", "email", "role"})
 public class Member {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MEMBER_ID")
@@ -46,8 +48,13 @@ public class Member {
     private String refreshToken;
 
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE)
-    private Set<Joins> joins = new HashSet<>();
+    @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OrderBy("enteredAt desc")
+    private List<Joins> joins = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @JoinColumn(name = "MEMBER_ID")
+    private List<Room> hostingRooms = new ArrayList<>();
 
     public Member update(String username, String picture) {
         this.username = username;
