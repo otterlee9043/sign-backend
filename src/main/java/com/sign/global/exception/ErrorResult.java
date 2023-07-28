@@ -1,4 +1,4 @@
-package com.sign.domain.member.controller.dto;
+package com.sign.global.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
