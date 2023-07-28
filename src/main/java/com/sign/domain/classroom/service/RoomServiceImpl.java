@@ -3,7 +3,7 @@ package com.sign.domain.classroom.service;
 import com.sign.domain.classroom.controller.dto.RoomUpdateRequest;
 import com.sign.domain.classroom.entity.Joins;
 import com.sign.domain.classroom.entity.Room;
-import com.sign.domain.classroom.exception.NotFoundException;
+import com.sign.global.exception.NotFoundException;
 import com.sign.domain.classroom.exception.RoomCapacityExceededException;
 import com.sign.domain.classroom.repository.JoinsRepository;
 import com.sign.domain.classroom.repository.RoomRepository;
@@ -16,6 +16,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,10 +48,11 @@ public class RoomServiceImpl implements RoomService{
     }
 
     @Override
-    public Set<Room> findJoiningRooms(Member member) {
-        return member.getJoins().stream()
+    public List<Room> findJoiningRooms(Member member) {
+        List<Joins> joins = member.getJoins();
+        return joins.stream()
                 .map(Joins::getRoom)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 
 
@@ -60,41 +62,42 @@ public class RoomServiceImpl implements RoomService{
     }
 
     @Override
-    public Room createRoom(RoomCreateRequest request, Member host) {
+    public void createRoom(RoomCreateRequest request, Member host) {
         Room classroom = Room.builder()
-                .name(request.getRoomName())
+                .name(request.getName())
                 .host(host)
-                .code(request.getRoomCode())
+                .code(request.getCode())
                 .capacity(request.getCapacity())
                 .build();
-        Room created = classroomRepository.save(classroom);
-        return joinRoom(host, created);
+        classroomRepository.save(classroom);
     }
 
     @Override
     public Room joinRoom(Member member, Room classroom) {
-        Member memberToJoin = memberRepository.findById(member.getId()).get();
+        Member memberToJoin = memberRepository.findById(member.getId())
+                .orElseThrow(() -> new NotFoundException("Member doesn't exist."));
         Set<Joins> joined = classroom.getJoined();
         int numberOfJoins = joined.size();
-        log.info("joined.size(): {}", joined.size());
 
         if (numberOfJoins >= classroom.getCapacity())
             throw new RoomCapacityExceededException();
-        Joins joins = Joins.builder()
-                .member(memberToJoin)
-                .room(classroom)
-                .build();
+        Joins joins = new Joins(memberToJoin, classroom);
         joinsRepository.save(joins);
         return classroom;
     }
 
     @Override
     public boolean checkJoined(Member member, Room classroom) {
-        Member checkingMember = memberRepository.findById(member.getId()).get();
-        if (findJoiningRooms(checkingMember).contains(classroom)) {
-            return true;
-        }
-        return false;
+        Member checkingMember = memberRepository.findById(member.getId())
+                .orElseThrow(() -> new NotFoundException("Member doesn't exist."));
+        return findJoiningRooms(checkingMember).contains(classroom);
+    }
+
+    @Override
+    public void enterRoom(Room room, Member member) {
+        Joins joins = joinsRepository.findByRoomAndMember(room, member)
+                .orElseThrow(() -> new NotFoundException("Member did not join this room"));
+        joins.updateEnteredTime();
     }
 
     @Override

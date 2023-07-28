@@ -18,17 +18,20 @@ public interface RoomService {
 
     Room findRoomByRoomId(Long roomId);
 
-    Set<Room> findJoiningRooms(Member member);
+    List<Room> findJoiningRooms(Member member);
 
     List<Room> findHostingRooms(Member host);
 
-    Room createRoom(RoomCreateRequest classroom, Member member);
+    void createRoom(RoomCreateRequest classroom, Member member);
 
     Room joinRoom(Member member, Room classroom);
 
     boolean checkJoined(Member member, Room classroom);
 
+    void enterRoom(Room room, Member member);
+
     void updateRoom(Room room, RoomUpdateRequest request);
+
     void deleteRoom(Room room, Member member);
 
     Integer getRoomCapacity(Long roomId);

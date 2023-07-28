@@ -13,5 +13,5 @@ import javax.validation.constraints.NotEmpty;
 public class RoomEnterRequest {
     
     @NotEmpty(message = "방 코드는 필수 항목입니다.")
-    private String roomCode;
+    private String code;
 }
