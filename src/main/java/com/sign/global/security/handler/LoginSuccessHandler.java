@@ -29,7 +29,8 @@ public class LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
         jwtProvider.sendAccessAndRefreshToken(response, accessToken, refreshToken);
         jwtProvider.updateRefreshToken(email, refreshToken);
-
+        log.info("tokens access: {}, refresh: {}",
+                response.getHeader("Access-Token"), response.getHeader("Refresh-Token"));
         log.info("User {} logged in successfully from {}", loginMember.getMember().getId(), request.getRemoteAddr());
     }
 }

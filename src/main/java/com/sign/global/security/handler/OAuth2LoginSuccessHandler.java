@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -24,18 +25,18 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
-                                        Authentication authentication)
-            throws IOException, ServletException {
+                                        Authentication authentication) throws IOException {
         LoginMember loginMember = (LoginMember) authentication.getPrincipal();
 
         String accessToken = jwtProvider.createAccessToken(loginMember.getUsername());
         String refreshToken = jwtProvider.createRefreshToken();
-        response.addHeader(jwtProvider.getAccessTokenHeader(), "Bearer " + accessToken);
-        response.addHeader(jwtProvider.getRefreshTokenHeader(), "Bearer " + refreshToken);
 
-        jwtProvider.sendAccessAndRefreshToken(response, accessToken, refreshToken);
+        jwtProvider.sendRefreshToken(response, refreshToken);
         jwtProvider.updateRefreshToken(loginMember.getUsername(), refreshToken);
-
+        String redirectURI = UriComponentsBuilder.fromUriString("http://localhost:3000/home")
+                .queryParam("token", accessToken)
+                .build().toUriString();
+        response.sendRedirect(redirectURI);
         log.info("User {} logged in successfully via {} from {}",
                 loginMember.getMember().getId(), loginMember.getMember().getProvider(), request.getRemoteAddr());
     }
