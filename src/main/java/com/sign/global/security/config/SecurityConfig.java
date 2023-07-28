@@ -1,7 +1,7 @@
 package com.sign.global.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sign.domain.member.controller.dto.AuthErrorResult;
+import com.sign.global.exception.ErrorResult;
 import com.sign.domain.member.repository.MemberRepository;
 import com.sign.global.security.authentication.JwtProvider;
 import com.sign.global.security.authentication.MemberSecurityService;
@@ -10,8 +10,10 @@ import com.sign.global.security.filter.JsonUsernamePasswordAuthenticationFilter;
 import com.sign.global.security.filter.JwtAuthenticationFilter;
 import com.sign.global.security.handler.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -24,6 +26,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -34,7 +37,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -49,7 +56,7 @@ public class SecurityConfig {
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
 
     @Bean
@@ -58,31 +65,33 @@ public class SecurityConfig {
                 .httpBasic().disable()
                 .csrf().disable()
                 .formLogin().disable()
-                //                .cors(withDefaults())
-//                .cors(this::configureCors)
+                .cors(withDefaults())
                 .sessionManagement().sessionCreationPolicy((SessionCreationPolicy.STATELESS))
                 .and()
                 .authorizeRequests()
-                    .mvcMatchers("/api/member/join",
-                            "/api/member/login",
-                            "/api/member/username/*/exists",
-                            "/api/member/email/*/exists",
+                    .mvcMatchers("/api/v1/members",
+                            "/api/v1/member/login",
+                            "/api/v1/member/username/*/exists",
+                            "/api/v1/members/email/*/duplication",
                             "/oauth2/authorization/*",
                             "/login/oauth2/code/*",
                             "/css/**","/images/**","/js/**","/favicon.ico",
+                            "/ws/**",
                             "/swagger-ui/**", "/v3/api-docs/**"
                             ).permitAll()
+                    .mvcMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     .mvcMatchers("/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated()
                 .and()
                     .addFilterAfter(jsonUsernamePasswordAuthenticationFilter(), LogoutFilter.class)
                     .addFilterBefore(jwtAuthenticationFilter(), JsonUsernamePasswordAuthenticationFilter.class)
-                    .exceptionHandling()
+//                .    addFilterAfter(jwtAuthenticationFilter(), FilterSecurityInterceptor.class)
+                .exceptionHandling()
                     .accessDeniedHandler(this::handleAccessDenied)
                     .authenticationEntryPoint(this::handleAuthenticationException)
                 .and()
                     .logout()
-                        .logoutUrl("/api/member/logout")
+                        .logoutUrl("/api/v1/member/logout")
                         .logoutSuccessHandler(logoutSuccessHandler())
                 .and()
                 .oauth2Login()
@@ -128,7 +137,9 @@ public class SecurityConfig {
         return new ProviderManager(provider);
     }
 
-    private void handleAccessDenied(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+    private void handleAccessDenied(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    AccessDeniedException accessDeniedException) throws IOException {
         response.setStatus(403);
         response.setCharacterEncoding("utf-8");
         response.setContentType("application/json; charset=UTF-8");
@@ -138,11 +149,14 @@ public class SecurityConfig {
     private void handleAuthenticationException
             (HttpServletRequest request,
              HttpServletResponse response,
-             AuthenticationException authException) throws IOException, ServletException {
+             AuthenticationException authException) throws IOException {
         response.setStatus(401);
         response.setCharacterEncoding("utf-8");
         response.setContentType("application/json; charset=UTF-8");
-        AuthErrorResult result = AuthErrorResult.builder().message("인증되지 않은 사용자입니다.").build();
+        ErrorResult result = ErrorResult.builder()
+                .code("UNAUTHORIZED")
+                .message("인증되지 않은 사용자입니다.")
+                .build();
         response.getWriter().write(objectMapper.writeValueAsString(result));
     }
     @Bean
@@ -154,9 +168,9 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
-        configuration.setAllowedMethods(Arrays.asList("HEAD","POST","GET","DELETE","PUT"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedMethods(Arrays.asList("HEAD", "POST", "GET", "DELETE", "PUT"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

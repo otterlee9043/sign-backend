@@ -30,7 +30,6 @@ public class MemberController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/members")
     public void signup(@RequestBody @Valid SignupRequest request) throws Exception {
-        log.info("signup~~~");
         memberService.join(request);
     }
 
@@ -48,7 +47,7 @@ public class MemberController {
         }
     }
 
-    @GetMapping("/member/{memberId}/profile")
+    @GetMapping("/member/{memberId}")
     public MemberProfile getProfile(@PathVariable Long memberId){
         Member member = memberService.findMember(memberId);
         return MemberProfile.from(member);
@@ -62,7 +61,7 @@ public class MemberController {
         List<Room> joiningRooms = classroomService.findJoiningRooms(member);
 
         return joiningRooms.stream()
-                .map(room -> RoomResponse.from(room))
+                .map(RoomResponse::from)
                 .collect(Collectors.toList());
     }
 
@@ -89,7 +88,7 @@ public class MemberController {
     public void checkEmail(@PathVariable String email) {
         if (memberService.doesEmailExist(email)) {
             throw new DataDuplicateException("이미 사용 중인 이메일입니다.");
-        };
+        }
     }
 }
 

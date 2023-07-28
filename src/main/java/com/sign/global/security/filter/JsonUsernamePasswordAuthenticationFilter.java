@@ -20,7 +20,7 @@ import java.util.Map;
 @Slf4j
 public class JsonUsernamePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
     private final ObjectMapper objectMapper;
-    private static final String DEFAULT_LOGIN_REQUEST_URL = "/api/member/login";
+    private static final String DEFAULT_LOGIN_REQUEST_URL = "/api/v1/member/login";
     private static final String HTTP_METHOD = "POST";
     private static final String CONTENT_TYPE = "application/json";
     private static final String USERNAME_KEY = "email";
@@ -33,7 +33,7 @@ public class JsonUsernamePasswordAuthenticationFilter extends AbstractAuthentica
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
-            throws AuthenticationException, IOException, ServletException {
+            throws AuthenticationException, IOException {
         if (request.getContentType() == null || !request.getContentType().equals(CONTENT_TYPE)) {
             throw new AuthenticationServiceException("Content type 오류: " +  request.getContentType());
         }
@@ -45,7 +45,6 @@ public class JsonUsernamePasswordAuthenticationFilter extends AbstractAuthentica
         String password = usernamePasswordMap.get(PASSWORD_KEY);
         UsernamePasswordAuthenticationToken authRequest
                 = new UsernamePasswordAuthenticationToken(email, password);
-
         return this.getAuthenticationManager().authenticate(authRequest);
     }
 }
