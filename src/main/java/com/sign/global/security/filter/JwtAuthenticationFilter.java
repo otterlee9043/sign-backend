@@ -4,10 +4,12 @@ import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
 import com.sign.global.security.authentication.JwtProvider;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -15,24 +17,58 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.UUID;
+import java.util.Arrays;
 
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtProvider jwtProvider;
     private final MemberRepository memberRepository;
-    private static final String LOGIN_URL = "/api/member/login";
+    private final RequestMatcher noCheckRequestMatcher;
+
 
     public JwtAuthenticationFilter(JwtProvider jwtProvider, MemberRepository memberRepository) {
         this.jwtProvider = jwtProvider;
         this.memberRepository = memberRepository;
+        String[] excludedUris = {
+                "/api/v1/members",
+                "/api/v1/member/login",
+                "/api/v1/member/username/*/exists",
+                "/api/v1/members/email/*/duplication",
+                "/oauth2/authorization/**",
+                "/login/oauth2/code/**",
+                "/css/**",
+                "/images/**",
+                "/js/**",
+                "/favicon.ico",
+                "/ws/**",
+                "/swagger-ui/**",
+                "/v3/api-docs/**"
+        };
+
+        AntPathRequestMatcher[] matchers = Arrays.stream(excludedUris)
+                .map(AntPathRequestMatcher::new)
+                .toArray(AntPathRequestMatcher[]::new);
+
+        this.noCheckRequestMatcher = new OrRequestMatcher(matchers);
     }
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        if (request.getRequestURI().equals(LOGIN_URL)) {
+        if (noCheckRequestMatcher.matches(request)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String accessToken = jwtProvider.extractAccessToken(request)
+                .filter(jwtProvider::isTokenValid)
+                .orElse(null);
+
+        if (accessToken != null) {
+            Authentication authentication = jwtProvider.getAuthentication(accessToken);
+            jwtProvider.saveAuthentication(authentication);
             filterChain.doFilter(request, response);
             return;
         }
@@ -42,50 +78,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .orElse(null);
 
         if (refreshToken != null) {
-            checkRefreshTokenAndReIssueAccessToken(response, refreshToken);
-            return;
+            Member refreshTokenOwner = memberRepository.findByRefreshToken(refreshToken).orElse(null);
+            if (refreshTokenOwner != null) {
+                String username = refreshTokenOwner.getEmail();
+                jwtProvider.sendAccessToken(response, jwtProvider.createAccessToken(username));
+                Authentication authentication = jwtProvider.getAuthentication(refreshTokenOwner);
+                jwtProvider.saveAuthentication(authentication);
+                filterChain.doFilter(request, response);
+            }
         }
-
-        if (refreshToken == null) {
-            checkAccessTokenAndAuthentication(request, response);
-            filterChain.doFilter(request, response);
-        }
-    }
-
-    private void checkRefreshTokenAndReIssueAccessToken(HttpServletResponse response, String refreshToken) {
-        memberRepository.findByRefreshToken(refreshToken)
-                .ifPresent(member -> {
-                    String reIssuedRefreshToken = reissueRefreshToken(member);
-                    jwtProvider.sendAccessAndRefreshToken(
-                            response, jwtProvider.createAccessToken(member.getEmail()), reIssuedRefreshToken
-                            );
-                });
-    }
-
-    private String reissueRefreshToken(Member member) {
-        String newRefreshToken = jwtProvider.createRefreshToken();
-        Member updatedMember = member.updateRefreshToken(newRefreshToken);
-        memberRepository.save(updatedMember);
-        return newRefreshToken;
-    }
-
-    private void checkAccessTokenAndAuthentication(HttpServletRequest request, HttpServletResponse response) {
-        jwtProvider.extractAccessToken(request)
-                .filter(jwtProvider::isTokenValid)
-                .ifPresent(accessToken -> jwtProvider.extractEmail(accessToken)
-                        .ifPresent(email -> memberRepository.findByEmail(email)
-                                .ifPresent(this::saveAuthentication)));
-    }
-
-    private void saveAuthentication(Member member) {
-        String password = member.getPassword();
-        if (password == null) {
-            password = UUID.randomUUID().toString();
-        }
-
-        Authentication authentication
-                = new UsernamePasswordAuthenticationToken(member.getEmail(), password);
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

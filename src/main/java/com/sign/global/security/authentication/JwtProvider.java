@@ -130,6 +130,15 @@ public class JwtProvider {
         response.setHeader(accessTokenHeader, accessToken);
     }
 
+    public void sendRefreshToken(HttpServletResponse response, String refreshToken) {
+        Cookie cookie = new Cookie(refreshTokenHeader, refreshToken);
+        cookie.setMaxAge(refreshTokenExpirationPeriod.intValue());
+        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+    }
+
     public void sendAccessAndRefreshToken(HttpServletResponse response, String accessToken, String refreshToken){
         response.setStatus(HttpServletResponse.SC_OK);
         response.setHeader("Access-Control-Expose-Headers", accessTokenHeader);
