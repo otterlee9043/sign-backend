@@ -9,8 +9,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -19,7 +19,7 @@ public class MemberExceptionHandler {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler
-    public ErrorResult exHandler(MethodArgumentNotValidException e){
+    public ErrorResult exHandler(MethodArgumentNotValidException e) {
         log.warn("MethodArgumentNotValidException occurred. Message: {}", e.getMessage());
         Map<String, String> errors = new HashMap<>();
         e.getBindingResult().getAllErrors()
@@ -33,12 +33,12 @@ public class MemberExceptionHandler {
                 .message("잘못된 양식")
                 .errors(errors)
                 .build();
-     }
+    }
 
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler
-    public ErrorResult dataDuplicateExceptionHandler(DataDuplicateException e){
+    public ErrorResult dataDuplicateExceptionHandler(DataDuplicateException e) {
         log.warn("DataDuplicateException occurred. Message: {}", e.getMessage());
         return ErrorResult.builder()
                 .code("CONFLICT")

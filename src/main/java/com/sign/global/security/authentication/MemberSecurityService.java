@@ -15,7 +15,6 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class MemberSecurityService implements UserDetailsService {
-
     private final MemberRepository memberRepository;
 
     @Override

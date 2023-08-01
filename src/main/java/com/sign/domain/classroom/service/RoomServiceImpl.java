@@ -1,30 +1,30 @@
 package com.sign.domain.classroom.service;
 
+import com.sign.domain.classroom.controller.dto.RoomCreateRequest;
 import com.sign.domain.classroom.controller.dto.RoomUpdateRequest;
 import com.sign.domain.classroom.entity.Joins;
 import com.sign.domain.classroom.entity.Room;
-import com.sign.global.exception.NotFoundException;
 import com.sign.domain.classroom.exception.RoomCapacityExceededException;
 import com.sign.domain.classroom.repository.JoinsRepository;
 import com.sign.domain.classroom.repository.RoomRepository;
-import com.sign.domain.classroom.controller.dto.RoomCreateRequest;
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
+import com.sign.global.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class RoomServiceImpl implements RoomService{
+public class RoomServiceImpl implements RoomService {
 
     private final MemberRepository memberRepository;
     private final RoomRepository classroomRepository;
@@ -43,7 +43,7 @@ public class RoomServiceImpl implements RoomService{
 
     @Override
     public Room findRoomByRoomId(Long roomId) {
-         return classroomRepository.findById(roomId).orElseThrow(() ->
+        return classroomRepository.findById(roomId).orElseThrow(() ->
                 new NotFoundException("해당 ID의 방을 찾을 수 없습니다."));
     }
 

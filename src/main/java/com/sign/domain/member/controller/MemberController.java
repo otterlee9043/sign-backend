@@ -4,9 +4,9 @@ import com.sign.domain.classroom.controller.dto.RoomResponse;
 import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.classroom.service.RoomService;
 import com.sign.domain.member.controller.dto.MemberProfile;
+import com.sign.domain.member.controller.dto.SignupRequest;
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.service.MemberService;
-import com.sign.domain.member.controller.dto.SignupRequest;
 import com.sign.global.exception.DataDuplicateException;
 import com.sign.global.security.authentication.LoginMember;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,7 +35,7 @@ public class MemberController {
 
 
     @GetMapping("/member")
-    public MemberProfile getMyProfile(@AuthenticationPrincipal LoginMember loginMember){
+    public MemberProfile getMyProfile(@AuthenticationPrincipal LoginMember loginMember) {
         return MemberProfile.from(loginMember.getMember());
     }
 
@@ -48,7 +48,7 @@ public class MemberController {
     }
 
     @GetMapping("/member/{memberId}")
-    public MemberProfile getProfile(@PathVariable Long memberId){
+    public MemberProfile getProfile(@PathVariable Long memberId) {
         Member member = memberService.findMember(memberId);
         return MemberProfile.from(member);
     }
@@ -56,7 +56,7 @@ public class MemberController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/member/{memberId}/classrooms")
-    public List<RoomResponse> getJoiningRooms(@PathVariable Long memberId){
+    public List<RoomResponse> getJoiningRooms(@PathVariable Long memberId) {
         Member member = memberService.findMember(memberId);
         List<Room> joiningRooms = classroomService.findJoiningRooms(member);
 
@@ -68,7 +68,7 @@ public class MemberController {
 
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/member/{memberId}/classroom/{roomId}")
-    public void join(@PathVariable Long memberId, @PathVariable Long roomId){
+    public void join(@PathVariable Long memberId, @PathVariable Long roomId) {
         Room room = classroomService.findRoomByRoomId(roomId);
         Member member = memberService.findMember(memberId);
         classroomService.joinRoom(member, room);

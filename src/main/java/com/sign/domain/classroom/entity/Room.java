@@ -4,20 +4,21 @@ import com.sign.domain.member.entity.Member;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import javax.persistence.*;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Entity
 @NoArgsConstructor
 public class Room {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CLASSROOM_ID")
     private Long id;
 
@@ -39,14 +40,14 @@ public class Room {
     private Set<Joins> joined = new HashSet<>();
 
     @Builder
-    public Room (String name, Member host, String code, Integer capacity){
+    public Room(String name, Member host, String code, Integer capacity) {
         this.name = name;
         this.host = host;
         this.code = code;
         this.capacity = capacity;
     }
 
-    public void updateRoom(String name){
+    public void updateRoom(String name) {
         this.name = name;
     }
 }

@@ -1,14 +1,11 @@
 package com.sign.domain.classroom.service;
 
+import com.sign.domain.classroom.controller.dto.RoomCreateRequest;
 import com.sign.domain.classroom.controller.dto.RoomUpdateRequest;
 import com.sign.domain.classroom.entity.Room;
-import com.sign.domain.classroom.controller.dto.RoomCreateRequest;
 import com.sign.domain.member.entity.Member;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 public interface RoomService {
 

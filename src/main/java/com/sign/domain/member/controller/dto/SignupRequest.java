@@ -1,9 +1,9 @@
 package com.sign.domain.member.controller.dto;
 
-import com.sign.domain.member.entity.Member;
-import lombok.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-import javax.persistence.*;
+import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
@@ -19,8 +19,8 @@ public class SignupRequest {
     @NotEmpty(message = "사용자 ID는 필수 항목입니다.")
     private String username;
 
-    @Pattern(regexp="^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?])[^\s]{8,16}$",
-            message="알파벳, 숫자, 공백을 제외한 특수문자를 모두 포함해야 합니다.")
+    @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?])[^\s]{8,16}$",
+            message = "알파벳, 숫자, 공백을 제외한 특수문자를 모두 포함해야 합니다.")
     @Size(min = 8, max = 16)
     @NotEmpty(message = "비밀번호는 필수 항목입니다.")
     private String password;

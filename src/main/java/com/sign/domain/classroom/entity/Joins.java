@@ -1,8 +1,6 @@
 package com.sign.domain.classroom.entity;
 
 import com.sign.domain.member.entity.Member;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -34,7 +32,7 @@ public class Joins extends BaseEntity {
         this.enteredAt = LocalDateTime.now();
     }
 
-    public void updateEnteredTime(){
+    public void updateEnteredTime() {
         this.enteredAt = LocalDateTime.now();
     }
 }

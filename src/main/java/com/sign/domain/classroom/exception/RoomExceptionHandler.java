@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice(basePackages = "com.sign.domain.classroom")
 public class RoomExceptionHandler {
-    
+
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler
-    public ErrorResult roomNotFoundExceptionHandler(NotFoundException e){
+    public ErrorResult roomNotFoundExceptionHandler(NotFoundException e) {
         log.warn("NotFoundException occurred. Message: {}", e.getMessage());
         return ErrorResult.builder()
                 .code("NOT FOUND")
@@ -25,7 +25,7 @@ public class RoomExceptionHandler {
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler
-    public ErrorResult roomCapacityExceededExceptionHandler(RoomCapacityExceededException e){
+    public ErrorResult roomCapacityExceededExceptionHandler(RoomCapacityExceededException e) {
         log.warn("RoomCapacityExceededException occurred. Message: {}", e.getMessage());
         return ErrorResult.builder()
                 .code("ROOM CAPACITY EXCEEDED")
@@ -35,7 +35,7 @@ public class RoomExceptionHandler {
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler
-    public ErrorResult dataDuplicateExceptionHandler(DataDuplicateException e){
+    public ErrorResult dataDuplicateExceptionHandler(DataDuplicateException e) {
         log.warn("DataDuplicateException occurred. Message: {}", e.getMessage());
         return ErrorResult.builder()
                 .code("CONFLICT")

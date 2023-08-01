@@ -1,10 +1,10 @@
 package com.sign.domain.member.service;
 
 import com.sign.domain.member.Role;
-import com.sign.domain.member.entity.Member;
-import com.sign.global.exception.DataDuplicateException;
-import com.sign.domain.member.repository.MemberRepository;
 import com.sign.domain.member.controller.dto.SignupRequest;
+import com.sign.domain.member.entity.Member;
+import com.sign.domain.member.repository.MemberRepository;
+import com.sign.global.exception.DataDuplicateException;
 import com.sign.global.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +35,7 @@ public class MemberServiceImpl implements MemberService {
                 .build();
         if (doesUsernameExist(request.getUsername())) {
             List<String> fields = Arrays.asList("username");
-            if (doesEmailExist(request.getEmail())){
+            if (doesEmailExist(request.getEmail())) {
                 fields.add("email");
             }
             throw new DataDuplicateException("중복된 입력값", fields);
