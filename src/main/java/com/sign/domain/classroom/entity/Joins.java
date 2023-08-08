@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 
 @Getter
@@ -30,6 +31,20 @@ public class Joins extends BaseEntity {
         this.member = member;
         this.room = room;
         this.enteredAt = LocalDateTime.now();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(member, room);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        JoinsId joinsId = (JoinsId) obj;
+        return Objects.equals(member, joinsId.getMember()) &&
+                Objects.equals(room, joinsId.getRoom());
     }
 
     public void updateEnteredTime() {
