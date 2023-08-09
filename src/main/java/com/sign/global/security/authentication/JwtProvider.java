@@ -31,22 +31,17 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Component
 public class JwtProvider {
-    @Value("${jwt.secret.key}")
-    private String salt;
-
-    @Value("${jwt.access.expiration}")
-    private Long accessTokenExpirationPeriod;
-
-    @Value("${jwt.refresh.expiration}")
-    private Long refreshTokenExpirationPeriod;
-
-    private Key secretKey;
-
     private final String accessTokenHeader = "Access-Token";
     private final String refreshTokenHeader = "Refresh-Token";
-
     private final MemberSecurityService userDetailService;
     private final MemberRepository memberRepository;
+    @Value("${jwt.secret.key}")
+    private String salt;
+    @Value("${jwt.access.expiration}")
+    private Long accessTokenExpirationPeriod;
+    @Value("${jwt.refresh.expiration}")
+    private Long refreshTokenExpirationPeriod;
+    private Key secretKey;
 
     public String getAccessTokenHeader() {
         return accessTokenHeader;
@@ -133,19 +128,17 @@ public class JwtProvider {
     public void sendRefreshToken(HttpServletResponse response, String refreshToken) {
         Cookie cookie = new Cookie(refreshTokenHeader, refreshToken);
         cookie.setMaxAge(refreshTokenExpirationPeriod.intValue());
-        cookie.setSecure(true);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         response.addCookie(cookie);
     }
 
-    public void sendAccessAndRefreshToken(HttpServletResponse response, String accessToken, String refreshToken){
+    public void sendAccessAndRefreshToken(HttpServletResponse response, String accessToken, String refreshToken) {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setHeader("Access-Control-Expose-Headers", accessTokenHeader);
         response.setHeader(accessTokenHeader, accessToken);
         Cookie cookie = new Cookie(refreshTokenHeader, refreshToken);
         cookie.setMaxAge(refreshTokenExpirationPeriod.intValue());
-        cookie.setSecure(true);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         response.addCookie(cookie);
