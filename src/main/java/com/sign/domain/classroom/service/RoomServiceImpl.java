@@ -70,6 +70,8 @@ public class RoomServiceImpl implements RoomService {
                 .capacity(request.getCapacity())
                 .build();
         classroomRepository.save(classroom);
+        Joins joins = new Joins(host, classroom);
+        joinsRepository.save(joins);
     }
 
     @Override
