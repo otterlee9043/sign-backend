@@ -5,8 +5,6 @@ import com.sign.domain.member.repository.MemberRepository;
 import com.sign.global.security.authentication.JwtProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -40,7 +38,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 "/images/**",
                 "/js/**",
                 "/favicon.ico",
-                "/ws/**",
                 "/swagger-ui/**",
                 "/v3/api-docs/**"
         };
@@ -61,7 +58,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
         String accessToken = jwtProvider.extractAccessToken(request)
                 .filter(jwtProvider::isTokenValid)
                 .orElse(null);
