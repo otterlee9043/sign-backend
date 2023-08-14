@@ -13,15 +13,12 @@ spring:
     defer-datasource-initialization: true
   sql:
     init:
-      schema-locations:
-        - classpath:/sql/member_schema.sql
-        - classpath:/sql/room_schema.sql
-        - classpath:/sql/joins_schema.sql
       encoding: UTF-8
-      mode: always
 
   profiles:
-    include: oauth
+    include:
+      - ${SPRING_ACTIVE_PROFILE}
+      - oauth
 
 jwt:
   secret:
