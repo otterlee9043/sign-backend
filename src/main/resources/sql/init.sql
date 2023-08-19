@@ -1,10 +1,10 @@
-drop table IF EXISTS JOINS;
-drop table IF EXISTS ROOM;
-drop table IF EXISTS MEMBER;
+drop table IF EXISTS joins;
+drop table IF EXISTS room;
+drop table IF EXISTS member;
 
-create TABLE MEMBER (
+create TABLE member (
   MEMBER_ID BIGINT AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(10) NOT NULL,
+  username VARCHAR(30) NOT NULL,
   password VARCHAR(255),
   email VARCHAR(255) NOT NULL,
   picture VARCHAR(255),
@@ -13,7 +13,7 @@ create TABLE MEMBER (
   provider VARCHAR(255)
 ) default character set utf8 collate utf8_general_ci;
 
-create TABLE ROOM (
+create TABLE room (
   CLASSROOM_ID BIGINT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   code VARCHAR(255) UNIQUE,
@@ -22,7 +22,7 @@ create TABLE ROOM (
   FOREIGN KEY (MEMBER_ID) REFERENCES MEMBER (MEMBER_ID)
 ) default character set utf8 collate utf8_general_ci;
 
-create TABLE JOINS (
+create TABLE joins (
   MEMBER_ID BIGINT,
   ROOM_ID BIGINT,
   CREATED_DATE DATETIME NOT NULL,

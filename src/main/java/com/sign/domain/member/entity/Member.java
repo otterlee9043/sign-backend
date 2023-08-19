@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +26,8 @@ public class Member {
     @Column(name = "MEMBER_ID")
     private Long id;
 
-    @Pattern(regexp = "^[가-힣a-zA-Z][^!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?\\s]*$")
     @NotNull
-    @Size(min = 2, max = 10)
+    @Size(min = 2, max = 30)
     private String username;
 
     private String password;
@@ -67,7 +65,6 @@ public class Member {
 
     public Member updateRefreshToken(String newRefreshToken) {
         this.refreshToken = newRefreshToken;
-
         return this;
     }
 
