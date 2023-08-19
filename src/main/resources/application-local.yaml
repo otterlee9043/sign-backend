@@ -1,0 +1,18 @@
+spring:
+  sql:
+    init:
+      schema-locations:
+        - classpath:sql/init.sql
+      mode: never
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            redirect-uri: http://localhost:8080/login/oauth2/code/kakao
+
+
+oauth:
+  login:
+    success-redirect-uri: http://localhost:3000/sign/home
+

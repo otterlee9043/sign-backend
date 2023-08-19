@@ -1,0 +1,20 @@
+spring:
+  sql:
+    init:
+      schema-locations:
+        - classpath:/sql/init.sql
+      mode: always
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: http://ec2-13-125-132-158.ap-northeast-2.compute.amazonaws.com/sign/login/oauth2/code/google
+          kakao:
+            redirect-uri: http://ec2-13-125-132-158.ap-northeast-2.compute.amazonaws.com/sign/login/oauth2/code/kakao
+
+
+oauth:
+  login:
+    success-redirect-uri: http://ec2-13-125-132-158.ap-northeast-2.compute.amazonaws.com/sign/home
+
