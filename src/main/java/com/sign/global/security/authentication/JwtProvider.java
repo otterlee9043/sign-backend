@@ -32,15 +32,22 @@ import java.util.Optional;
 @Component
 public class JwtProvider {
     private final String accessTokenHeader = "Access-Token";
+
     private final String refreshTokenHeader = "Refresh-Token";
+
     private final MemberSecurityService userDetailService;
+
     private final MemberRepository memberRepository;
+
     @Value("${jwt.secret.key}")
     private String salt;
+
     @Value("${jwt.access.expiration}")
     private Long accessTokenExpirationPeriod;
+
     @Value("${jwt.refresh.expiration}")
     private Long refreshTokenExpirationPeriod;
+
     private Key secretKey;
 
     public String getAccessTokenHeader() {
@@ -133,6 +140,22 @@ public class JwtProvider {
         response.addCookie(cookie);
     }
 
+    public void updateRefreshToken(String email, String refreshToken) {
+        memberRepository.findByEmail(email)
+                .ifPresentOrElse(
+                        member -> memberRepository.save(member.updateRefreshToken(refreshToken)),
+                        () -> new Exception("일치하는 회원이 없습니다.")
+                );
+    }
+
+    public void revokeRefreshToken(HttpServletResponse response) {
+        Cookie cookie = new Cookie(refreshTokenHeader, null);
+        cookie.setMaxAge(0);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+    }
+
     public void sendAccessAndRefreshToken(HttpServletResponse response, String accessToken, String refreshToken) {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setHeader("Access-Control-Expose-Headers", accessTokenHeader);
@@ -144,12 +167,5 @@ public class JwtProvider {
         response.addCookie(cookie);
     }
 
-    public void updateRefreshToken(String email, String refreshToken) {
-        memberRepository.findByEmail(email)
-                .ifPresentOrElse(
-                        member -> memberRepository.save(member.updateRefreshToken(refreshToken)),
-                        () -> new Exception("일치하는 회원이 없습니다.")
-                );
-    }
 
 }
