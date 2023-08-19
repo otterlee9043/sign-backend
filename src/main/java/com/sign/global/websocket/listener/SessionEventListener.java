@@ -6,14 +6,17 @@ import com.sign.global.websocket.service.ChatroomService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.simp.*;
+import org.springframework.messaging.simp.SimpAttributes;
+import org.springframework.messaging.simp.SimpAttributesContextHolder;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.*;
+import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.util.List;
 import java.util.Map;
@@ -48,12 +51,11 @@ public class SessionEventListener {
 
     private String getSessionId() {
         SimpAttributes simpAttributes = SimpAttributesContextHolder.currentAttributes();
-        String sessionId = simpAttributes.getSessionId();
-        return sessionId;
+        return simpAttributes.getSessionId();
     }
 
     private String getHeaderValue(Map nativeHeaders, String headerName) {
-        return (String)((List) nativeHeaders.get(headerName)).get(0);
+        return (String) ((List) nativeHeaders.get(headerName)).get(0);
     }
 
     private Map getNativeHeaders(SessionConnectedEvent event) {
