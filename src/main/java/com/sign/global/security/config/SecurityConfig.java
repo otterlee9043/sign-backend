@@ -1,8 +1,8 @@
 package com.sign.global.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sign.global.exception.ErrorResult;
 import com.sign.domain.member.repository.MemberRepository;
+import com.sign.global.exception.ErrorResult;
 import com.sign.global.security.authentication.JwtProvider;
 import com.sign.global.security.authentication.MemberSecurityService;
 import com.sign.global.security.authentication.OAuth2MemberService;
@@ -26,13 +26,11 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -49,15 +47,18 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     private final MemberRepository memberRepository;
+
     private final JwtProvider jwtProvider;
 
     private final OAuth2MemberService oAuth2UserService;
+
     private final MemberSecurityService memberSecurityService;
+
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -69,47 +70,47 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy((SessionCreationPolicy.STATELESS))
                 .and()
                 .authorizeRequests()
-                    .mvcMatchers("/api/v1/members",
-                            "/api/v1/member/login",
-                            "/api/v1/member/username/*/exists",
-                            "/api/v1/members/email/*/duplication",
-                            "/oauth2/authorization/*",
-                            "/login/oauth2/code/*",
-                            "/css/**","/images/**","/js/**","/favicon.ico",
-                            "/ws/**",
-                            "/swagger-ui/**", "/v3/api-docs/**"
-                            ).permitAll()
-                    .mvcMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    .mvcMatchers("/admin/**").hasRole("ADMIN")
-                    .anyRequest().authenticated()
+                .mvcMatchers("/api/v1/members",
+                        "/api/v1/member/login",
+                        "/api/v1/member/username/*/exists",
+                        "/api/v1/members/email/*/duplication",
+                        "/oauth2/authorization/*",
+                        "/login/oauth2/code/*",
+                        "/css/**", "/images/**", "/js/**", "/favicon.ico",
+                        "/ws/**",
+                        "/swagger-ui/**", "/v3/api-docs/**"
+                ).permitAll()
+                .mvcMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .mvcMatchers("/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
                 .and()
-                    .addFilterAfter(jsonUsernamePasswordAuthenticationFilter(), LogoutFilter.class)
-                    .addFilterBefore(jwtAuthenticationFilter(), JsonUsernamePasswordAuthenticationFilter.class)
-//                .    addFilterAfter(jwtAuthenticationFilter(), FilterSecurityInterceptor.class)
+                .addFilterAfter(jsonUsernamePasswordAuthenticationFilter(), LogoutFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter(), JsonUsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling()
-                    .accessDeniedHandler(this::handleAccessDenied)
-                    .authenticationEntryPoint(this::handleAuthenticationException)
+                .accessDeniedHandler(this::handleAccessDenied)
+                .authenticationEntryPoint(this::handleAuthenticationException)
                 .and()
-                    .logout()
-                        .logoutUrl("/api/v1/member/logout")
-                        .logoutSuccessHandler(logoutSuccessHandler())
+                .logout()
+                .logoutUrl("/api/v1/member/logout")
+                .logoutSuccessHandler(logoutSuccessHandler())
                 .and()
                 .oauth2Login()
-                    .successHandler(oAuth2LoginSuccessHandler)
-                    .failureHandler(oAuth2LoginFailureHandler)
-                    .userInfoEndpoint().userService(oAuth2UserService);
+                .successHandler(oAuth2LoginSuccessHandler)
+                .failureHandler(oAuth2LoginFailureHandler)
+                .userInfoEndpoint().userService(oAuth2UserService);
         return http.build();
     }
 
     @Bean
     public CustomLogoutSuccessHandler logoutSuccessHandler() {
-        return new CustomLogoutSuccessHandler();
+        return new CustomLogoutSuccessHandler(jwtProvider);
     }
 
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter(){
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter(jwtProvider, memberRepository);
     }
+
     @Bean
     public LoginSuccessHandler loginSuccessHandler() {
         return new LoginSuccessHandler(jwtProvider, memberRepository);
@@ -159,6 +160,7 @@ public class SecurityConfig {
                 .build();
         response.getWriter().write(objectMapper.writeValueAsString(result));
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
