@@ -11,23 +11,37 @@
           "name": "DB_URL",
           "value": "jdbc:mariadb://db:3306/sign?createDatabaseIfNotExist=true"
         },
-        { "name": "DB_USERNAME", "value": "root" },
-        { "name": "DB_PASSWORD", "value": "${{ secrets.DB_PASSWORD }}" },
-        { "name": "JWT_SECRET_KEY", "value": "${{ secrets.JWT_SECRET_KEY }}" },
+        { "name": "SPRING_ACTIVE_PROFILE", "value": "production" }
+      ],
+      "secrets": [
+        {
+          "name": "DB_USERNAME",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:207995484402:secret:sign-prod-rO1shG:DB_USERNAME"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:207995484402:secret:sign-prod-rO1shG:DB_PASSWORD"
+        },
+        {
+          "name": "JWT_SECRET_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:207995484402:secret:sign-prod-rO1shG:JWT_SECRET_KEY"
+        },
         {
           "name": "GOOGLE_OAUTH_CLIENT_ID",
-          "value": "${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}"
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:207995484402:secret:sign-prod-rO1shG:GOOGLE_OAUTH_CLIENT_ID"
         },
         {
           "name": "GOOGLE_OAUTH_CLIENT_SECRET",
-          "value": "${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}"
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:207995484402:secret:sign-prod-rO1shG:GOOGLE_OAUTH_CLIENT_SECRET"
         },
-        { "name": "KAKAO_OAUTH_CLIENT_ID", "value": "${{ secrets.KAKAO_OAUTH_CLIENT_ID }}" },
+        {
+          "name": "KAKAO_OAUTH_CLIENT_ID",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:207995484402:secret:sign-prod-rO1shG:KAKAO_OAUTH_CLIENT_ID"
+        },
         {
           "name": "KAKAO_OAUTH_CLIENT_SECRET",
-          "value": "${{ secrets.KAKAO_OAUTH_CLIENT_SECRET }}"
-        },
-        { "name": "SPRING_ACTIVE_PROFILE", "value": "production" }
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:207995484402:secret:sign-prod-rO1shG:KAKAO_OAUTH_CLIENT_SECRET"
+        }
       ],
       "portMappings": [
         {
@@ -120,9 +134,12 @@
       "essential": true,
       "hostname": "db",
       "command": ["--lower_case_table_names=1"],
-      "environment": [
-        { "name": "MYSQL_ROOT_PASSWORD", "value": "${{ secrets.DB_PASSWORD }}" },
-        { "name": "MYSQL_DATABASE", "value": "sign" }
+      "environment": [{ "name": "MYSQL_DATABASE", "value": "sign" }],
+      "secrets": [
+        {
+          "name": "MYSQL_ROOT_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:207995484402:secret:sign-prod-rO1shG:DB_USERNAME"
+        }
       ],
       "portMappings": [
         {
