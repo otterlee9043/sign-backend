@@ -19,7 +19,7 @@ env:
   ECR_REPOSITORY: sign-backend           # set this to your Amazon ECR repository name
   ECS_SERVICE: sign-service                 # set this to your Amazon ECS service name
   ECS_CLUSTER: SignCluster2023                 # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION: arn:aws:ecs:ap-northeast-2:207995484402:task-definition/sign-app:13 # set this to the name or ARN of your existing task definition
+  ECS_TASK_DEFINITION: task-definition.json # set this to the name or ARN of your existing task definition
 
 jobs:
   deploy:
@@ -74,15 +74,10 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Download task def
-        run: |
-          aws ecs describe-task-definition --task-definition sign-app > task-definition.json
-          echo "TASK_DEFINITION_PATH=task-definition.json" >> $GITHUB_ENV  # Set an environment variable
-
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
         with:
-          task-definition: ${{ env.TASK_DEFINITION_PATH }}
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
