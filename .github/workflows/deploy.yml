@@ -17,7 +17,7 @@ on:
 env:
   AWS_REGION: ap-northeast-2                   # set this to your preferred AWS region, e.g. us-west-1
   ECR_REPOSITORY: sign-backend           # set this to your Amazon ECR repository name
-  ECS_SERVICE: sign-github-action-1                 # set this to your Amazon ECS service name
+  ECS_SERVICE: sign-github-action-2                 # set this to your Amazon ECS service name
   ECS_CLUSTER: SignCluster2023                 # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: task-definition.json # set this to the name or ARN of your existing task definition
 
@@ -56,15 +56,6 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: latest
-          DB_URL: jdbc:mariadb://db:3306/sign?createDatabaseIfNotExist=true
-          DB_USERNAME: root
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
-          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
-          KAKAO_OAUTH_CLIENT_ID: ${{ secrets.KAKAO_OAUTH_CLIENT_ID }}
-          KAKAO_OAUTH_CLIENT_SECRET: ${{ secrets.KAKAO_OAUTH_CLIENT_SECRET }}
-          SPRING_ACTIVE_PROFILE: production
         run: |
           # Build a docker container and
           # push it to ECR so that it can
