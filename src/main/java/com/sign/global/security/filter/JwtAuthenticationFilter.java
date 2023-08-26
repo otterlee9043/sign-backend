@@ -80,8 +80,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 jwtProvider.sendAccessToken(response, jwtProvider.createAccessToken(username));
                 Authentication authentication = jwtProvider.getAuthentication(refreshTokenOwner);
                 jwtProvider.saveAuthentication(authentication);
-                filterChain.doFilter(request, response);
             }
         }
+        filterChain.doFilter(request, response);
     }
 }
