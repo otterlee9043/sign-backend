@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1")
 public class MemberController {
     private final MemberService memberService;
+
     private final RoomService classroomService;
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -34,11 +35,13 @@ public class MemberController {
     }
 
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/member")
     public MemberProfile getMyProfile(@AuthenticationPrincipal LoginMember loginMember) {
         return MemberProfile.from(loginMember.getMember());
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/member/{memberId}")
     public void unregister(@PathVariable Long memberId, @AuthenticationPrincipal LoginMember loginMember) {
         Member member = loginMember.getMember();
@@ -47,6 +50,7 @@ public class MemberController {
         }
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/member/{memberId}")
     public MemberProfile getProfile(@PathVariable Long memberId) {
         Member member = memberService.findMember(memberId);
@@ -84,6 +88,7 @@ public class MemberController {
     }
 
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/members/email/{email}/duplication")
     public void checkEmail(@PathVariable String email) {
         if (memberService.doesEmailExist(email)) {
