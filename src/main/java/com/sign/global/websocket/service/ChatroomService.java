@@ -1,5 +1,6 @@
 package com.sign.global.websocket.service;
 
+import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.classroom.service.RoomService;
 import com.sign.global.websocket.dto.MessageType;
 import com.sign.global.websocket.dto.RoomMessage;
@@ -27,12 +28,12 @@ public class ChatroomService {
 
     // sessionId, {userId, roomId}
     public void sit(String sessionId, Long roomId) {
-        Integer capacity = roomService.getRoomCapacity(roomId);
+        Room room = roomService.getRoom(roomId);
         if (seatingCharts.containsKey(roomId)) {
             Map<String, Integer> seatingChart = seatingCharts.get(roomId);
 
             Map<Integer, String[]> colorInfo = lastState.get(roomId);
-            int seatNum = IntStream.rangeClosed(1, capacity)
+            int seatNum = IntStream.rangeClosed(1, room.getCapacity())
                     .filter(i -> !colorInfo.containsKey(i))
                     .findFirst()
                     .orElse(1);
@@ -109,8 +110,8 @@ public class ChatroomService {
     }
 
     public boolean isRoomAccessible(Long roomId) {
-        Integer capacity = roomService.getRoomCapacity(roomId);
-        return !(seatingCharts.get(roomId).size() >= capacity);
+        Room room = roomService.getRoom(roomId);
+        return !(seatingCharts.get(roomId).size() >= room.getCapacity());
     }
 
     public Integer getMySeatPosition(Long roomId, String sessionId) {
