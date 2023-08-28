@@ -73,7 +73,7 @@ public class MemberController {
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/member/{memberId}/classroom/{roomId}")
     public void join(@PathVariable Long memberId, @PathVariable Long roomId) {
-        Room room = classroomService.findRoomByRoomId(roomId);
+        Room room = classroomService.getRoom(roomId);
         Member member = memberService.findMember(memberId);
         classroomService.joinRoom(member, room);
     }
@@ -82,7 +82,7 @@ public class MemberController {
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping("/member/{memberId}/classroom/{roomId}")
     public void enter(@PathVariable Long memberId, @PathVariable Long roomId) {
-        Room room = classroomService.findRoomByRoomId(roomId);
+        Room room = classroomService.getRoom(roomId);
         Member member = memberService.findMember(memberId);
         classroomService.enterRoom(room, member);
     }

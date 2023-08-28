@@ -43,7 +43,7 @@ public class RoomController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/classroom/{roomId}")
     public RoomResponse enter(@PathVariable Long roomId) {
-        Room room = classroomService.findRoomByRoomId(roomId);
+        Room room = classroomService.getRoom(roomId);
         return RoomResponse.from(room);
     }
 
@@ -52,7 +52,7 @@ public class RoomController {
     @PutMapping("/classroom/{roomId}")
     public void updateRoom(@PathVariable Long roomId, @RequestBody RoomUpdateRequest request,
                            @AuthenticationPrincipal LoginMember loginMember) {
-        Room room = classroomService.findRoomByRoomId(roomId);
+        Room room = classroomService.getRoom(roomId);
 
         if (!room.getHost().getId().equals(loginMember.getMember().getId())) {
             throw new AccessDeniedException("방을 수정할 권한이 없습니다.");
@@ -64,7 +64,7 @@ public class RoomController {
     @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/classroom/{roomId}")
     public void deleteRoom(@PathVariable Long roomId, @AuthenticationPrincipal LoginMember loginMember) {
-        Room room = classroomService.findRoomByRoomId(roomId);
+        Room room = classroomService.getRoom(roomId);
         classroomService.deleteRoom(room, loginMember.getMember());
     }
 
