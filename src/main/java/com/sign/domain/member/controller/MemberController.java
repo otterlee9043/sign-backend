@@ -12,6 +12,7 @@ import com.sign.global.security.authentication.LoginMember;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,15 +43,6 @@ public class MemberController {
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @DeleteMapping("/member/{memberId}")
-    public void unregister(@PathVariable Long memberId, @AuthenticationPrincipal LoginMember loginMember) {
-        Member member = loginMember.getMember();
-        if (memberId.equals(member.getId())) {
-            memberService.deleteMember(member);
-        }
-    }
-
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/member/{memberId}")
     public MemberProfile getProfile(@PathVariable Long memberId) {
         Member member = memberService.findMember(memberId);
@@ -59,10 +51,17 @@ public class MemberController {
 
 
     @ResponseStatus(HttpStatus.OK)
+    @DeleteMapping("/member")
+    public void unregister(@AuthenticationPrincipal LoginMember loginMember) {
+        memberService.deleteMember(loginMember.getMember());
+    }
+
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/member/{memberId}/classrooms")
-    public List<RoomResponse> getJoiningRooms(@PathVariable Long memberId) {
-        Member member = memberService.findMember(memberId);
-        List<Room> joiningRooms = classroomService.findJoiningRooms(member);
+    public List<RoomResponse> getJoiningRooms(@PathVariable Long memberId,
+                                              @AuthenticationPrincipal LoginMember loginMember) {
+        memberService.verifyMemberAccess(memberId, loginMember);
+        List<Room> joiningRooms = classroomService.getJoiningRooms(loginMember.getMember());
 
         return joiningRooms.stream()
                 .map(RoomResponse::from)
@@ -72,7 +71,10 @@ public class MemberController {
 
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/member/{memberId}/classroom/{roomId}")
-    public void join(@PathVariable Long memberId, @PathVariable Long roomId) {
+    public void join(@PathVariable Long memberId,
+                     @PathVariable Long roomId,
+                     @AuthenticationPrincipal LoginMember loginMember) {
+        memberService.verifyMemberAccess(memberId, loginMember);
         Room room = classroomService.getRoom(roomId);
         Member member = memberService.findMember(memberId);
         classroomService.joinRoom(member, room);
@@ -81,7 +83,10 @@ public class MemberController {
 
     @ResponseStatus(HttpStatus.OK)
     @PatchMapping("/member/{memberId}/classroom/{roomId}")
-    public void enter(@PathVariable Long memberId, @PathVariable Long roomId) {
+    public void enter(@PathVariable Long memberId,
+                      @PathVariable Long roomId,
+                      @AuthenticationPrincipal LoginMember loginMember) {
+        memberService.verifyMemberAccess(memberId, loginMember);
         Room room = classroomService.getRoom(roomId);
         Member member = memberService.findMember(memberId);
         classroomService.enterRoom(room, member);

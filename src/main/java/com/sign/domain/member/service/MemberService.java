@@ -2,6 +2,7 @@ package com.sign.domain.member.service;
 
 import com.sign.domain.member.controller.dto.SignupRequest;
 import com.sign.domain.member.entity.Member;
+import com.sign.global.security.authentication.LoginMember;
 
 public interface MemberService {
     void join(SignupRequest request) throws Exception;
@@ -10,8 +11,8 @@ public interface MemberService {
 
     void deleteMember(Member member);
 
-    boolean doesUsernameExist(String username);
-
     boolean doesEmailExist(String email);
+
+    void verifyMemberAccess(Long memberId, LoginMember loginMember);
 }
 

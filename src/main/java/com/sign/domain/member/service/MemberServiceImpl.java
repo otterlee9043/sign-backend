@@ -6,8 +6,10 @@ import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
 import com.sign.global.exception.DataDuplicateException;
 import com.sign.global.exception.NotFoundException;
+import com.sign.global.security.authentication.LoginMember;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import java.util.List;
 public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
+
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -33,19 +36,19 @@ public class MemberServiceImpl implements MemberService {
                 .role(Role.USER)
                 .provider("sign")
                 .build();
-        if (doesUsernameExist(request.getUsername())) {
-            List<String> fields = Arrays.asList("username");
-            if (doesEmailExist(request.getEmail())) {
-                fields.add("email");
-            }
+        if (doesEmailExist(request.getEmail())) {
+            log.info("duplicate");
+            List<String> fields = Arrays.asList("email");
             throw new DataDuplicateException("중복된 입력값", fields);
         }
+        log.info("save");
         memberRepository.save(member);
     }
 
     @Override
     public Member findMember(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow(() -> new NotFoundException("Member does not exist."));
+        Member member = memberRepository.findById(memberId).orElseThrow(() -> new NotFoundException("Member does not exist."));
+        return member;
     }
 
     @Override
@@ -54,12 +57,14 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public boolean doesUsernameExist(String username) {
-        return memberRepository.findByUsername(username).isPresent();
+    public boolean doesEmailExist(String email) {
+        return memberRepository.findByEmail(email).isPresent();
     }
 
     @Override
-    public boolean doesEmailExist(String email) {
-        return memberRepository.findByEmail(email).isPresent();
+    public void verifyMemberAccess(Long memberId, LoginMember loginMember) {
+        if (!memberId.equals(loginMember.getId())) {
+            throw new AccessDeniedException("해당 계정을 탈퇴할 권한이 없습니다.");
+        }
     }
 }
