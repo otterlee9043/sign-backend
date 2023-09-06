@@ -5,6 +5,7 @@ import com.sign.domain.classroom.controller.dto.RoomResponse;
 import com.sign.domain.classroom.controller.dto.RoomUpdateRequest;
 import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.classroom.service.RoomService;
+import com.sign.domain.member.service.MemberService;
 import com.sign.global.exception.DataDuplicateException;
 import com.sign.global.security.authentication.LoginMember;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +25,13 @@ public class RoomController {
 
     private final RoomService classroomService;
 
+    private final MemberService memberService;
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/classrooms")
     public void create(@Validated @RequestBody RoomCreateRequest request,
                        @AuthenticationPrincipal LoginMember loginMember) {
+        log.info("validated");
         classroomService.createRoom(request, loginMember.getMember());
     }
 
@@ -41,32 +45,30 @@ public class RoomController {
 
 
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/classroom/{roomId}")
-    public RoomResponse enter(@PathVariable Long roomId) {
-        Room room = classroomService.getRoom(roomId);
+    @GetMapping("/classroom/{id}")
+    public RoomResponse getRoom(@PathVariable Long id) {
+        Room room = classroomService.getRoom(id);
         return RoomResponse.from(room);
     }
 
 
     @ResponseStatus(HttpStatus.OK)
-    @PutMapping("/classroom/{roomId}")
-    public void updateRoom(@PathVariable Long roomId, @RequestBody RoomUpdateRequest request,
+    @PutMapping("/classroom/{id}")
+    public void updateRoom(@PathVariable Long id,
+                           @RequestBody RoomUpdateRequest request,
                            @AuthenticationPrincipal LoginMember loginMember) {
-        Room room = classroomService.getRoom(roomId);
-        if (!room.getHost().getId().equals(loginMember.getMember().getId())) {
-            throw new AccessDeniedException("방을 수정할 권한이 없습니다.");
-        }
+        Room room = classroomService.getRoom(id);
+        memberService.verifyMemberAccess(room.getHost().getId(), loginMember);
         classroomService.updateRoom(room, request);
     }
 
 
     @ResponseStatus(HttpStatus.OK)
-    @DeleteMapping("/classroom/{roomId}")
-    public void deleteRoom(@PathVariable Long roomId, @AuthenticationPrincipal LoginMember loginMember) {
-        Room room = classroomService.getRoom(roomId);
-        if (!room.getHost().getId().equals(loginMember.getMember().getId())) {
-            throw new AccessDeniedException("방을 삭제할 권한이 없습니다.");
-        }
+    @DeleteMapping("/classroom/{id}")
+    public void deleteRoom(@PathVariable Long id,
+                           @AuthenticationPrincipal LoginMember loginMember) {
+        Room room = classroomService.getRoom(id);
+        memberService.verifyMemberAccess(room.getHost().getId(), loginMember);
         classroomService.deleteRoom(room, loginMember.getMember());
     }
 
