@@ -25,6 +25,10 @@ public class LoginMember implements UserDetails, OAuth2User {
         this.attributes = attributes;
     }
 
+    public Long getId() {
+        return member.getId();
+    }
+
     @Override
     public String getName() {
         return null;
