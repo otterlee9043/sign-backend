@@ -13,6 +13,6 @@ public interface MemberService {
 
     boolean doesEmailExist(String email);
 
-    void verifyMemberAccess(Long memberId, LoginMember loginMember);
+    Member getVerifiedMember(Long memberId, LoginMember loginMember);
 }
 

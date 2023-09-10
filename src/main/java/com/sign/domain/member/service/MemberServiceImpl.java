@@ -38,7 +38,7 @@ public class MemberServiceImpl implements MemberService {
                 .build();
         if (doesEmailExist(request.getEmail())) {
             log.info("duplicate");
-            List<String> fields = Arrays.asList("email");
+            List<String> fields = List.of("email");
             throw new DataDuplicateException("중복된 입력값", fields);
         }
         log.info("save");
@@ -47,8 +47,8 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public Member findMember(Long memberId) {
-        Member member = memberRepository.findById(memberId).orElseThrow(() -> new NotFoundException("Member does not exist."));
-        return member;
+        return memberRepository.findById(memberId).orElseThrow(
+                () -> new NotFoundException("Member does not exist."));
     }
 
     @Override
@@ -62,9 +62,11 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public void verifyMemberAccess(Long memberId, LoginMember loginMember) {
+    public Member getVerifiedMember(Long memberId, LoginMember loginMember) {
         if (!memberId.equals(loginMember.getId())) {
-            throw new AccessDeniedException("해당 계정을 탈퇴할 권한이 없습니다.");
+            throw new AccessDeniedException("해당 계정에 대한 권한이 없습니다.");
         }
+        return findMember(memberId);
     }
+
 }

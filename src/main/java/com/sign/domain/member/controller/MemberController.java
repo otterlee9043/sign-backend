@@ -12,7 +12,6 @@ import com.sign.global.security.authentication.LoginMember;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,25 +42,24 @@ public class MemberController {
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/member/{memberId}")
-    public MemberProfile getProfile(@PathVariable Long memberId) {
-        Member member = memberService.findMember(memberId);
-        return MemberProfile.from(member);
-    }
-
-
-    @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/member")
     public void unregister(@AuthenticationPrincipal LoginMember loginMember) {
         memberService.deleteMember(loginMember.getMember());
     }
 
     @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/member/{memberId}")
+    public MemberProfile getProfile(@PathVariable Long memberId) {
+        Member member = memberService.findMember(memberId);
+        return MemberProfile.from(member);
+    }
+
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/member/{memberId}/classrooms")
     public List<RoomResponse> getJoiningRooms(@PathVariable Long memberId,
                                               @AuthenticationPrincipal LoginMember loginMember) {
-        memberService.verifyMemberAccess(memberId, loginMember);
-        List<Room> joiningRooms = classroomService.getJoiningRooms(loginMember.getMember());
+        Member member = memberService.getVerifiedMember(memberId, loginMember);
+        List<Room> joiningRooms = classroomService.getJoiningRooms(member);
 
         return joiningRooms.stream()
                 .map(RoomResponse::from)
@@ -74,9 +72,8 @@ public class MemberController {
     public void join(@PathVariable Long memberId,
                      @PathVariable Long roomId,
                      @AuthenticationPrincipal LoginMember loginMember) {
-        memberService.verifyMemberAccess(memberId, loginMember);
+        Member member = memberService.getVerifiedMember(memberId, loginMember);
         Room room = classroomService.getRoom(roomId);
-        Member member = memberService.findMember(memberId);
         classroomService.joinRoom(member, room);
     }
 
@@ -86,9 +83,8 @@ public class MemberController {
     public void enter(@PathVariable Long memberId,
                       @PathVariable Long roomId,
                       @AuthenticationPrincipal LoginMember loginMember) {
-        memberService.verifyMemberAccess(memberId, loginMember);
+        Member member = memberService.getVerifiedMember(memberId, loginMember);
         Room room = classroomService.getRoom(roomId);
-        Member member = memberService.findMember(memberId);
         classroomService.enterRoom(room, member);
     }
 

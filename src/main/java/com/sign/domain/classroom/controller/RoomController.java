@@ -5,13 +5,13 @@ import com.sign.domain.classroom.controller.dto.RoomResponse;
 import com.sign.domain.classroom.controller.dto.RoomUpdateRequest;
 import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.classroom.service.RoomService;
+import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.service.MemberService;
 import com.sign.global.exception.DataDuplicateException;
 import com.sign.global.security.authentication.LoginMember;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -58,7 +58,7 @@ public class RoomController {
                            @RequestBody RoomUpdateRequest request,
                            @AuthenticationPrincipal LoginMember loginMember) {
         Room room = classroomService.getRoom(id);
-        memberService.verifyMemberAccess(room.getHost().getId(), loginMember);
+        memberService.getVerifiedMember(room.getHost().getId(), loginMember);
         classroomService.updateRoom(room, request);
     }
 
@@ -68,8 +68,8 @@ public class RoomController {
     public void deleteRoom(@PathVariable Long id,
                            @AuthenticationPrincipal LoginMember loginMember) {
         Room room = classroomService.getRoom(id);
-        memberService.verifyMemberAccess(room.getHost().getId(), loginMember);
-        classroomService.deleteRoom(room, loginMember.getMember());
+        Member member = memberService.getVerifiedMember(room.getHost().getId(), loginMember);
+        classroomService.deleteRoom(room, member);
     }
 
 
