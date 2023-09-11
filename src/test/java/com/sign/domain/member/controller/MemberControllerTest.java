@@ -19,23 +19,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithAnonymousUser;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -337,9 +331,8 @@ class MemberControllerTest {
             @Test
             @DisplayName("Forbidden으로 응답한다.")
             void itRespondsWithNotFound() throws Exception {
-                doThrow(new AccessDeniedException("권한 없음"))
-                        .when(memberService).verifyMemberAccess(anyLong(), any(LoginMember.class));
-
+                given(memberService.getVerifiedMember(anyLong(), any(LoginMember.class)))
+                        .willThrow(new AccessDeniedException("권한 없음"));
                 MockHttpServletRequestBuilder request = RestDocumentationRequestBuilders
                         .get(BASE_URL + "/member/{memberId}/classrooms", 1)
                         .header("Access-Token", "your-access-token")
@@ -358,6 +351,7 @@ class MemberControllerTest {
             @Test
             @DisplayName("RoomResponse 리스트와 함께 Ok로 응답한다.")
             void itReturnsRoomResponseList() throws Exception {
+                given(memberService.getVerifiedMember(anyLong(), any(LoginMember.class))).willReturn(member);
                 given(roomService.getJoiningRooms(any(Member.class))).willReturn(List.of(room));
 
                 MockHttpServletRequestBuilder request = RestDocumentationRequestBuilders
@@ -412,8 +406,8 @@ class MemberControllerTest {
             @Test
             @DisplayName("Ok로 응답한다.")
             void itRespondsWithOk() throws Exception {
+                given(memberService.getVerifiedMember(anyLong(), any(LoginMember.class))).willReturn(member);
                 given(roomService.getRoom(anyLong())).willReturn(room);
-                given(memberService.findMember(anyLong())).willReturn(member);
 
                 MockHttpServletRequestBuilder request = RestDocumentationRequestBuilders
                         .put(BASE_URL + "/member/{memberId}/classroom/{roomId}", 1, 1)
@@ -447,7 +441,7 @@ class MemberControllerTest {
             @DisplayName("Ok로 응답한다.")
             void itRespondsWithOk() throws Exception {
                 given(roomService.getRoom(anyLong())).willReturn(room);
-                given(memberService.findMember(anyLong())).willReturn(member);
+                given(memberService.getVerifiedMember(anyLong(), any(LoginMember.class))).willReturn(member);
 
                 MockHttpServletRequestBuilder request = RestDocumentationRequestBuilders
                         .patch(BASE_URL + "/member/{memberId}/classroom/{roomId}", 1, 1)

@@ -47,7 +47,6 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.request.RequestDocumentation.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -311,8 +310,8 @@ class RoomControllerTest {
                 RoomUpdateRequest updateDTO = new RoomUpdateRequest("newName");
                 String content = objectMapper.writeValueAsString(updateDTO);
                 given(roomService.getRoom(anyLong())).willReturn(room);
-                doThrow(new AccessDeniedException("권한 없음"))
-                        .when(memberService).verifyMemberAccess(anyLong(), any(LoginMember.class));
+                given(memberService.getVerifiedMember(anyLong(), any(LoginMember.class)))
+                        .willThrow(new AccessDeniedException("권한 없음"));
 
                 MockHttpServletRequestBuilder request = RestDocumentationRequestBuilders
                         .put(BASE_URL + "/classroom/{id}", 1)
