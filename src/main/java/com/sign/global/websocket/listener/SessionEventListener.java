@@ -15,8 +15,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.*;
 
 import java.util.List;
 import java.util.Map;
@@ -29,39 +28,37 @@ public class SessionEventListener {
 
     @EventListener
     public void handleSessionConnectedEvent(SessionConnectedEvent event) {
-        Map nativeHeaders = getNativeHeaders(event);
-        Long roomId = Long.parseLong(getHeaderValue(nativeHeaders, "roomId"));
+        StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.wrap(event.getMessage());
+        MessageHeaderAccessor messageHeaderAccessor =
+                NativeMessageHeaderAccessor.getAccessor(event.getMessage(), SimpMessageHeaderAccessor.class);
+
+        Long memberId = getMemberId(stompHeaderAccessor);
+        Long roomId = Long.parseLong(getNativeHeader(messageHeaderAccessor, "roomId"));
         String sessionId = getSessionId();
 
-        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-        Authentication simpUser = (Authentication) accessor.getHeader("simpUser");
-        LoginMember loginMember = (LoginMember) simpUser.getPrincipal();
-        Long userId = loginMember.getMember().getId();
-
-        chatroomService.enter(sessionId, userId, roomId);
+        chatroomService.enter(sessionId, memberId, roomId);
     }
 
     @EventListener
     public void handleSessionDisconnectEvent(SessionDisconnectEvent event) {
-        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-        String sessionId = accessor.getSessionId();
-        chatroomService.exit(sessionId);
+        chatroomService.exit(getSessionId());
     }
-
 
     private String getSessionId() {
         SimpAttributes simpAttributes = SimpAttributesContextHolder.currentAttributes();
         return simpAttributes.getSessionId();
     }
 
-    private String getHeaderValue(Map nativeHeaders, String headerName) {
-        return (String) ((List) nativeHeaders.get(headerName)).get(0);
+    private Long getMemberId(StompHeaderAccessor accessor) {
+        Authentication simpUser = (Authentication) accessor.getHeader("simpUser");
+        LoginMember loginMember = (LoginMember) simpUser.getPrincipal();
+        return loginMember.getId();
     }
 
-    private Map getNativeHeaders(SessionConnectedEvent event) {
-        MessageHeaderAccessor accessor = NativeMessageHeaderAccessor.getAccessor(event.getMessage(), SimpMessageHeaderAccessor.class);
+    private String getNativeHeader(MessageHeaderAccessor accessor, String header) {
         GenericMessage generic = (GenericMessage) accessor.getHeader("simpConnectMessage");
         Map nativeHeaders = (Map) generic.getHeaders().get("nativeHeaders");
-        return nativeHeaders;
+        return (String) ((List) nativeHeaders.get(header)).get(0);
     }
+
 }
