@@ -2,8 +2,10 @@ package com.sign.domain.member.exception;
 
 import com.sign.global.exception.DataDuplicateException;
 import com.sign.global.exception.ErrorResult;
+import com.sign.global.exception.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -46,4 +48,23 @@ public class MemberExceptionHandler {
                 .build();
     }
 
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler
+    public ErrorResult NotFoundExceptionHandler(NotFoundException e) {
+        log.warn("NotFoundException occurred. Message: {}", e.getMessage());
+        return ErrorResult.builder()
+                .code("NOT FOUND")
+                .message("존재하지 않는 사용자입니다.")
+                .build();
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler
+    public ErrorResult AccessDeniedExceptionHandler(AccessDeniedException e) {
+        log.warn("AccessDeniedException occurred. Message: {}", e.getMessage());
+        return ErrorResult.builder()
+                .code("FORBIDDEN")
+                .message(e.getMessage())
+                .build();
+    }
 }
