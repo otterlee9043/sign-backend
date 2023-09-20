@@ -3,9 +3,11 @@ package com.sign.global.websocket.service;
 import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.classroom.service.RoomService;
 import com.sign.global.websocket.dto.MessageType;
+import com.sign.global.websocket.dto.RoomInfo;
 import com.sign.global.websocket.dto.RoomMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -17,61 +19,39 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class ChatroomService {
 
-    private final RoomService roomService;
-
     private final Map<Long, Map<Integer, String[]>> lastState = new ConcurrentHashMap<>();
     //roomId, seatNum, [color, emoji]
-    private final Map<Long, Map<String, Integer>> seatingCharts = new ConcurrentHashMap<>();
-    //roomId, sessionId, seatNum
-//    private final Map<Long, Map<String, Long>> userSession = new ConcurrentHashMap<>();
+    private final Map<Long, Map<Long, Integer>> seatingCharts = new ConcurrentHashMap<>();
+    //roomId, {memberId, seatNum}
+
     private final Map<String, Long[]> userSession = new ConcurrentHashMap<>();
+    // sessionId, {memberId, roomId}
 
-    // sessionId, {userId, roomId}
-    public void sit(String sessionId, Long roomId) {
-        Room room = roomService.getRoom(roomId);
-        if (seatingCharts.containsKey(roomId)) {
-            Map<String, Integer> seatingChart = seatingCharts.get(roomId);
+    private final RoomService roomService;
 
-            Map<Integer, String[]> colorInfo = lastState.get(roomId);
-            int seatNum = IntStream.rangeClosed(1, room.getCapacity())
-                    .filter(i -> !colorInfo.containsKey(i))
-                    .findFirst()
-                    .orElse(1);
-            seatingChart.put(sessionId, seatNum);
 
-            colorInfo.put(seatNum, new String[]{"unselected", ""});
-        } else {
-            Map<String, Integer> seatingChart = new ConcurrentHashMap<>();
-            seatingChart.put(sessionId, 1);
-            seatingCharts.put(roomId, seatingChart);
-
-            Map<Integer, String[]> colorInfo = new ConcurrentHashMap<>();
-            colorInfo.put(1, new String[]{"unselected", ""});
-            lastState.put(roomId, colorInfo);
-        }
+    public void enter(String sessionId, Long memberId, Long roomId) {
+        userSession.put(sessionId, new Long[]{memberId, roomId});
+        log.info("User {} entered room {}.", memberId, roomId);
     }
 
-    public RoomMessage leave(String sessionId) {
-        Integer seatNum = null;
-        Long leavingRoomId = null;
-        for (Long roomId : seatingCharts.keySet()) {
-            if (seatingCharts.get(roomId).containsKey(sessionId)) {
-                seatNum = seatingCharts.get(roomId).get(sessionId);
-                leavingRoomId = roomId;
-                seatingCharts.get(roomId).remove(sessionId);
+    public int sit(Long memberId, Long roomId) {
+        Map<Long, Integer> seatingChart = seatingCharts.computeIfAbsent(roomId, k -> new ConcurrentHashMap<>());
+        Map<Integer, String[]> colorInfo = lastState.computeIfAbsent(roomId, k -> new ConcurrentHashMap<>());
 
-                if (seatingCharts.get(roomId).isEmpty()) {
-                    seatingCharts.remove(roomId);
-                }
+        Room room = roomService.getRoom(roomId);
+        int seatNum = IntStream.rangeClosed(1, room.getCapacity())
+                .filter(i -> !colorInfo.containsKey(i))
+                .findFirst()
+                .orElse(1);
 
-                lastState.get(roomId).remove(seatNum);
-                if (lastState.get(roomId).isEmpty()) {
-                    lastState.remove(roomId);
-                }
-                break;
-            }
-        }
-        return new RoomMessage(MessageType.EXIT, seatNum, leavingRoomId, null, null);
+        seatingChart.put(memberId, seatNum);
+        seatingCharts.put(roomId, seatingChart);
+
+        colorInfo.put(seatNum, new String[]{"unselected", ""});
+        lastState.put(roomId, colorInfo);
+
+        return seatNum;
     }
 
     public void color(Long roomId, int seatNum, String color) {
@@ -86,39 +66,64 @@ public class ChatroomService {
         lastState.get(roomId).put(seatNum, state);
     }
 
-    public void enter(String sessionId, Long userId, Long roomId) {
-        userSession.put(sessionId, new Long[]{userId, roomId});
-        log.info("User {} entered room {}.", userId, roomId);
-        sit(sessionId, roomId);
+    public void leave(Long memberId) {
+        for (Long roomId : seatingCharts.keySet()) {
+            if (seatingCharts.get(roomId).containsKey(memberId)) {
+                int seatNum = seatingCharts.get(roomId).get(memberId);
+                seatingCharts.get(roomId).remove(memberId);
+
+                if (seatingCharts.get(roomId).isEmpty()) {
+                    seatingCharts.remove(roomId);
+                }
+
+                lastState.get(roomId).remove(seatNum);
+                if (lastState.get(roomId).isEmpty()) {
+                    lastState.remove(roomId);
+                }
+                break;
+            }
+        }
     }
 
     public void exit(String sessionId) {
-        Long[] userInfo = userSession.get(sessionId);
-        Long userId = userInfo[0];
-        Long roomId = userInfo[1];
-        userSession.remove(sessionId);
-        log.info("User {} exited room {}.", userId, roomId);
-        leave(sessionId);
+        if (userSession.containsKey(sessionId)) {
+            Long[] userInfo = userSession.get(sessionId);
+            Long memberId = userInfo[0];
+            Long roomId = userInfo[1];
+            log.info("User {} exited room {}.", memberId, roomId);
+
+            userSession.remove(sessionId);
+            leave(memberId);
+        }
     }
 
     public void changeSeat(Long roomId, String sessionId, int oldSeatNum, int newSeatNum) {
+        Long memberId = userSession.get(sessionId)[0];
+
         Map<Integer, String[]> classroomState = lastState.get(roomId);
-        Map<String, Integer> seatingChart = seatingCharts.get(roomId);
+        Map<Long, Integer> seatingChart = seatingCharts.get(roomId);
+
         classroomState.put(newSeatNum, classroomState.get(oldSeatNum));
         classroomState.remove(oldSeatNum);
-        seatingChart.put(sessionId, newSeatNum);
+
+        seatingChart.put(memberId, newSeatNum);
     }
 
-    public boolean isRoomAccessible(Long roomId) {
-        Room room = roomService.getRoom(roomId);
-        return !(seatingCharts.get(roomId).size() >= room.getCapacity());
+    public int getSeatNum(String sessionId) {
+        Long memberId = userSession.get(sessionId)[0];
+        Long roomId = userSession.get(sessionId)[1];
+        return seatingCharts.get(roomId).get(memberId);
     }
 
-    public Integer getMySeatPosition(Long roomId, String sessionId) {
-        return seatingCharts.get(roomId).get(sessionId);
+    public Long getRoomId(String sessionId) {
+        return userSession.get(sessionId)[1];
     }
 
     public Map<Integer, String[]> getRoomStatesByRoomId(Long roomId) {
         return lastState.get(roomId);
+    }
+
+    public boolean isConnected(Long roomId, Long memberId) {
+        return seatingCharts.containsKey(roomId) && seatingCharts.get(roomId).containsKey(memberId);
     }
 }
