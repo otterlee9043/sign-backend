@@ -19,7 +19,7 @@ public class Room {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "CLASSROOM_ID")
+    @Column(name = "ROOM_ID")
     private Long id;
 
     @NotNull
