@@ -6,7 +6,7 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
 
   jpa:
-    show-sql: true
+    show-sql: false
     database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
       ddl-auto: none
@@ -17,7 +17,6 @@ spring:
 
   profiles:
     include:
-      - ${SPRING_ACTIVE_PROFILE}
       - oauth
 
 jwt:
