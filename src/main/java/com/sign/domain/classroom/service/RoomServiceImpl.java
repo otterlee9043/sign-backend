@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -63,13 +62,9 @@ public class RoomServiceImpl implements RoomService {
     public Room joinRoom(Member member, Room classroom) {
         Member memberToJoin = memberRepository.findById(member.getId())
                 .orElseThrow(() -> new NotFoundException("Member doesn't exist."));
-        Set<Joins> joined = classroom.getJoined();
-        int numberOfJoins = joined.size();
-
-        if (numberOfJoins >= classroom.getCapacity())
+        if (classroom.getJoined().size() >= classroom.getCapacity())
             throw new RoomCapacityExceededException();
-        Joins joins = new Joins(memberToJoin, classroom);
-        joinsRepository.save(joins);
+        joinsRepository.save(new Joins(memberToJoin, classroom));
         return classroom;
     }
 
@@ -86,21 +81,19 @@ public class RoomServiceImpl implements RoomService {
                 new NotFoundException("해당 ID의 방을 찾을 수 없습니다."));
     }
 
-
     @Override
-    public Room findRoomByRoomCode(String roomCode) {
-        return classroomRepository.findByCode(roomCode).orElseThrow(() ->
-                new NotFoundException("해당 입장 코드의 방을 찾을 수 없습니다."));
-    }
-
-    @Override
-    public List<Room> findJoiningRooms(Member member) {
+    public List<Room> getJoiningRooms(Member member) {
         List<Joins> joins = member.getJoins();
         return joins.stream()
                 .map(Joins::getRoom)
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Room findRoomByRoomCode(String roomCode) {
+        return classroomRepository.findByCode(roomCode).orElseThrow(() ->
+                new NotFoundException("해당 입장 코드의 방을 찾을 수 없습니다."));
+    }
 
     @Override
     public boolean doesRoomCodeExist(String roomCode) {

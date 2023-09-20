@@ -23,7 +23,7 @@ public interface RoomService {
 
     Room findRoomByRoomCode(String roomCode);
 
-    List<Room> findJoiningRooms(Member member);
+    List<Room> getJoiningRooms(Member member);
 
     boolean doesRoomCodeExist(String roomCode);
 }
