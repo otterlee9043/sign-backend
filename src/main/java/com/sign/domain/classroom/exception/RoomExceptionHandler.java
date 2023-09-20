@@ -5,6 +5,7 @@ import com.sign.global.exception.ErrorResult;
 import com.sign.global.exception.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -39,7 +40,17 @@ public class RoomExceptionHandler {
         log.warn("DataDuplicateException occurred. Message: {}", e.getMessage());
         return ErrorResult.builder()
                 .code("CONFLICT")
-                .message("이미 존재하는 방입니다.")
+                .message(e.getMessage())
+                .build();
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler
+    public ErrorResult accessDeniedExceptionHandler(AccessDeniedException e) {
+        log.warn("AccessDeniedException occurred. Message: {}", e.getMessage());
+        return ErrorResult.builder()
+                .code("FORBIDDEN")
+                .message(e.getMessage())
                 .build();
     }
 }
