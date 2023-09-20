@@ -2,6 +2,8 @@ package com.sign.global.websocket.listener;
 
 
 import com.sign.global.security.authentication.LoginMember;
+import com.sign.global.websocket.dto.MessageType;
+import com.sign.global.websocket.dto.RoomMessage;
 import com.sign.global.websocket.service.ChatroomService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +11,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpAttributes;
 import org.springframework.messaging.simp.SimpAttributesContextHolder;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.messaging.support.MessageHeaderAccessor;
@@ -26,6 +29,8 @@ import java.util.Map;
 public class SessionEventListener {
     private final ChatroomService chatroomService;
 
+    private final SimpMessageSendingOperations sendingOperations;
+
     @EventListener
     public void handleSessionConnectedEvent(SessionConnectedEvent event) {
         StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.wrap(event.getMessage());
@@ -33,7 +38,7 @@ public class SessionEventListener {
                 NativeMessageHeaderAccessor.getAccessor(event.getMessage(), SimpMessageHeaderAccessor.class);
 
         Long memberId = getMemberId(stompHeaderAccessor);
-        Long roomId = Long.parseLong(getNativeHeader(messageHeaderAccessor, "roomId"));
+        Long roomId = Long.parseLong(getRoomId(messageHeaderAccessor));
         String sessionId = getSessionId();
 
         chatroomService.enter(sessionId, memberId, roomId);
@@ -41,7 +46,16 @@ public class SessionEventListener {
 
     @EventListener
     public void handleSessionDisconnectEvent(SessionDisconnectEvent event) {
-        chatroomService.exit(getSessionId());
+        String sessionId = getSessionId();
+        Long roomId = chatroomService.getRoomId(sessionId);
+        RoomMessage message = RoomMessage.builder()
+                .type(MessageType.EXIT)
+                .seatNum(chatroomService.getSeatNum(sessionId))
+                .build();
+        sendingOperations.convertAndSend(
+                "/topic/classroom/" + roomId,
+                message);
+        chatroomService.exit(sessionId);
     }
 
     private String getSessionId() {
@@ -55,10 +69,10 @@ public class SessionEventListener {
         return loginMember.getId();
     }
 
-    private String getNativeHeader(MessageHeaderAccessor accessor, String header) {
+    private String getRoomId(MessageHeaderAccessor accessor) {
         GenericMessage generic = (GenericMessage) accessor.getHeader("simpConnectMessage");
-        Map nativeHeaders = (Map) generic.getHeaders().get("nativeHeaders");
-        return (String) ((List) nativeHeaders.get(header)).get(0);
+        Map<String, Object> nativeHeaders = (Map<String, Object>) generic.getHeaders().get("nativeHeaders");
+        return (String) ((List) nativeHeaders.get("roomId")).get(0);
     }
 
 }

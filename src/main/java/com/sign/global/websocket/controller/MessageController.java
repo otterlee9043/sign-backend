@@ -1,5 +1,6 @@
 package com.sign.global.websocket.controller;
 
+import com.sign.global.security.authentication.LoginMember;
 import com.sign.global.websocket.service.ChatroomService;
 import com.sign.global.websocket.dto.ChatroomMessage;
 import com.sign.global.websocket.dto.MessageType;
@@ -11,6 +12,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.stereotype.Controller;
 
 
@@ -20,44 +22,41 @@ import org.springframework.stereotype.Controller;
 public class MessageController {
 
     private final SimpMessageSendingOperations sendingOperations;
+
     private final ChatroomService chatroomService;
 
-    @MessageMapping("/classroom/{roomId}")
-    public void handleMessage(RoomMessage message, @DestinationVariable Long roomId, @Header("simpSessionId") String sessionId){
-        if (message.getType().equals(MessageType.COLOR)) {
+    @MessageMapping("/topic/classroom/{roomId}")
+    public void handleMessage(RoomMessage message,
+                              @DestinationVariable Long roomId,
+                              @Header("simpSessionId") String sessionId){
+        MessageType type = message.getType();
+        if (type.equals(MessageType.COLOR)) {
             chatroomService.color(roomId, message.getSeatNum(), message.getMessage());
-        } else if (message.getType().equals(MessageType.DRAW_EMOJI)) {
+        } else if (type.equals(MessageType.DRAW_EMOJI)) {
+            chatroomService.drawEmoji(roomId, message.getSeatNum(), message.getMessage());
+        } else if (type.equals(MessageType.TALK)) {
             chatroomService.color(roomId, message.getSeatNum(), message.getMessage());
-        } else if (message.getType().equals(MessageType.TALK)) {
-            chatroomService.color(roomId, message.getSeatNum(), message.getMessage());
-        } else if (message.getType().equals(MessageType.CHANGE_SEAT)) {
-            chatroomService.changeSeat(roomId, sessionId, message.getSeatNum(),
-                    Integer.parseInt(message.getMessage()));
+        } else if (type.equals(MessageType.CHANGE_SEAT)) {
+            chatroomService.changeSeat(
+                    roomId,
+                    sessionId,
+                    message.getSeatNum(),
+                    Integer.parseInt(message.getMessage())
+            );
         }
-        sendingOperations.convertAndSend("/topic/classroom/" + roomId, message) ;
     }
 
-    @MessageMapping("/classroom/{roomId}/chat/{row}")
-    public void chat(ChatroomMessage message,
-                     @DestinationVariable Integer roomId,
-                     @DestinationVariable Integer row){
-        sendingOperations.convertAndSend("/topic/classroom/" + roomId + "/chat/" + row, message) ;
-    }
 
-    @MessageMapping("/classroomInfo/{roomId}")
-    public void enter(RoomMessage message,
-                     @DestinationVariable Long roomId,
-                     @Header("simpSessionId") String sessionId){
-        RoomInfo classroomInfo = new RoomInfo();
-        classroomInfo.setClassRoomStates(chatroomService.getRoomStatesByRoomId(roomId));
-        classroomInfo.setSeatNum(chatroomService.getMySeatPosition(roomId, sessionId));
-        sendingOperations.convertAndSend("/queue/temp/classroom/" + roomId + "/user/" + message.getSender(), classroomInfo) ;
-
-        RoomMessage roomMessage = RoomMessage.builder()
-                .roomId(roomId)
-                .type(MessageType.ENTER)
-                .seatNum(classroomInfo.getSeatNum())
+    @SubscribeMapping("/queue/temp/classroom/{roomId}/member/{memberId}")
+    public void getState(@DestinationVariable Long roomId,
+                         @DestinationVariable Long memberId) {
+        int seatNum = chatroomService.sit(memberId, roomId);
+        RoomInfo classroomInfo = RoomInfo.builder()
+                .seatNum(seatNum)
+                .classRoomStates(chatroomService.getRoomStatesByRoomId(roomId))
                 .build();
-        sendingOperations.convertAndSend("/topic/classroom/" + roomId, roomMessage) ;
+        sendingOperations.convertAndSend(
+                "/queue/temp/classroom/" + roomId + "/member/" + memberId,
+                classroomInfo);
     }
 }
