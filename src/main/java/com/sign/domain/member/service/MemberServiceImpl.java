@@ -14,7 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -37,11 +36,9 @@ public class MemberServiceImpl implements MemberService {
                 .provider("sign")
                 .build();
         if (doesEmailExist(request.getEmail())) {
-            log.info("duplicate");
             List<String> fields = List.of("email");
             throw new DataDuplicateException("중복된 입력값", fields);
         }
-        log.info("save");
         memberRepository.save(member);
     }
 
@@ -68,5 +65,4 @@ public class MemberServiceImpl implements MemberService {
         }
         return findMember(memberId);
     }
-
 }
