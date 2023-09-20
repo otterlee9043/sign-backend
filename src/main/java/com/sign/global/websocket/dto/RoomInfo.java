@@ -1,16 +1,12 @@
 package com.sign.global.websocket.dto;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.Map;
 
 @Getter
-@Setter
-@ToString
-@RequiredArgsConstructor
+@Builder
+@AllArgsConstructor
 public class RoomInfo {
     private Integer seatNum;
     private Map<Integer, String[]> classRoomStates;
