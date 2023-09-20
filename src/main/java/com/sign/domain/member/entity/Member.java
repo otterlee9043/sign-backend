@@ -50,11 +50,11 @@ public class Member {
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @OrderBy("enteredAt desc")
-    private List<Joins> joins = new ArrayList<>();
+    private List<Joins> joins;
 
     @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinColumn(name = "MEMBER_ID")
-    private List<Room> hostingRooms = new ArrayList<>();
+    private List<Room> hostingRooms;
 
     public Member update(String username, String picture) {
         this.username = username;
