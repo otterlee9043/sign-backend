@@ -66,6 +66,7 @@ public class SecurityConfig {
                 .httpBasic().disable()
                 .csrf().disable()
                 .formLogin().disable()
+                .headers().disable()
                 .cors(withDefaults())
                 .sessionManagement().sessionCreationPolicy((SessionCreationPolicy.STATELESS))
                 .and()
@@ -179,5 +180,4 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
 }
