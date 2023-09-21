@@ -64,6 +64,7 @@ dependencies {
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     asciidoctorExtensions 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+    testImplementation 'com.h2database:h2:2.2.220'
 
 }
 
