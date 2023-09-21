@@ -21,6 +21,7 @@ public class WithMockCustomLoginUserSecurityContextFactory
                 .username("username")
                 .email("user@email.com")
                 .role(Role.USER)
+                .picture("profile-picture-url")
                 .build();
         ReflectionTestUtils.setField(member, "id", 999L);
 
