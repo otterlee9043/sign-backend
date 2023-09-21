@@ -2,9 +2,7 @@ package com.sign.domain.member.repository;
 
 import com.sign.domain.member.Role;
 import com.sign.domain.member.entity.Member;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -23,13 +21,15 @@ class MemberRepositoryTest {
     @Autowired
     MemberRepository memberRepository;
 
-    private Member getMember(String username, String email) {
-        Member member = Member.builder()
-                .username(username)
-                .email(email)
-                .role(Role.USER)
-                .build();
-        return memberRepository.save(member);
+    private static final Member member = Member.builder()
+            .username("user1234")
+            .email("user1234@email.com")
+            .role(Role.USER)
+            .build();
+
+    @BeforeEach
+    void cleanup() {
+        memberRepository.deleteAll();
     }
 
     @Nested
@@ -60,13 +60,13 @@ class MemberRepositoryTest {
             @DisplayName("Member가 포함된 Optional을 반환한다.")
             void itReturnsOptionalMember() {
                 //given
-                Member member = getMember("username", "user@email.com");
+                Member savedMember = memberRepository.save(member);
 
                 //when
-                Optional<Member> foundMember = memberRepository.findByUsername("username");
+                Optional<Member> foundMember = memberRepository.findByUsername(savedMember.getUsername());
 
                 //then
-                assertThat(member).isEqualTo(foundMember.get());
+                assertThat(savedMember).isEqualTo(foundMember.get());
             }
         }
     }
@@ -99,13 +99,13 @@ class MemberRepositoryTest {
             @DisplayName("Member가 포함된 Optional을 반환한다.")
             void itReturnsOptionalMember() {
                 //given
-                Member member = getMember("username", "user@email.com");
+                Member savedMember = memberRepository.save(member);
 
                 //when
-                Optional<Member> foundMember = memberRepository.findByEmail("user@email.com");
+                Optional<Member> foundMember = memberRepository.findByEmail(savedMember.getEmail());
 
                 //then
-                assertThat(member).isEqualTo(foundMember.get());
+                assertThat(savedMember).isEqualTo(foundMember.get());
             }
         }
     }
@@ -138,7 +138,7 @@ class MemberRepositoryTest {
             @DisplayName("Member가 포함된 Optional을 반환한다.")
             void itReturnsOptionalMember() {
                 //given
-                Member member = getMember("username", "user@email.com");
+                Member savedMember = memberRepository.save(member);
                 String refreshToken = "eyJhbGciOiJpXVCJ9.eyJpYXQMjJ9.tbDepxfz48wgRQ";
                 member.updateRefreshToken(refreshToken);
 
@@ -146,7 +146,7 @@ class MemberRepositoryTest {
                 Optional<Member> foundMember = memberRepository.findByRefreshToken(refreshToken);
 
                 //then
-                assertThat(member).isEqualTo(foundMember.get());
+                assertThat(savedMember).isEqualTo(foundMember.get());
             }
         }
     }

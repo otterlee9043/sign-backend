@@ -4,9 +4,7 @@ import com.sign.domain.classroom.entity.Room;
 import com.sign.domain.member.Role;
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -29,7 +27,7 @@ class RoomRepositoryTest {
     @Autowired
     RoomRepository roomRepository;
 
-    private Member getMember() {
+    private Member getSavedMember() {
         Member member = Member.builder()
                 .username("username")
                 .email("user@email.com")
@@ -38,19 +36,23 @@ class RoomRepositoryTest {
         return memberRepository.save(member);
     }
 
-    private Room getRoom(String roomName, String roomCode, Member host) {
-        Room room = Room.builder()
-                .name(roomName)
+    private static Room getRoom(Member host, String code) {
+        return Room.builder()
+                .name("room")
                 .host(host)
-                .code(roomCode)
+                .code(code)
                 .capacity(10)
                 .build();
-        return roomRepository.save(room);
     }
 
+    @BeforeEach
+    void cleanup() {
+        roomRepository.deleteAll();
+        memberRepository.deleteAll();
+    }
 
     @Nested
-    @DisplayName("findByUsername 메소드는")
+    @DisplayName("findByName 메소드는")
     class DescribeFindByName {
 
         @Nested
@@ -77,18 +79,18 @@ class RoomRepositoryTest {
             @DisplayName("List<Room>을 반환한다.")
             void itReturnsRoomList() {
                 //given
-                Member host = getMember();
-                String roomName = "room";
-                Room room1 = getRoom(roomName, "code1", host);
-                Room room2 = getRoom(roomName, "code2", host);
+                Member host = getSavedMember();
+
+                Room savedRoom1 = roomRepository.save(getRoom(host, "code1"));
+                Room savedRoom2 = roomRepository.save(getRoom(host, "code2"));
 
                 //when
-                List<Room> result = roomRepository.findByName(roomName);
+                List<Room> result = roomRepository.findByName(savedRoom1.getName());
 
                 //then
                 assertThat(result.size()).isEqualTo(2);
-                assertThat(result).contains(room1);
-                assertThat(result).contains(room2);
+                assertThat(result).contains(savedRoom1);
+                assertThat(result).contains(savedRoom2);
             }
 
         }
@@ -115,19 +117,18 @@ class RoomRepositoryTest {
         }
 
         @Nested
-        @DisplayName("올바른 방 이름이라면")
+        @DisplayName("올바른 방 코드라면")
         class ContextWithValidRoomName {
 
             @Test
             @DisplayName("Room을 포함한 Optional을 반환한다.")
             void itReturnsOptionalRoom() {
                 //given
-                Member host = getMember();
-                String roomCode = "code";
-                Room room = getRoom("name", roomCode, host);
+                Member host = getSavedMember();
+                Room room = roomRepository.save(getRoom(host, "code1"));
 
                 //when
-                Optional<Room> result = roomRepository.findByCode(roomCode);
+                Optional<Room> result = roomRepository.findByCode(room.getCode());
 
                 //then
                 assertThat(result.get()).isEqualTo(room);
@@ -143,19 +144,20 @@ class RoomRepositoryTest {
             class ContextWithValidHost {
 
                 @Test
-                @DisplayName("Optional.empty()를 반환한다.")
+                @DisplayName("List<Room>을 반환한다.")
                 void itReturnsRoomList() {
                     //given
-                    Member host = getMember();
-                    Room room1 = getRoom("name1", "code1", host);
-                    Room room2 = getRoom("name2", "code2", host);
+                    Member host = getSavedMember();
+                    Room savedRoom1 = roomRepository.save(getRoom(host, "code1"));
+                    Room savedRoom2 = roomRepository.save(getRoom(host, "code2"));
+
                     //when
                     List<Room> result = roomRepository.findByHost(host);
 
                     //then
                     assertThat(result.size()).isEqualTo(2);
-                    assertThat(result).contains(room1);
-                    assertThat(result).contains(room2);
+                    assertThat(result).contains(savedRoom1);
+                    assertThat(result).contains(savedRoom2);
                 }
 
             }
