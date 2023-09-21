@@ -29,6 +29,9 @@ class MemberServiceTest {
     @Mock
     private MemberRepository memberRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private MemberServiceImpl memberService;
 
@@ -56,7 +59,7 @@ class MemberServiceTest {
                         "testPassword",
                         "testPassword",
                         "test@example.com");
-                given(memberRepository.findByUsername(anyString())).willReturn(Optional.of(member));
+                given(memberRepository.findByEmail(anyString())).willReturn(Optional.of(member));
 
                 assertThrows(DataDuplicateException.class, () -> memberService.join(request));
             }
@@ -73,7 +76,7 @@ class MemberServiceTest {
                 SignupRequest request =
                         new SignupRequest("username", "", "", "username@email.com");
 
-                given(memberRepository.findByUsername(anyString())).willReturn(Optional.empty());
+                given(memberRepository.findByEmail(anyString())).willReturn(Optional.empty());
                 given(memberRepository.save(any(Member.class))).willReturn(member);
 
                 memberService.join(request);
