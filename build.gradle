@@ -41,7 +41,6 @@ dependencies {
 
     implementation group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.1'
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
-    implementation 'com.h2database:h2'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
@@ -65,7 +64,6 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     asciidoctorExtensions 'org.springframework.restdocs:spring-restdocs-asciidoctor'
     testImplementation 'com.h2database:h2:2.2.220'
-
 }
 
 tasks.named('test') {
