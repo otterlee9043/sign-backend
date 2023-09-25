@@ -34,8 +34,6 @@ public class MessageController {
             chatroomService.color(roomId, message.getSeatNum(), message.getMessage());
         } else if (type.equals(MessageType.DRAW_EMOJI)) {
             chatroomService.drawEmoji(roomId, message.getSeatNum(), message.getMessage());
-        } else if (type.equals(MessageType.TALK)) {
-            chatroomService.color(roomId, message.getSeatNum(), message.getMessage());
         } else if (type.equals(MessageType.CHANGE_SEAT)) {
             chatroomService.changeSeat(
                     roomId,
