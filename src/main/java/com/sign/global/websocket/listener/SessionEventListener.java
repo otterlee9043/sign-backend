@@ -5,6 +5,7 @@ import com.sign.global.security.authentication.LoginMember;
 import com.sign.global.websocket.dto.MessageType;
 import com.sign.global.websocket.dto.RoomMessage;
 import com.sign.global.websocket.service.ChatroomService;
+import com.sign.global.websocket.service.WebSocketSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -29,6 +30,8 @@ import java.util.Map;
 public class SessionEventListener {
     private final ChatroomService chatroomService;
 
+    private final WebSocketSessionRegistry webSocketSessionRegistry;
+
     private final SimpMessageSendingOperations sendingOperations;
 
     @EventListener
@@ -47,7 +50,7 @@ public class SessionEventListener {
     @EventListener
     public void handleSessionDisconnectEvent(SessionDisconnectEvent event) {
         String sessionId = getSessionId();
-        Long roomId = chatroomService.getRoomId(sessionId);
+        Long roomId = webSocketSessionRegistry.getRoomId(sessionId);
         RoomMessage message = RoomMessage.builder()
                 .type(MessageType.EXIT)
                 .seatNum(chatroomService.getSeatNum(sessionId))

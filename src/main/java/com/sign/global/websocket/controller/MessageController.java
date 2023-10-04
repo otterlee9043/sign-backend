@@ -1,8 +1,6 @@
 package com.sign.global.websocket.controller;
 
-import com.sign.global.security.authentication.LoginMember;
 import com.sign.global.websocket.service.ChatroomService;
-import com.sign.global.websocket.dto.ChatroomMessage;
 import com.sign.global.websocket.dto.MessageType;
 import com.sign.global.websocket.dto.RoomInfo;
 import com.sign.global.websocket.dto.RoomMessage;
@@ -51,7 +49,7 @@ public class MessageController {
         int seatNum = chatroomService.sit(memberId, roomId);
         RoomInfo classroomInfo = RoomInfo.builder()
                 .seatNum(seatNum)
-                .classRoomStates(chatroomService.getRoomStatesByRoomId(roomId))
+                .classRoomStates(chatroomService.getRoomStateByRoomId(roomId))
                 .build();
         sendingOperations.convertAndSend(
                 "/queue/temp/classroom/" + roomId + "/member/" + memberId,
