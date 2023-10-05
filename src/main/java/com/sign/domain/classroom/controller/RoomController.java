@@ -31,7 +31,6 @@ public class RoomController {
     @PostMapping("/classrooms")
     public void create(@Validated @RequestBody RoomCreateRequest request,
                        @AuthenticationPrincipal LoginMember loginMember) {
-        log.info("validated");
         classroomService.createRoom(request, loginMember.getMember());
     }
 
