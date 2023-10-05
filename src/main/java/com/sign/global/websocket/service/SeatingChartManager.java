@@ -1,8 +1,13 @@
 package com.sign.global.websocket.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
+@Component
 public class SeatingChartManager {
 
     private final Map<Long, Map<Long, Integer>> seatingCharts = new ConcurrentHashMap<>();
