@@ -32,29 +32,21 @@ public class ChatroomService {
     }
 
     public void color(Long roomId, int seatNum, String color) {
-        String[] state = roomStateManager.getSeatState(roomId, seatNum);
-        state[0] = color;
-        roomStateManager.updateRoomState(roomId, seatNum, state);
+        roomStateManager.changeColor(roomId, seatNum, color);
     }
 
     public void drawEmoji(Long roomId, int seatNum, String emoji) {
-        String[] state = roomStateManager.getSeatState(roomId, seatNum);
-        state[1] = emoji;
-        roomStateManager.updateRoomState(roomId, seatNum, state);
-    }
-
-    public void leave(Long memberId) {
-        Long roomId = seatingChartManager.getJoiningRoomId(memberId);
-
-        seatingChartManager.emptySeat(roomId, memberId);
-        int seatNum = seatingChartManager.getSeatNum(roomId, memberId);
-
-        roomStateManager.removeSeatState(roomId, seatNum);
+        roomStateManager.changeEmoji(roomId, seatNum, emoji);
     }
 
     public void exit(String sessionId) {
         Long memberId = webSocketSessionRegistry.getMemberId(sessionId);
-        leave(memberId);
+        Long roomId = seatingChartManager.getJoiningRoomId(memberId);
+
+        int seatNum = seatingChartManager.getSeatNum(roomId, memberId);
+        seatingChartManager.emptySeat(roomId, memberId);
+
+        roomStateManager.removeSeatState(roomId, seatNum);
 
         webSocketSessionRegistry.removeSession(sessionId);
     }
@@ -64,14 +56,14 @@ public class ChatroomService {
 
         String[] oldSeatState = roomStateManager.getSeatState(roomId, oldSeatNum);
         roomStateManager.updateRoomState(roomId, newSeatNum, oldSeatState);
-        roomStateManager.getSeatState(roomId, oldSeatNum);
+        roomStateManager.removeSeatState(roomId, oldSeatNum);
 
         seatingChartManager.updateSeatingChart(roomId, memberId, newSeatNum);
     }
 
     public int getSeatNum(String sessionId) {
         Long memberId = webSocketSessionRegistry.getMemberId(sessionId);
-        Long roomId = webSocketSessionRegistry.getMemberId(sessionId);
+        Long roomId = webSocketSessionRegistry.getRoomId(sessionId);
         return seatingChartManager.getSeatNum(roomId, memberId);
     }
 

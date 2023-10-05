@@ -2,12 +2,16 @@ package com.sign.global.websocket.service;
 
 import com.sign.domain.classroom.service.RoomService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
+@Slf4j
 @RequiredArgsConstructor
+@Component
 public class RoomStateManager {
 
     private final RoomService roomService;
@@ -30,6 +34,7 @@ public class RoomStateManager {
     }
 
     public void updateRoomState(Long roomId, int seatNum, String[] state) {
+
         Map<Integer, String[]> roomState = getRoomState(roomId);
         roomState.put(seatNum, state);
         lastState.put(roomId, roomState);
@@ -44,6 +49,18 @@ public class RoomStateManager {
         if (lastState.get(roomId).isEmpty()) {
             lastState.remove(roomId);
         }
+    }
+
+    public void changeColor(Long roomId, int seatNum, String color) {
+        String[] state = getSeatState(roomId, seatNum);
+        state[0] = color;
+        updateRoomState(roomId, seatNum, state);
+    }
+
+    public void changeEmoji(Long roomId, int seatNum, String emoji) {
+        String[] state = getSeatState(roomId, seatNum);
+        state[1] = emoji;
+        updateRoomState(roomId, seatNum, state);
     }
 
 }
