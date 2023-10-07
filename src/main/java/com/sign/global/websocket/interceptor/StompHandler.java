@@ -35,13 +35,6 @@ public class StompHandler implements ChannelInterceptor {
             }
             Authentication authentication = jwtProvider.getAuthentication(accessToken);
             jwtProvider.saveAuthentication(authentication);
-
-            Long roomId = Long.parseLong(accessor.getFirstNativeHeader("roomId"));
-            Long memberId = getMemberId(accessor);
-
-            if (chatroomService.isConnected(roomId, memberId)) {
-                throw new RuntimeException("이미 연결된 세션");
-            }
         }
         return ChannelInterceptor.super.postReceive(message, channel);
     }
