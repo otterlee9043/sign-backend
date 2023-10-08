@@ -24,11 +24,15 @@ public class ChatroomService {
     }
 
     public int sit(Long memberId, Long roomId) {
-        int seatNum = roomStateManager.getAvailableSeatNum(roomId);
-        roomStateManager.updateRoomState(roomId, seatNum, new String[]{"unselected", ""});
-        seatingChartManager.updateSeatingChart(roomId, memberId, seatNum);
+        Integer seatNum = seatingChartManager.getSeatNum(roomId, memberId);
+        if (seatNum != null) {
+            return seatNum;
+        }
+        int newSeatNum = roomStateManager.getAvailableSeatNum(roomId);
+        roomStateManager.updateRoomState(roomId, newSeatNum, new String[]{"unselected", ""});
+        seatingChartManager.updateSeatingChart(roomId, memberId, newSeatNum);
 
-        return seatNum;
+        return newSeatNum;
     }
 
     public void color(Long roomId, int seatNum, String color) {

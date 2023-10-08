@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -30,8 +31,10 @@ public class SeatingChartManager {
                 .orElseThrow(() -> new IllegalArgumentException("Member not found."));
     }
 
-    public int getSeatNum(Long roomId, Long memberId) {
-        return seatingCharts.get(roomId).get(memberId);
+    public Integer getSeatNum(Long roomId, Long memberId) {
+        return Optional.ofNullable(seatingCharts.get(roomId))
+                .map(seatingChart -> seatingChart.get(memberId))
+                .orElse(null);
     }
 
     public void emptySeat(Long roomId, Long memberId) {
