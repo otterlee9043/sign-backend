@@ -1,7 +1,9 @@
 package com.sign.global.websocket.listener;
 
 
+import com.sign.domain.classroom.service.RoomService;
 import com.sign.global.security.authentication.LoginMember;
+import com.sign.global.websocket.dto.ChatroomMessage;
 import com.sign.global.websocket.dto.MessageType;
 import com.sign.global.websocket.dto.RoomMessage;
 import com.sign.global.websocket.service.ChatroomService;
@@ -29,6 +31,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SessionEventListener {
     private final ChatroomService chatroomService;
+
+    private final RoomService roomService;
 
     private final WebSocketSessionRegistry webSocketSessionRegistry;
 
@@ -58,7 +62,24 @@ public class SessionEventListener {
         sendingOperations.convertAndSend(
                 "/topic/classroom/" + roomId,
                 message);
+
+        int seatNum = chatroomService.getSeatNum(sessionId);
+        int row = getRow(seatNum, roomService.getRoom(roomId).getCapacity());
+        ChatroomMessage chatroomMessage = ChatroomMessage.builder()
+                .type(MessageType.EXIT)
+                .row(row)
+                .seatNum(seatNum)
+                .build();
+        sendingOperations.convertAndSend(
+                "/topic/classroom/" + roomId + "/chat/" + row,
+                chatroomMessage);
+        log.info("chat subscription: {}", "/topic/classroom/" + roomId + "/chat/" + row);
         chatroomService.exit(sessionId);
+    }
+
+    private int getRow(int seatNum, int roomCapacity) {
+        int columnNum = roomCapacity > 50 ? 10 : 5;
+        return (seatNum / columnNum) + 1;
     }
 
     private String getSessionId() {
