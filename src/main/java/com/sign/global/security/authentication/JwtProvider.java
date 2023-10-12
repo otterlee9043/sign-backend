@@ -160,6 +160,7 @@ public class JwtProvider {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setHeader("Access-Control-Expose-Headers", accessTokenHeader);
         response.setHeader(accessTokenHeader, accessToken);
+
         Cookie cookie = new Cookie(refreshTokenHeader, refreshToken);
         cookie.setMaxAge(refreshTokenExpirationPeriod.intValue());
         cookie.setHttpOnly(true);
