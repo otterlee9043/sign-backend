@@ -70,35 +70,39 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 .sessionManagement().sessionCreationPolicy((SessionCreationPolicy.STATELESS))
                 .and()
-                .authorizeRequests()
-                .mvcMatchers("/api/v1/members",
-                        "/api/v1/member/login",
-                        "/api/v1/member/username/*/exists",
-                        "/api/v1/members/email/*/duplication",
-                        "/oauth2/authorization/*",
-                        "/login/oauth2/code/*",
-                        "/css/**", "/images/**", "/js/**", "/favicon.ico",
-                        "/ws/**",
-                        "/swagger-ui/**", "/v3/api-docs/**"
-                ).permitAll()
-                .mvcMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .mvcMatchers("/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
+                    .authorizeRequests()
+                        .mvcMatchers("/api/v1/members",
+                                "/api/v1/member/login",
+                                "/api/v1/member/username/*/exists",
+                                "/api/v1/members/email/*/duplication",
+                                "/oauth2/authorization/*",
+                                "/login/oauth2/code/*",
+                                "/login/oauth2/*",
+                                "/member/login/oauth2/code/*",
+                                "/css/**", "/images/**", "/js/**", "/favicon.ico",
+                                "/ws/**",
+                                "/swagger-ui/**", "/v3/api-docs/**"
+                        ).permitAll()
+                        .mvcMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .mvcMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
                 .and()
-                .addFilterAfter(jsonUsernamePasswordAuthenticationFilter(), LogoutFilter.class)
-                .addFilterBefore(jwtAuthenticationFilter(), JsonUsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling()
-                .accessDeniedHandler(this::handleAccessDenied)
-                .authenticationEntryPoint(this::handleAuthenticationException)
+                    .addFilterAfter(jsonUsernamePasswordAuthenticationFilter(), LogoutFilter.class)
+                    .addFilterBefore(jwtAuthenticationFilter(), JsonUsernamePasswordAuthenticationFilter.class)
+                    .exceptionHandling()
+                    .accessDeniedHandler(this::handleAccessDenied)
+                    .authenticationEntryPoint(this::handleAuthenticationException)
                 .and()
-                .logout()
-                .logoutUrl("/api/v1/member/logout")
-                .logoutSuccessHandler(logoutSuccessHandler())
-                .and()
-                .oauth2Login()
-                .successHandler(oAuth2LoginSuccessHandler)
-                .failureHandler(oAuth2LoginFailureHandler)
-                .userInfoEndpoint().userService(oAuth2UserService);
+                    .logout()
+                        .logoutUrl("/api/v1/member/logout")
+                        .logoutSuccessHandler(logoutSuccessHandler());
+//                .and()
+//                    .oauth2Login()
+//                            .redirectionEndpoint(redirection -> redirection
+//                                            .baseUri("/member/login/oauth2/code/*"))
+//                            .successHandler(oAuth2LoginSuccessHandler)
+//                            .failureHandler(oAuth2LoginFailureHandler)
+//                            .userInfoEndpoint().userService(oAuth2UserService);
         return http.build();
     }
 

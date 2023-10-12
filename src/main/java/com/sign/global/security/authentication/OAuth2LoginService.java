@@ -37,7 +37,7 @@ public class OAuth2LoginService {
                 + "?client_id=" + clientRegistration.getClientId()
                 + "&response_type=code"
                 + "&redirect_uri=" + clientRegistration.getRedirectUri()
-                + "&scope=" + String.join(",", clientRegistration.getScopes());
+                + "&scope=" + String.join("%20", clientRegistration.getScopes());
     }
 
     public Member login(String provider, String code){
