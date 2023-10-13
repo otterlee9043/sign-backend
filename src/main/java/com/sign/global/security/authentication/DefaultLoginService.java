@@ -14,8 +14,10 @@ import java.util.Optional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MemberSecurityService implements UserDetailsService {
+public class DefaultLoginService implements UserDetailsService {
+
     private final MemberRepository memberRepository;
+
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
