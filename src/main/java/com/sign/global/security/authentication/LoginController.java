@@ -1,6 +1,7 @@
 package com.sign.global.security.authentication;
 
 import com.sign.domain.member.entity.Member;
+import com.sign.global.security.authentication.oauth2.OAuth2LoginService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
