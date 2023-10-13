@@ -1,8 +1,9 @@
-package com.sign.global.security.authentication;
+package com.sign.global.security.authentication.oauth2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
+import com.sign.global.security.authentication.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -20,6 +21,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class OAuth2LoginService {
+
     private final InMemoryClientRegistrationRepository clientRegistrationRepository;
 
     private final JwtProvider jwtProvider;
@@ -42,12 +44,11 @@ public class OAuth2LoginService {
 
     public Member login(String provider, String code){
         ClientRegistration clientRegistration = clientRegistrationRepository.findByRegistrationId(provider);
-        OAuth2Token oAuth2Token = getAccessToken(provider, clientRegistration, code);
-        Member member = loadUser(clientRegistration, oAuth2Token.getAccessToken());
-        return member;
+        OAuthToken oAuthToken = getAccessToken(provider, clientRegistration, code);
+        return loadMember(clientRegistration, oAuthToken.getAccessToken());
     }
 
-    public OAuth2Token getAccessToken(String registrationId, ClientRegistration clientRegistration, String code){
+    public OAuthToken getAccessToken(String registrationId, ClientRegistration clientRegistration, String code){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         HttpEntity<MultiValueMap<String, String>> tokenRequest =
@@ -56,21 +57,20 @@ public class OAuth2LoginService {
                 tokenRequest, String.class);
 
         try {
-            Map map = objectMapper.readValue(response.getBody(), Map.class);
-            return OAuth2Token.of(registrationId, map);
+            Map tokenAttributes = objectMapper.readValue(response.getBody(), Map.class);
+            return OAuthToken.of(registrationId, tokenAttributes);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Member loadUser(ClientRegistration clientRegistration, String token) {
+    private Member loadMember(ClientRegistration clientRegistration, String token) {
         String userNameAttributeName = clientRegistration.getProviderDetails()
                 .getUserInfoEndpoint().getUserNameAttributeName();
         Map<String, Object> map = (Map<String, Object>) getOAuth2Attributes(clientRegistration, token);
-        OAuthAttributes attributes =
-                OAuthAttributes.of(clientRegistration.getRegistrationId(), userNameAttributeName, map);
-        Member member = saveOrUpdate(attributes);
-        return member;
+        OAuth2Attributes attributes =
+                OAuth2Attributes.of(clientRegistration.getRegistrationId(), userNameAttributeName, map);
+        return saveOrUpdateMember(attributes);
     }
 
     private Map<?, ?> getOAuth2Attributes(ClientRegistration clientRegistration, String token) {
@@ -88,12 +88,13 @@ public class OAuth2LoginService {
         }
     }
 
-    private Member saveOrUpdate(OAuthAttributes attributes) {
+    private Member saveOrUpdateMember(OAuth2Attributes attributes) {
         Member member = memberRepository.findByEmail(attributes.getEmail())
                 .map(entity -> entity.update(attributes.getUsername(), attributes.getPicture()))
                 .orElse(attributes.toEntity());
         return memberRepository.save(member);
     }
+
     private MultiValueMap<String, String> setParamsForTokenRequest
             (ClientRegistration clientRegistration, String code) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();

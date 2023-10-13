@@ -1,4 +1,4 @@
-package com.sign.global.security.authentication;
+package com.sign.global.security.authentication.oauth2;
 
 import com.sign.domain.member.Role;
 import com.sign.domain.member.entity.Member;
@@ -12,17 +12,24 @@ import java.util.Map;
 @Slf4j
 @Getter
 @ToString
-public class OAuthAttributes {
+public class OAuth2Attributes {
+
     private Map<String, Object> attributes;
+
     private String nameAttributeKey;
+
     private String username;
+
     private String email;
+
     private String picture;
+
     private String provider;
 
+
     @Builder
-    public OAuthAttributes(Map<String, Object> attributes, String nameAttributeKey,
-                           String username, String email, String picture, String provider){
+    public OAuth2Attributes(Map<String, Object> attributes, String nameAttributeKey,
+                            String username, String email, String picture, String provider){
         this.attributes = attributes;
         this.nameAttributeKey = nameAttributeKey;
         this.username = username;
@@ -31,7 +38,7 @@ public class OAuthAttributes {
         this.provider = provider;
     }
 
-    public static OAuthAttributes of(String registrationId, String userNameAttributeName, Map<String, Object> attributes){
+    public static OAuth2Attributes of(String registrationId, String userNameAttributeName, Map<String, Object> attributes){
         if ("kakao".equals(registrationId)){
             return ofKakao("id", attributes);
         }
@@ -39,11 +46,10 @@ public class OAuthAttributes {
         return ofGoogle(userNameAttributeName, attributes);
     }
 
-    public static OAuthAttributes ofKakao(String userNameAttributeNAme, Map<String, Object> attributes){
+    public static OAuth2Attributes ofKakao(String userNameAttributeNAme, Map<String, Object> attributes){
         Map<String, Object> accountInfo = (Map<String, Object>) attributes.get("kakao_account");
         Map<String, Object> profile = (Map<String, Object>) accountInfo.get("profile");
-
-        return OAuthAttributes.builder()
+        return OAuth2Attributes.builder()
                 .username((String) profile.get("nickname"))
                 .email((String) accountInfo.get("email"))
                 .picture((String) profile.get("profile_image_url"))
@@ -53,9 +59,8 @@ public class OAuthAttributes {
                 .build();
     }
 
-    // map 객체를 OAuthAttributes 객체로 전환
-    private static OAuthAttributes ofGoogle(String userNameAttributeNAme, Map<String, Object> attributes){
-        return OAuthAttributes.builder()
+    private static OAuth2Attributes ofGoogle(String userNameAttributeNAme, Map<String, Object> attributes){
+        return OAuth2Attributes.builder()
                 .username((String) attributes.get("name"))
                 .email((String) attributes.get("email"))
                 .picture((String) attributes.get("picture"))
