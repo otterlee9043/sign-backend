@@ -1,5 +1,5 @@
 package com.sign.global.websocket.dto;
 
 public enum MessageType {
-    ENTER, COLOR, DRAW_EMOJI, TALK, EXIT, CHANGE_SEAT
+    COLOR, DRAW_EMOJI, EXIT, CHANGE_SEAT
 }
