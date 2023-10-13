@@ -42,20 +42,22 @@ public class OAuth2LoginService {
 
     public Member login(String provider, String code){
         ClientRegistration clientRegistration = clientRegistrationRepository.findByRegistrationId(provider);
-        KakaoToken kakaoToken = getAccessToken(clientRegistration, code);
-        Member member = loadUser(clientRegistration, kakaoToken.getAccess_token());
+        OAuth2Token oAuth2Token = getAccessToken(provider, clientRegistration, code);
+        Member member = loadUser(clientRegistration, oAuth2Token.getAccessToken());
         return member;
     }
 
-    public KakaoToken getAccessToken(ClientRegistration clientRegistration, String code){
+    public OAuth2Token getAccessToken(String registrationId, ClientRegistration clientRegistration, String code){
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         HttpEntity<MultiValueMap<String, String>> tokenRequest =
-                new HttpEntity<>(getParamsForTokenRequest(clientRegistration, code), headers);
+                new HttpEntity<>(setParamsForTokenRequest(clientRegistration, code), headers);
         ResponseEntity<String> response = restTemplate.postForEntity(clientRegistration.getProviderDetails().getTokenUri(),
                 tokenRequest, String.class);
+
         try {
-            return objectMapper.readValue(response.getBody(), KakaoToken.class);
+            Map map = objectMapper.readValue(response.getBody(), Map.class);
+            return OAuth2Token.of(registrationId, map);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -65,7 +67,8 @@ public class OAuth2LoginService {
         String userNameAttributeName = clientRegistration.getProviderDetails()
                 .getUserInfoEndpoint().getUserNameAttributeName();
         Map<String, Object> map = (Map<String, Object>) getOAuth2Attributes(clientRegistration, token);
-        OAuthAttributes attributes = OAuthAttributes.of(clientRegistration.getRegistrationId(), userNameAttributeName, map);
+        OAuthAttributes attributes =
+                OAuthAttributes.of(clientRegistration.getRegistrationId(), userNameAttributeName, map);
         Member member = saveOrUpdate(attributes);
         return member;
     }
@@ -91,7 +94,8 @@ public class OAuth2LoginService {
                 .orElse(attributes.toEntity());
         return memberRepository.save(member);
     }
-    private MultiValueMap<String, String> getParamsForTokenRequest(ClientRegistration clientRegistration, String code) {
+    private MultiValueMap<String, String> setParamsForTokenRequest
+            (ClientRegistration clientRegistration, String code) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("code", code);
         params.add("grant_type", clientRegistration.getAuthorizationGrantType().getValue());
