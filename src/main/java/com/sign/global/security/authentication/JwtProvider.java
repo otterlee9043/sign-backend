@@ -2,6 +2,8 @@ package com.sign.global.security.authentication;
 
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
+import com.sign.global.security.authentication.DefaultLoginService;
+import com.sign.global.security.authentication.LoginMember;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -31,11 +33,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Component
 public class JwtProvider {
-    private final String accessTokenHeader = "Access-Token";
+    private final String accessTokenHeader = "Authorization";
 
     private final String refreshTokenHeader = "Refresh-Token";
 
-    private final MemberSecurityService userDetailService;
+    private final DefaultLoginService userDetailService;
 
     private final MemberRepository memberRepository;
 
@@ -49,14 +51,6 @@ public class JwtProvider {
     private Long refreshTokenExpirationPeriod;
 
     private Key secretKey;
-
-    public String getAccessTokenHeader() {
-        return accessTokenHeader;
-    }
-
-    public String getRefreshTokenHeader() {
-        return refreshTokenHeader;
-    }
 
 
     @PostConstruct
@@ -114,7 +108,15 @@ public class JwtProvider {
     }
 
     public Optional<String> extractAccessToken(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader(accessTokenHeader));
+        String headerValue = request.getHeader(accessTokenHeader);
+        return Optional.ofNullable(retrieveTokenFromHeaderValue(headerValue));
+    }
+
+    private String retrieveTokenFromHeaderValue(String headerValue) {
+        if (headerValue != null && headerValue.startsWith("Bearer ")) {
+            return headerValue.substring(7);
+        }
+        return null;
     }
 
     public boolean isTokenValid(String token) {
@@ -129,7 +131,7 @@ public class JwtProvider {
     public void sendAccessToken(HttpServletResponse response, String accessToken) {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setHeader("Access-Control-Expose-Headers", accessTokenHeader);
-        response.setHeader(accessTokenHeader, accessToken);
+        response.setHeader(accessTokenHeader, "Bearer " + accessToken);
     }
 
     public void sendRefreshToken(HttpServletResponse response, String refreshToken) {
@@ -159,7 +161,7 @@ public class JwtProvider {
     public void sendAccessAndRefreshToken(HttpServletResponse response, String accessToken, String refreshToken) {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setHeader("Access-Control-Expose-Headers", accessTokenHeader);
-        response.setHeader(accessTokenHeader, accessToken);
+        response.setHeader(accessTokenHeader, "Bearer " + accessToken);
 
         Cookie cookie = new Cookie(refreshTokenHeader, refreshToken);
         cookie.setMaxAge(refreshTokenExpirationPeriod.intValue());
