@@ -4,8 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sign.domain.member.repository.MemberRepository;
 import com.sign.global.exception.ErrorResult;
 import com.sign.global.security.authentication.JwtProvider;
-import com.sign.global.security.authentication.MemberSecurityService;
-import com.sign.global.security.authentication.OAuth2MemberService;
+import com.sign.global.security.authentication.DefaultLoginService;
 import com.sign.global.security.filter.JsonUsernamePasswordAuthenticationFilter;
 import com.sign.global.security.filter.JwtAuthenticationFilter;
 import com.sign.global.security.handler.*;
@@ -50,13 +49,7 @@ public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
 
-    private final OAuth2MemberService oAuth2UserService;
-
-    private final MemberSecurityService memberSecurityService;
-
-    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-
-    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+    private final DefaultLoginService defaultLoginService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -96,13 +89,6 @@ public class SecurityConfig {
                     .logout()
                         .logoutUrl("/api/v1/member/logout")
                         .logoutSuccessHandler(logoutSuccessHandler());
-//                .and()
-//                    .oauth2Login()
-//                            .redirectionEndpoint(redirection -> redirection
-//                                            .baseUri("/member/login/oauth2/code/*"))
-//                            .successHandler(oAuth2LoginSuccessHandler)
-//                            .failureHandler(oAuth2LoginFailureHandler)
-//                            .userInfoEndpoint().userService(oAuth2UserService);
         return http.build();
     }
 
@@ -139,7 +125,7 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setPasswordEncoder(passwordEncoder());
-        provider.setUserDetailsService(memberSecurityService);
+        provider.setUserDetailsService(defaultLoginService);
         return new ProviderManager(provider);
     }
 
