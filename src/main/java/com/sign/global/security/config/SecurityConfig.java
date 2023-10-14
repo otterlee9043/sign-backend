@@ -29,6 +29,7 @@ import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -64,21 +65,17 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy((SessionCreationPolicy.STATELESS))
                 .and()
                     .authorizeRequests()
-                        .mvcMatchers("/api/v1/members",
-                                "/api/v1/member/login",
-                                "/api/v1/member/username/*/exists",
-                                "/api/v1/members/email/*/duplication",
-                                "/oauth2/authorization/*",
-                                "/login/oauth2/code/*",
-                                "/login/oauth2/*",
-                                "/member/login/oauth2/code/*",
-                                "/css/**", "/images/**", "/js/**", "/favicon.ico",
-                                "/ws/**",
-                                "/swagger-ui/**", "/v3/api-docs/**"
-                        ).permitAll()
-                        .mvcMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .mvcMatchers("/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
+                    .mvcMatchers(HttpMethod.POST, "/api/v1/members").permitAll()
+                    .mvcMatchers(HttpMethod.GET, "/api/v1/members/email/*/duplication").permitAll()
+                    .mvcMatchers(HttpMethod.GET, "/oauth2/authorization/*").permitAll()
+                    .mvcMatchers(HttpMethod.GET, "/login/oauth2/code/*").permitAll()
+                    .mvcMatchers(HttpMethod.GET, "/css/**").permitAll()
+                    .mvcMatchers(HttpMethod.GET, "/images/**").permitAll()
+                    .mvcMatchers(HttpMethod.GET, "/js/**").permitAll()
+                    .mvcMatchers(HttpMethod.GET, "/favicon.ico").permitAll()
+                    .mvcMatchers(HttpMethod.GET, "/ws/**").permitAll()
+                    .mvcMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    .anyRequest().authenticated()
                 .and()
                     .addFilterAfter(jsonUsernamePasswordAuthenticationFilter(), LogoutFilter.class)
                     .addFilterBefore(jwtAuthenticationFilter(), JsonUsernamePasswordAuthenticationFilter.class)
