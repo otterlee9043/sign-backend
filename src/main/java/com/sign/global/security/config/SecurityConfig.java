@@ -25,11 +25,11 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -78,7 +78,7 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
                 .and()
                     .addFilterAfter(jsonUsernamePasswordAuthenticationFilter(), LogoutFilter.class)
-                    .addFilterBefore(jwtAuthenticationFilter(), JsonUsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(jwtAuthenticationFilter(), FilterSecurityInterceptor.class)
                     .exceptionHandling()
                     .accessDeniedHandler(this::handleAccessDenied)
                     .authenticationEntryPoint(this::handleAuthenticationException)
