@@ -5,6 +5,7 @@ import com.sign.global.security.authentication.oauth2.OAuth2LoginService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -16,6 +17,8 @@ import java.io.IOException;
 public class LoginController {
 
     private final OAuth2LoginService oAuth2LoginService;
+
+    private final JwtProvider jwtProvider;
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/oauth2/authorization/{provider}")
@@ -32,6 +35,13 @@ public class LoginController {
         log.info("/login/oauth2/code/{}", provider);
         Member member = oAuth2LoginService.login(provider, code);
         oAuth2LoginService.sendAccessTokenAndRefreshToken(member, response);
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/api/v1/member/logout")
+    public void logout(@AuthenticationPrincipal LoginMember loginMember, HttpServletResponse response) {
+        loginMember.getMember().updateRefreshToken("");
+        jwtProvider.revokeRefreshToken(response);
     }
 
 }
