@@ -81,11 +81,7 @@ public class SecurityConfig {
                     .addFilterBefore(jwtAuthenticationFilter(), FilterSecurityInterceptor.class)
                     .exceptionHandling()
                     .accessDeniedHandler(this::handleAccessDenied)
-                    .authenticationEntryPoint(this::handleAuthenticationException)
-                .and()
-                    .logout()
-                        .logoutUrl("/api/v1/member/logout")
-                        .logoutSuccessHandler(logoutSuccessHandler());
+                    .authenticationEntryPoint(this::handleAuthenticationException);
         return http.build();
     }
 
