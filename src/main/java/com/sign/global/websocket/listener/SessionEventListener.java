@@ -45,7 +45,7 @@ public class SessionEventListener {
                 NativeMessageHeaderAccessor.getAccessor(event.getMessage(), SimpMessageHeaderAccessor.class);
 
         Long memberId = getMemberId(stompHeaderAccessor);
-        Long roomId = Long.parseLong(getRoomId(messageHeaderAccessor));
+        Long roomId = getRoomId(messageHeaderAccessor);
         String sessionId = getSessionId();
 
         chatroomService.enter(sessionId, memberId, roomId);
@@ -93,10 +93,10 @@ public class SessionEventListener {
         return loginMember.getId();
     }
 
-    private String getRoomId(MessageHeaderAccessor accessor) {
+    private Long getRoomId(MessageHeaderAccessor accessor) {
         GenericMessage generic = (GenericMessage) accessor.getHeader("simpConnectMessage");
         Map<String, Object> nativeHeaders = (Map<String, Object>) generic.getHeaders().get("nativeHeaders");
-        return (String) ((List) nativeHeaders.get("roomId")).get(0);
+        return Long.parseLong((String) ((List) nativeHeaders.get("roomId")).get(0));
     }
 
 }
