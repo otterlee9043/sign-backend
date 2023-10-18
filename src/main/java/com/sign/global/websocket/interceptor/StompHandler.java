@@ -10,6 +10,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -19,8 +20,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class StompHandler implements ChannelInterceptor {
 
-    private final ChatroomService chatroomService;
-
     private final JwtProvider jwtProvider;
 
     @Override
@@ -28,21 +27,29 @@ public class StompHandler implements ChannelInterceptor {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         SimpMessageType messageType = accessor.getMessageType();
 
-        String accessToken = accessor.getFirstNativeHeader("Access-Token");
         if (messageType.equals(SimpMessageType.CONNECT)) {
-            if (!jwtProvider.isTokenValid(accessToken) || accessor.getUser() == null) {
+            String accessToken = getAccessToken(accessor);
+            if (!jwtProvider.isTokenValid(accessToken)) {
                 throw new BadCredentialsException("토큰이 유효하지 않음");
             }
             Authentication authentication = jwtProvider.getAuthentication(accessToken);
             jwtProvider.saveAuthentication(authentication);
+
+            accessor.setUser(authentication);
+            Message<?> authenticatedMessage =
+                    MessageBuilder.createMessage(message.getPayload(), accessor.getMessageHeaders());
+            return ChannelInterceptor.super.postReceive(authenticatedMessage, channel);
         }
+
         return ChannelInterceptor.super.postReceive(message, channel);
     }
 
-    private Long getMemberId(StompHeaderAccessor accessor) {
-        Authentication simpUser = (Authentication) accessor.getHeader("simpUser");
-        LoginMember loginMember = (LoginMember) simpUser.getPrincipal();
-        return loginMember.getId();
+    private String getAccessToken(StompHeaderAccessor accessor) {
+        String authorizationHeader = accessor.getFirstNativeHeader("Authorization");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+        return null;
     }
 
 }
