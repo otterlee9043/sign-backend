@@ -9,11 +9,7 @@ spring:
       client:
         registration:
           google:
-            redirect-uri: http://load-balancer-1-1600774340.ap-northeast-2.elb.amazonaws.com/sign/login/oauth2/code/google
+            redirect-uri: http://the-sign.net/login/oauth2/code/google
           kakao:
-            redirect-uri: http://load-balancer-1-1600774340.ap-northeast-2.elb.amazonaws.com/sign/login/oauth2/code/kakao
+            redirect-uri: http://the-sign.net/login/oauth2/code/kakao
 
-
-oauth:
-  login:
-    success-redirect-uri: http://load-balancer-1-1600774340.ap-northeast-2.elb.amazonaws.com/sign/home
