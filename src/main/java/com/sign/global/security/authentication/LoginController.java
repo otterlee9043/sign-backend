@@ -8,11 +8,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+
 @Slf4j
 @RequiredArgsConstructor
+@RequestMapping("/api/v1")
 @RestController
 public class LoginController {
 
@@ -38,10 +41,19 @@ public class LoginController {
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/api/v1/member/logout")
+    @PostMapping("/logout")
     public void logout(@AuthenticationPrincipal LoginMember loginMember, HttpServletResponse response) {
         loginMember.getMember().updateRefreshToken("");
         jwtProvider.revokeRefreshToken(response);
+    }
+
+    @ResponseStatus(HttpStatus.OK)
+    @PostMapping("/refresh/access-token")
+    public void refreshAccessToken(HttpServletRequest request,
+                                   HttpServletResponse response) {
+        String refreshToken = jwtProvider.extractRefreshToken(request);
+        String reissuedAccessToken = jwtProvider.reissueAccessToken(refreshToken);
+        jwtProvider.sendAccessToken(response, reissuedAccessToken);
     }
 
 }

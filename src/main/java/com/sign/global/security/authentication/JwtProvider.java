@@ -15,10 +15,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,6 +60,7 @@ public class JwtProvider {
         secretKey = Keys.hmacShaKeyFor(salt.getBytes(StandardCharsets.UTF_8));
     }
 
+
     public String createAccessToken(String username) {
         Claims claims = Jwts.claims().setSubject(username);
         Date now = new Date();
@@ -69,6 +72,7 @@ public class JwtProvider {
                 .compact();
     }
 
+
     public String createRefreshToken() {
         Date now = new Date();
         return Jwts.builder()
@@ -78,46 +82,42 @@ public class JwtProvider {
                 .compact();
     }
 
+
     public Authentication getAuthentication(String accessToken) {
         UserDetails userDetails = userDetailService.loadUserByUsername(this.getUsername(accessToken));
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
-    public Authentication getAuthentication(Member member) {
-        UserDetails userDetails = new LoginMember(member);
-        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
-    }
 
     public void saveAuthentication(Authentication authentication) {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
+
 
     public String getUsername(String token) {
         return Jwts.parserBuilder().setSigningKey(secretKey).build()
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
-    public Optional<String> extractRefreshToken(HttpServletRequest request) {
-        if (request.getCookies() != null) {
-            return Arrays.stream(request.getCookies())
-                    .filter(cookie -> cookie.getName().equals(refreshTokenHeader))
-                    .map(Cookie::getValue)
-                    .findFirst();
+
+    public String extractAccessToken(HttpServletRequest request) {
+        String accessToken = request.getHeader(accessTokenHeader);
+        if (accessToken == null) {
+            throw new IllegalArgumentException("Access Token 존재하지 않음");
         }
-        return Optional.empty();
+        return accessToken;
     }
 
-    public Optional<String> extractAccessToken(HttpServletRequest request) {
-        String headerValue = request.getHeader(accessTokenHeader);
-        return Optional.ofNullable(retrieveTokenFromHeaderValue(headerValue));
+
+    public String extractRefreshToken(HttpServletRequest request) {
+        return Arrays.stream(request.getCookies())
+                .filter(cookie -> cookie.getName().equals(refreshTokenHeader))
+                .map(Cookie::getValue)
+                .filter(this::isTokenValid)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("잘못된 Refresh-Token 쿠키"));
     }
 
-    private String retrieveTokenFromHeaderValue(String headerValue) {
-        if (headerValue != null && headerValue.startsWith("Bearer ")) {
-            return headerValue.substring(7);
-        }
-        return null;
-    }
 
     public boolean isTokenValid(String token) {
         try {
@@ -128,35 +128,13 @@ public class JwtProvider {
         }
     }
 
+
     public void sendAccessToken(HttpServletResponse response, String accessToken) {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setHeader("Access-Control-Expose-Headers", accessTokenHeader);
         response.setHeader(accessTokenHeader, "Bearer " + accessToken);
     }
 
-    public void sendRefreshToken(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie(refreshTokenHeader, refreshToken);
-        cookie.setMaxAge(refreshTokenExpirationPeriod.intValue());
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        response.addCookie(cookie);
-    }
-
-    public void updateRefreshToken(String email, String refreshToken) {
-        memberRepository.findByEmail(email)
-                .ifPresentOrElse(
-                        member -> memberRepository.save(member.updateRefreshToken(refreshToken)),
-                        () -> new Exception("일치하는 회원이 없습니다.")
-                );
-    }
-
-    public void revokeRefreshToken(HttpServletResponse response) {
-        Cookie cookie = new Cookie(refreshTokenHeader, null);
-        cookie.setMaxAge(0);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        response.addCookie(cookie);
-    }
 
     public void sendAccessAndRefreshToken(HttpServletResponse response, String accessToken, String refreshToken) {
         response.setStatus(HttpServletResponse.SC_OK);
@@ -171,4 +149,27 @@ public class JwtProvider {
     }
 
 
+    public String reissueAccessToken(String refreshToken) {
+        Member refreshTokenOwner = memberRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new EntityNotFoundException("해당 Refresh Token으로 사용자 찾을 수 없음."));
+        return createAccessToken(refreshTokenOwner.getEmail());
+    }
+
+
+    public void updateRefreshToken(String email, String refreshToken) {
+        memberRepository.findByEmail(email)
+                .ifPresentOrElse(
+                        member -> memberRepository.save(member.updateRefreshToken(refreshToken)),
+                        () -> new Exception("일치하는 회원이 없습니다.")
+                );
+    }
+
+
+    public void revokeRefreshToken(HttpServletResponse response) {
+        Cookie cookie = new Cookie(refreshTokenHeader, null);
+        cookie.setMaxAge(0);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+    }
 }
