@@ -20,4 +20,14 @@ public class GlobalExceptionHandler {
                 .message(e.getMessage())
                 .build();
     }
+
+    @ResponseStatus(HttpStatus.OK)
+    @ExceptionHandler
+    public ErrorResult invalidRefreshTokenException(InvalidRefreshTokenException e) {
+        log.warn("InvalidRefreshTokenException occurred. Message: {}", e.getMessage());
+        return ErrorResult.builder()
+                .code("NOT LOGGED IN")
+                .message(e.getMessage())
+                .build();
+    }
 }
