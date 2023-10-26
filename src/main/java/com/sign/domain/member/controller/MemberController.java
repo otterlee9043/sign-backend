@@ -28,6 +28,7 @@ public class MemberController {
 
     private final RoomService classroomService;
 
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/members")
     public void signup(@RequestBody @Valid SignupRequest request) throws Exception {
