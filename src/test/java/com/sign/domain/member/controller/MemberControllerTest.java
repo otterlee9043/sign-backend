@@ -56,7 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles(profiles = {"test"})
+@ActiveProfiles(profiles = {"test, oauth"})
 @MockBean(JpaMetamodelMappingContext.class)
 @Import({TestSecurityConfig.class})
 @ExtendWith(RestDocumentationExtension.class)
@@ -104,8 +104,10 @@ class MemberControllerTest {
                RestDocumentationContextProvider provider) {
         this.mockMvc = MockMvcBuilders
                 .webAppContextSetup(webApplicationContext)
-                .apply(documentationConfiguration(provider))
                 .addFilters(new CharacterEncodingFilter("UTF-8", true))
+                .apply(documentationConfiguration(provider).uris()
+                        .withHost("the-sign.net")
+                        .withPort(80))
                 .apply(springSecurity())
                 .build();
     }

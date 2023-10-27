@@ -11,7 +11,7 @@ import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
 import com.sign.domain.member.service.MemberServiceImpl;
 import com.sign.global.exception.NotFoundException;
-import com.sign.global.security.authentication.JwtProvider;
+import com.sign.global.security.authentication.jwt.JwtProvider;
 import com.sign.global.security.authentication.LoginMember;
 import com.sign.global.security.config.TestSecurityConfig;
 import com.sign.util.WithMockCustomLoginUser;
@@ -52,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@ActiveProfiles(profiles = {"test"})
+@ActiveProfiles(profiles = {"test, oauth"})
 @MockBean(JpaMetamodelMappingContext.class)
 @WithMockCustomLoginUser
 @Import({TestSecurityConfig.class})
@@ -75,6 +75,7 @@ class RoomControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
 
     private MockMvc mockMvc;
 
@@ -111,7 +112,9 @@ class RoomControllerTest {
                RestDocumentationContextProvider provider) {
         this.mockMvc = MockMvcBuilders
                 .webAppContextSetup(webApplicationContext)
-                .apply(documentationConfiguration(provider))
+                .apply(documentationConfiguration(provider).uris()
+                        .withHost("the-sign.net")
+                        .withPort(80))
                 .addFilters(new CharacterEncodingFilter("UTF-8", true))
                 .apply(springSecurity())
                 .build();
