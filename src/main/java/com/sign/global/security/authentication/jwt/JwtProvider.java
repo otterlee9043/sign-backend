@@ -1,9 +1,9 @@
-package com.sign.global.security.authentication;
+package com.sign.global.security.authentication.jwt;
 
 import com.sign.domain.member.entity.Member;
 import com.sign.domain.member.repository.MemberRepository;
-import com.sign.global.security.authentication.DefaultLoginService;
-import com.sign.global.security.authentication.LoginMember;
+import com.sign.global.exception.InvalidRefreshTokenException;
+import com.sign.global.security.authentication.DefaultUserDetailsService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -35,11 +35,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Component
 public class JwtProvider {
+
     private final String accessTokenHeader = "Authorization";
 
     private final String refreshTokenHeader = "Refresh-Token";
 
-    private final DefaultLoginService userDetailService;
+    private final DefaultUserDetailsService userDetailService;
 
     private final MemberRepository memberRepository;
 
@@ -101,21 +102,23 @@ public class JwtProvider {
 
 
     public String extractAccessToken(HttpServletRequest request) {
-        String accessToken = request.getHeader(accessTokenHeader);
-        if (accessToken == null) {
-            throw new IllegalArgumentException("Access Token 존재하지 않음");
+        String headerValue = request.getHeader(accessTokenHeader);
+        if (headerValue != null && headerValue.startsWith("Bearer ")) {
+            return headerValue.substring(7);
         }
-        return accessToken;
+        throw new IllegalArgumentException("Access Token 존재하지 않음");
     }
 
 
     public String extractRefreshToken(HttpServletRequest request) {
-        return Arrays.stream(request.getCookies())
-                .filter(cookie -> cookie.getName().equals(refreshTokenHeader))
-                .map(Cookie::getValue)
-                .filter(this::isTokenValid)
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("잘못된 Refresh-Token 쿠키"));
+        return Optional.ofNullable(request.getCookies())
+                .map(cookies -> Arrays.stream(cookies)
+                        .filter(cookie -> cookie.getName().equals(refreshTokenHeader))
+                        .map(Cookie::getValue)
+                        .filter(this::isTokenValid)
+                        .findFirst()
+                        .orElse(null))
+                .orElseThrow(() -> new InvalidRefreshTokenException("잘못된 Refresh-Token 쿠키"));
     }
 
 
