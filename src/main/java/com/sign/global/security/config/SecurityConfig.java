@@ -1,10 +1,12 @@
 package com.sign.global.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sign.domain.member.repository.MemberRepository;
 import com.sign.global.exception.ErrorResult;
-import com.sign.global.security.authentication.JwtProvider;
-import com.sign.global.security.authentication.DefaultLoginService;
+import com.sign.global.security.authentication.jwt.JwtProvider;
+import com.sign.global.security.authentication.DefaultUserDetailsService;
+import com.sign.global.security.authentication.oauth2.OAuth2LoginService;
+import com.sign.global.security.filter.CustomOAuth2AuthorizationRequestRedirectFilter;
+import com.sign.global.security.filter.CustomOAuth2LoginAuthenticationFilter;
 import com.sign.global.security.filter.JsonUsernamePasswordAuthenticationFilter;
 import com.sign.global.security.filter.JwtAuthenticationFilter;
 import com.sign.global.security.handler.*;
@@ -25,8 +27,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -46,13 +48,12 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    private final MemberRepository memberRepository;
-
     private final JwtProvider jwtProvider;
 
-    private final DefaultLoginService defaultLoginService;
+    private final OAuth2LoginService oAuth2LoginService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final DefaultUserDetailsService defaultUserDetailsService;
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -65,24 +66,28 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy((SessionCreationPolicy.STATELESS))
                 .and()
                     .authorizeRequests()
-                    .mvcMatchers(HttpMethod.POST, "/api/v1/members").permitAll()
-                    .mvcMatchers(HttpMethod.GET, "/api/v1/members/email/*/duplication").permitAll()
-                    .mvcMatchers(HttpMethod.GET, "/api/v1/oauth2/authorization/*").permitAll()
-                    .mvcMatchers(HttpMethod.GET, "/api/v1/login/oauth2/code/*").permitAll()
-                    .mvcMatchers(HttpMethod.POST, "/api/v1/refresh/access-token").permitAll()
-                    .mvcMatchers(HttpMethod.GET, "/css/**").permitAll()
-                    .mvcMatchers(HttpMethod.GET, "/images/**").permitAll()
-                    .mvcMatchers(HttpMethod.GET, "/js/**").permitAll()
-                    .mvcMatchers(HttpMethod.GET, "/favicon.ico").permitAll()
-                    .mvcMatchers(HttpMethod.GET, "/ws/**").permitAll()
-                    .mvcMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    .anyRequest().authenticated()
+                        .mvcMatchers(HttpMethod.POST, "/api/v1/members").permitAll()
+                        .mvcMatchers(HttpMethod.GET, "/api/v1/members/email/*/duplication").permitAll()
+                        .mvcMatchers(HttpMethod.POST, "/api/v1/refresh/access-token").permitAll()
+                        .mvcMatchers(HttpMethod.GET, "/css/**").permitAll()
+                        .mvcMatchers(HttpMethod.GET, "/images/**").permitAll()
+                        .mvcMatchers(HttpMethod.GET, "/js/**").permitAll()
+                        .mvcMatchers(HttpMethod.GET, "/favicon.ico").permitAll()
+                        .mvcMatchers(HttpMethod.GET, "/ws/**").permitAll()
+                        .mvcMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .anyRequest().authenticated()
                 .and()
-                    .addFilterAfter(jsonUsernamePasswordAuthenticationFilter(), LogoutFilter.class)
-                    .addFilterBefore(jwtAuthenticationFilter(), FilterSecurityInterceptor.class)
+                    .addFilterBefore(jwtAuthenticationFilter(), LogoutFilter.class)
+                    .addFilterBefore(jsonUsernamePasswordAuthenticationFilter(), JwtAuthenticationFilter.class)
+                    .addFilterBefore(customOAuth2LoginAuthenticationFilter(), JwtAuthenticationFilter.class)
+                    .addFilterBefore(customOAuth2AuthorizationRequestRedirectFilter(), JwtAuthenticationFilter.class)
                     .exceptionHandling()
-                    .accessDeniedHandler(this::handleAccessDenied)
-                    .authenticationEntryPoint(this::handleAuthenticationException);
+                        .accessDeniedHandler(this::handleAccessDenied)
+                        .authenticationEntryPoint(this::handleAuthenticationException)
+                .and()
+                    .logout()
+                        .logoutUrl("/logout")
+                        .logoutSuccessHandler(logoutSuccessHandler());
         return http.build();
     }
 
@@ -97,8 +102,12 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CustomOAuth2AuthorizationRequestRedirectFilter customOAuth2AuthorizationRequestRedirectFilter() {
+        return new CustomOAuth2AuthorizationRequestRedirectFilter(oAuth2LoginService);
+    }
+    @Bean
     public LoginSuccessHandler loginSuccessHandler() {
-        return new LoginSuccessHandler(jwtProvider, memberRepository);
+        return new LoginSuccessHandler(jwtProvider);
     }
 
     @Bean
@@ -108,7 +117,17 @@ public class SecurityConfig {
 
     @Bean
     public JsonUsernamePasswordAuthenticationFilter jsonUsernamePasswordAuthenticationFilter() {
-        JsonUsernamePasswordAuthenticationFilter filter = new JsonUsernamePasswordAuthenticationFilter(objectMapper);
+        JsonUsernamePasswordAuthenticationFilter filter = new JsonUsernamePasswordAuthenticationFilter(objectMapper());
+        filter.setAuthenticationManager(authenticationManager());
+        filter.setAuthenticationSuccessHandler(loginSuccessHandler());
+        filter.setAuthenticationFailureHandler(loginFailureHandler());
+        return filter;
+    }
+
+    @Bean
+    public CustomOAuth2LoginAuthenticationFilter customOAuth2LoginAuthenticationFilter() {
+        CustomOAuth2LoginAuthenticationFilter filter
+                = new CustomOAuth2LoginAuthenticationFilter(oAuth2LoginService);
         filter.setAuthenticationManager(authenticationManager());
         filter.setAuthenticationSuccessHandler(loginSuccessHandler());
         filter.setAuthenticationFailureHandler(loginFailureHandler());
@@ -119,7 +138,7 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setPasswordEncoder(passwordEncoder());
-        provider.setUserDetailsService(defaultLoginService);
+        provider.setUserDetailsService(defaultUserDetailsService);
         return new ProviderManager(provider);
     }
 
@@ -132,6 +151,7 @@ public class SecurityConfig {
         response.getWriter().write("권한이 없는 사용자입니다.");
     }
 
+
     private void handleAuthenticationException
             (HttpServletRequest request,
              HttpServletResponse response,
@@ -143,7 +163,7 @@ public class SecurityConfig {
                 .code("UNAUTHORIZED")
                 .message("인증되지 않은 사용자입니다.")
                 .build();
-        response.getWriter().write(objectMapper.writeValueAsString(result));
+        response.getWriter().write(objectMapper().writeValueAsString(result));
     }
 
     @Bean
@@ -151,7 +171,13 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
+        @Bean
+        public ObjectMapper objectMapper() { return new ObjectMapper(); }
+
+        @Bean
+        public RestTemplate restTemplate() { return new RestTemplate(); }
+
+        @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
