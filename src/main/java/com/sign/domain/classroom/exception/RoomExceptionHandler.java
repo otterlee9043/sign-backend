@@ -18,39 +18,28 @@ public class RoomExceptionHandler {
     @ExceptionHandler
     public ErrorResult roomNotFoundExceptionHandler(NotFoundException e) {
         log.warn("NotFoundException occurred. Message: {}", e.getMessage());
-        return ErrorResult.builder()
-                .code("NOT FOUND")
-                .message(e.getMessage())
-                .build();
+        return ErrorResult.build("NOT FOUND", e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler
     public ErrorResult roomCapacityExceededExceptionHandler(RoomCapacityExceededException e) {
         log.warn("RoomCapacityExceededException occurred. Message: {}", e.getMessage());
-        return ErrorResult.builder()
-                .code("ROOM CAPACITY EXCEEDED")
-                .message(e.getMessage())
-                .build();
+        return ErrorResult.build("ROOM CAPACITY EXCEEDED", e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler
     public ErrorResult dataDuplicateExceptionHandler(DataDuplicateException e) {
         log.warn("DataDuplicateException occurred. Message: {}", e.getMessage());
-        return ErrorResult.builder()
-                .code("CONFLICT")
-                .message(e.getMessage())
-                .build();
+        return ErrorResult.build("CONFLICT", e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler
     public ErrorResult accessDeniedExceptionHandler(AccessDeniedException e) {
         log.warn("AccessDeniedException occurred. Message: {}", e.getMessage());
-        return ErrorResult.builder()
-                .code("FORBIDDEN")
-                .message(e.getMessage())
-                .build();
+        return ErrorResult.build("FORBIDDEN", e.getMessage());
     }
+
 }

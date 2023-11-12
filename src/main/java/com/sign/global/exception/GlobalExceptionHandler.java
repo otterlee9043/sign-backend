@@ -15,19 +15,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler
     public ErrorResult illegalArgumentExceptionHandler(IllegalArgumentException e) {
         log.warn("IllegalArgumentException occurred. Message: {}", e.getMessage());
-        return ErrorResult.builder()
-                .code("BAD")
-                .message(e.getMessage())
-                .build();
+        return ErrorResult.build("BAD REQUEST", e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.OK)
     @ExceptionHandler
     public ErrorResult invalidRefreshTokenException(InvalidRefreshTokenException e) {
         log.warn("InvalidRefreshTokenException occurred. Message: {}", e.getMessage());
-        return ErrorResult.builder()
-                .code("NOT LOGGED IN")
-                .message(e.getMessage())
-                .build();
+        return ErrorResult.build("NOT LOGGED IN", e.getMessage());
     }
 }
