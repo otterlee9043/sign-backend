@@ -13,4 +13,19 @@ public class ErrorResult {
     private String code;
     private String message;
     private Map<String, String> errors;
+
+    public static ErrorResult build(String code, String message) {
+        return ErrorResult.builder()
+                .code(code)
+                .message(message)
+                .build();
+    }
+
+    public static ErrorResult build(String code, String message, Map<String, String> errors) {
+        return ErrorResult.builder()
+                .code(code)
+                .message(message)
+                .errors(errors)
+                .build();
+    }
 }
