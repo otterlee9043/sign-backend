@@ -1,14 +1,15 @@
 package com.sign.global.security.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sign.domain.member.entity.Member;
+import com.sign.global.security.authentication.LoginMember;
 import com.sign.global.security.authentication.oauth2.OAuth2LoginService;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,24 +17,21 @@ import javax.servlet.http.HttpServletResponse;
 
 public class CustomOAuth2LoginAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
-    private static final String DEFAULT_LOGIN_REQUEST_URL = "/api/v1/oauth2/authorization/*";
+    private static final String DEFAULT_LOGIN_REQUEST_URI = "/login/oauth2/code";
+
+    private static final String REGISTRATION_ID_URI_VARIABLE_NAME = "provider";
 
     private static final String HTTP_METHOD = "GET";
 
-    private final RestTemplate restTemplate = new RestTemplate();
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final RequestMatcher requestMatcher =
+            new AntPathRequestMatcher(DEFAULT_LOGIN_REQUEST_URI + "/{" + REGISTRATION_ID_URI_VARIABLE_NAME + "}",
+                    HTTP_METHOD);
 
     private final OAuth2LoginService oAuth2LoginService;
 
-    private final InMemoryClientRegistrationRepository clientRegistrationRepository;
 
-
-    public CustomOAuth2LoginAuthenticationFilter
-            (InMemoryClientRegistrationRepository clientRegistrationRepository,
-             OAuth2LoginService oAuth2LoginService) {
-        super(new AntPathRequestMatcher(DEFAULT_LOGIN_REQUEST_URL, HTTP_METHOD));
-        this.clientRegistrationRepository = clientRegistrationRepository;
+    public CustomOAuth2LoginAuthenticationFilter(OAuth2LoginService oAuth2LoginService) {
+        super(requestMatcher);
         this.oAuth2LoginService = oAuth2LoginService;
     }
 
@@ -41,14 +39,15 @@ public class CustomOAuth2LoginAuthenticationFilter extends AbstractAuthenticatio
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
         String code = request.getParameter("code");
-        String pathInfo = request.getPathInfo();
-        String provider = pathInfo.substring(pathInfo.lastIndexOf("/") + 1);
+        String registrationId = retrieveRegistrationId(request);
+        Member member = oAuth2LoginService.login(registrationId, code);
 
-        Member member = oAuth2LoginService.login(provider, code);
-        oAuth2LoginService.sendAccessTokenAndRefreshToken(member, response);
-
-        return null;
+        UserDetails userDetails = new LoginMember(member);
+        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
-
+    private String retrieveRegistrationId(HttpServletRequest request) {
+        return requestMatcher.matcher(request).getVariables()
+                .get(REGISTRATION_ID_URI_VARIABLE_NAME);
+    }
 }
