@@ -3,6 +3,7 @@ package com.sign.global.security.filter;
 import com.sign.domain.member.entity.Member;
 import com.sign.global.security.authentication.LoginMember;
 import com.sign.global.security.authentication.oauth2.OAuth2LoginService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -15,9 +16,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 
+
 public class CustomOAuth2LoginAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
-    private static final String DEFAULT_LOGIN_REQUEST_URI = "/login/oauth2/code";
+    private static final String DEFAULT_LOGIN_REQUEST_URI = "/api/v1/login/oauth2/code";
 
     private static final String REGISTRATION_ID_URI_VARIABLE_NAME = "provider";
 

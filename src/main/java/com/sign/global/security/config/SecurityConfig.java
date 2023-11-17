@@ -68,6 +68,7 @@ public class SecurityConfig {
                     .authorizeRequests()
                         .mvcMatchers(HttpMethod.POST, "/api/v1/members").permitAll()
                         .mvcMatchers(HttpMethod.GET, "/api/v1/members/email/*/duplication").permitAll()
+                        .mvcMatchers(HttpMethod.GET, "/api/v1/login/oauth2/code/*").permitAll()
                         .mvcMatchers(HttpMethod.POST, "/api/v1/refresh/access-token").permitAll()
                         .mvcMatchers(HttpMethod.GET, "/css/**").permitAll()
                         .mvcMatchers(HttpMethod.GET, "/images/**").permitAll()

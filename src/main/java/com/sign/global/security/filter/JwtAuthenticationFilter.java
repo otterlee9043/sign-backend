@@ -26,6 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String[] excludedUris = {
                 "/api/v1/members",
                 "/api/v1/members/email/*/duplication",
+                "/api/v1/login/oauth2/code/*",
                 "/api/v1/refresh/access-token",
                 "/css/**",
                 "/images/**",
