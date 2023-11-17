@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -15,6 +16,7 @@ import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
+@Component
 public class OAuth2LoginService  {
 
     private final InMemoryClientRegistrationRepository clientRegistrationRepository;
