@@ -87,7 +87,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(this::handleAuthenticationException)
                 .and()
                     .logout()
-                        .logoutUrl("/logout")
+                        .logoutUrl("/api/v1/logout")
                         .logoutSuccessHandler(logoutSuccessHandler());
         return http.build();
     }
