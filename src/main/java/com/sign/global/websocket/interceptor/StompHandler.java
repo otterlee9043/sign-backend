@@ -1,8 +1,6 @@
 package com.sign.global.websocket.interceptor;
 
-import com.sign.global.security.authentication.JwtProvider;
-import com.sign.global.security.authentication.LoginMember;
-import com.sign.global.websocket.service.ChatroomService;
+import com.sign.global.security.authentication.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;

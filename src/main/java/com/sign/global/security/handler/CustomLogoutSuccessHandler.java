@@ -1,7 +1,7 @@
 package com.sign.global.security.handler;
 
 import com.sign.domain.member.entity.Member;
-import com.sign.global.security.authentication.JwtProvider;
+import com.sign.global.security.authentication.jwt.JwtProvider;
 import com.sign.global.security.authentication.LoginMember;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,6 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
     @Override
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response,
                                 Authentication authentication) {
-        log.info("logout | authentication: {}", authentication);
         LoginMember loginMember = (LoginMember) authentication.getPrincipal();
 
         Member member = loginMember.getMember();
