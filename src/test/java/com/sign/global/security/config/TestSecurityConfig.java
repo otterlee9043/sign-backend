@@ -18,18 +18,15 @@ public class TestSecurityConfig {
                 .formLogin().disable()
                 .headers().disable()
                 .authorizeRequests()
-                .mvcMatchers("/api/v1/members",
-                        "/api/v1/member/login",
-                        "/api/v1/member/username/*/exists",
-                        "/api/v1/members/email/*/duplication",
-                        "/oauth2/authorization/*",
-                        "/login/oauth2/code/*",
-                        "/css/**", "/images/**", "/js/**", "/favicon.ico",
-                        "/ws/**",
-                        "/swagger-ui/**", "/v3/api-docs/**"
-                ).permitAll()
+                .mvcMatchers(HttpMethod.POST, "/api/v1/members").permitAll()
+                .mvcMatchers(HttpMethod.GET, "/api/v1/members/email/*/duplication").permitAll()
+                .mvcMatchers(HttpMethod.POST, "/api/v1/refresh/access-token").permitAll()
+                .mvcMatchers(HttpMethod.GET, "/css/**").permitAll()
+                .mvcMatchers(HttpMethod.GET, "/images/**").permitAll()
+                .mvcMatchers(HttpMethod.GET, "/js/**").permitAll()
+                .mvcMatchers(HttpMethod.GET, "/favicon.ico").permitAll()
+                .mvcMatchers(HttpMethod.GET, "/ws/**").permitAll()
                 .mvcMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .mvcMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated();
         return http.build();
     }
