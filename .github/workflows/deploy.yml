@@ -1,4 +1,4 @@
-name: Build and Push Image to Amazon ECR
+name: Build, Push Image to Amazon ECR and Deploy ECS Service
 
 on:
   push:
@@ -8,6 +8,9 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: sign-backend
+  ECS_SERVICE: sign-github-actions-2
+  ECS_CLUSTER: SignCluster2023
+  ECS_TASK_DEFINITION: sign-app
 
 jobs:
   build:
@@ -49,3 +52,7 @@ jobs:
           ./gradlew clean build
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Deploy Existing Amazon ECS Task Definition
+          run: |
+            aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE }} --task-definition ${{ env.ECS_TASK_DEFINITION }} --force-new-deployment
